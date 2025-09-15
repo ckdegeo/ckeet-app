@@ -8,8 +8,19 @@ import ReportConfirmationModal from '@/app/components/modals/reportConfirmationM
 
 import { Eye, Download, Flag } from 'lucide-react';
 
+interface OrderData {
+  id: string;
+  product: string;
+  price: number;
+  paymentMethod: 'credit_card' | 'debit_card' | 'pix' | 'boleto' | 'transfer';
+  status: 'pending' | 'completed' | 'cancelled' | 'refunded';
+  date: string;
+  time: string;
+  key: string;
+}
+
 // Dados de exemplo
-const sampleOrders = [
+const sampleOrders: OrderData[] = [
   {
     id: 'ORD001',
     product: 'Smartphone XYZ',
@@ -63,18 +74,18 @@ const sampleOrders = [
 ];
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState(sampleOrders);
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+  const [orders, setOrders] = useState<OrderData[]>(sampleOrders);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   
   // Estados dos modais
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState<OrderData | null>(null);
   const [isOrderDetailsModalOpen, setIsOrderDetailsModalOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
 
   // Função para formatar data e hora
-  const formatDateTime = (date, time) => {
+  const formatDateTime = (date: string, time: string) => {
     const dateObj = new Date(date + 'T' + time);
     return dateObj.toLocaleString('pt-BR', {
       day: '2-digit',
@@ -86,30 +97,30 @@ export default function OrdersPage() {
   };
 
   // Função para formatar status
-  const formatStatus = (status) => {
-    const statusMap = {
+  const formatStatus = (status: OrderData['status']) => {
+    const statusMap: Record<OrderData['status'], string> = {
       completed: 'Concluído',
       pending: 'Pendente',
       cancelled: 'Cancelado',
       refunded: 'Reembolsado'
     };
-    return statusMap[status];
+    return statusMap[status] || status;
   };
 
   // Função para formatar forma de pagamento
-  const formatPaymentMethod = (method) => {
-    const methodMap = {
+  const formatPaymentMethod = (method: OrderData['paymentMethod']) => {
+    const methodMap: Record<OrderData['paymentMethod'], string> = {
       credit_card: 'Cartão de Crédito',
       debit_card: 'Cartão de Débito',
       pix: 'PIX',
       boleto: 'Boleto',
       transfer: 'Transferência'
     };
-    return methodMap[method];
+    return methodMap[method] || method;
   };
 
   // Função para formatar valor
-  const formatCurrency = (value) => {
+  const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
@@ -117,12 +128,12 @@ export default function OrdersPage() {
   };
 
   // Handlers para ações
-  const handleViewOrder = (order) => {
+  const handleViewOrder = (order: OrderData) => {
     setSelectedOrder(order);
     setIsOrderDetailsModalOpen(true);
   };
 
-  const handleDownloadKey = (order) => {
+  const handleDownloadKey = (order: OrderData) => {
     // Implementar download direto da chave
     const dataStr = `Chave do produto: ${order.key}\nProduto: ${order.product}\nData: ${formatDateTime(order.date, order.time)}`;
     const dataBlob = new Blob([dataStr], { type: 'text/plain' });
@@ -136,12 +147,12 @@ export default function OrdersPage() {
     URL.revokeObjectURL(url);
   };
 
-  const handleReportOrder = (order) => {
+  const handleReportOrder = (order: OrderData) => {
     setSelectedOrder(order);
     setIsReportModalOpen(true);
   };
 
-  const handleReportConfirm = (reason) => {
+  const handleReportConfirm = (reason: string) => {
     console.log('Denúncia enviada:', { order: selectedOrder, reason });
     alert(`Denúncia da ordem ${selectedOrder?.id} registrada com sucesso!`);
   };
@@ -157,14 +168,19 @@ export default function OrdersPage() {
   });
 
   // Handler para mudança de data
-  const handleDateChange = (dates) => {
+  const handleDateChange = (dates: [Date | null, Date | null]) => {
     const [start, end] = dates;
     setStartDate(start);
     setEndDate(end);
   };
 
   // Configuração das colunas
-  const columns = [
+  const columns: Array<{
+    key: keyof OrderData;
+    label: string;
+    width: string;
+    render?: (value: unknown) => string;
+  }> = [
     {
       key: 'id',
       label: 'ID',
@@ -179,26 +195,26 @@ export default function OrdersPage() {
       key: 'price',
       label: 'Preço',
       width: 'w-[120px]',
-      render: (value) => formatCurrency(value)
+      render: (value: unknown) => formatCurrency(value as number)
     },
     {
       key: 'paymentMethod',
       label: 'Pagamento',
       width: 'w-[140px]',
-      render: (value) => formatPaymentMethod(value)
+      render: (value: unknown) => formatPaymentMethod(value as OrderData['paymentMethod'])
     },
     {
       key: 'status',
       label: 'Status',
       width: 'w-[120px]',
-      render: (value) => formatStatus(value)
+      render: (value: unknown) => formatStatus(value as OrderData['status'])
     },
     {
       key: 'date',
       label: 'Data e Hora',
       width: 'w-[140px]',
-      render: (value) => {
-        const order = orders.find(o => o.date === value);
+      render: (value: unknown) => {
+        const order = orders.find(o => o.date === value as string);
         return order ? formatDateTime(order.date, order.time) : String(value);
       }
     },
@@ -206,7 +222,7 @@ export default function OrdersPage() {
       key: 'key',
       label: 'Chave',
       width: 'w-[180px]',
-      render: (value) => {
+      render: (value: unknown) => {
         const key = String(value);
         return `${key.substring(0, 8)}...${key.substring(key.length - 4)}`;
       }
@@ -226,7 +242,7 @@ export default function OrdersPage() {
       label: 'Download da chave',
       onClick: handleDownloadKey,
       color: 'secondary',
-      show: (order) => order.status === 'completed'
+      show: (order: OrderData) => order.status === 'completed'
     },
     {
       icon: Flag,
