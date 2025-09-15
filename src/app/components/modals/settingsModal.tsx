@@ -1,0 +1,373 @@
+'use client';
+
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { X, User, Bell, Shield, Palette, Globe } from "lucide-react";
+import Button from "../buttons/button";
+import ColorPicker from "../inputs/colorPicker";
+import Checkbox from "../checkbox/checkbox";
+
+interface SettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  className?: string;
+}
+
+export default function SettingsModal({ 
+  isOpen, 
+  onClose, 
+  className = "" 
+}: SettingsModalProps) {
+  const [activeTab, setActiveTab] = useState("profile");
+  const [mounted, setMounted] = useState(false);
+  const [primaryColor, setPrimaryColor] = useState("#6200EE");
+  const [notifySales, setNotifySales] = useState(true);
+  const [notifyIntegrations, setNotifyIntegrations] = useState(true);
+  const [notifyReports, setNotifyReports] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
+
+  const tabs = [
+    { id: "profile", label: "Perfil", icon: User },
+    { id: "notifications", label: "Notificações", icon: Bell },
+    { id: "security", label: "Segurança", icon: Shield }
+  ];
+
+  const modalContent = (
+    <>
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-black/60 z-[9999]"
+        onClick={onClose}
+      />
+      
+      {/* Modal */}
+      <div className={`
+        fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[10000]
+        w-[95%] max-w-4xl max-h-[90vh] bg-[var(--surface)] rounded-lg shadow-xl
+        overflow-hidden
+        ${className}
+      `}>
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200">
+          <h2 className="text-lg md:text-xl font-semibold text-[var(--foreground)]">
+            Configurações
+          </h2>
+          <button
+            onClick={onClose}
+            className="
+              cursor-pointer
+              flex items-center justify-center
+              w-8 h-8 md:w-10 md:h-10
+              rounded-full
+              bg-[var(--primary)]
+              text-[var(--on-primary)]
+              font-medium
+              transition-all
+              hover:opacity-90
+              hover:bg-[var(--primary-variant)]
+              disabled:opacity-50
+              disabled:cursor-not-allowed
+            "
+          >
+            <X size={18} className="md:hidden" />
+            <X size={20} className="hidden md:block" />
+          </button>
+        </div>
+
+        {/* Mobile Tabs */}
+        <div className="md:hidden w-full overflow-x-auto border-b border-gray-200">
+          <div className="flex w-full">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`
+                    flex-1 min-w-[100px] py-3 px-2
+                    flex flex-col items-center justify-center gap-1
+                    border-b-2 transition-all
+                    ${activeTab === tab.id 
+                      ? "border-[var(--primary)] text-[var(--primary)]" 
+                      : "border-transparent text-gray-500"}
+                  `}
+                >
+                  <Icon size={18} />
+                  <span className="text-xs font-medium whitespace-nowrap">{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex flex-col md:flex-row h-[65vh] md:h-[500px]">
+          {/* Sidebar - Desktop Only */}
+          <div className="hidden md:block md:w-64 md:border-r border-gray-200">
+            <nav className="p-4 flex flex-col gap-2">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <Button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`
+                      w-full justify-start whitespace-nowrap
+                      px-0
+                      rounded-full
+                      ${activeTab === tab.id 
+                        ? "bg-[var(--primary)] text-[var(--on-primary)] hover:bg-[var(--primary-variant)]" 
+                        : "bg-transparent text-[var(--on-surface)] hover:bg-gray-100 border border-transparent hover:border-gray-200"
+                      }
+                    `}
+                  >
+                    <Icon size={18} />
+                    <span className="font-medium">{tab.label}</span>
+                  </Button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 p-4 md:p-6 overflow-y-auto">
+            {activeTab === "profile" && (
+              <div className="space-y-6">
+                <h3 className="text-base md:text-lg font-semibold text-[var(--foreground)]">
+                  Informações do Perfil
+                </h3>
+                
+                <div className="space-y-4 md:space-y-6">
+                  <div className="flex flex-col gap-1.5 w-full">
+                    <label className="text-sm font-medium text-[var(--foreground)]">
+                      Nome
+                    </label>
+                    <input 
+                      type="text" 
+                      defaultValue="Admin"
+                      className="
+                        w-full
+                        px-3 py-2 md:px-4 md:py-3
+                        rounded-full
+                        bg-transparent
+                        border border-[var(--on-background)]
+                        text-[var(--foreground)]
+                        placeholder:text-[var(--on-background)]
+                        transition-all
+                        outline-none
+                        focus:border-[var(--primary)]
+                        disabled:opacity-50
+                        disabled:cursor-not-allowed
+                      "
+                    />
+                  </div>
+                  
+                  <div className="flex flex-col gap-1.5 w-full">
+                    <label className="text-sm font-medium text-[var(--foreground)]">
+                      Email
+                    </label>
+                    <input 
+                      type="email" 
+                      defaultValue="admin@void.com"
+                      className="
+                        w-full
+                        px-3 py-2 md:px-4 md:py-3
+                        rounded-full
+                        bg-transparent
+                        border border-[var(--on-background)]
+                        text-[var(--foreground)]
+                        placeholder:text-[var(--on-background)]
+                        transition-all
+                        outline-none
+                        focus:border-[var(--primary)]
+                        disabled:opacity-50
+                        disabled:cursor-not-allowed
+                      "
+                    />
+                  </div>
+                  
+                  <div className="flex flex-col gap-1.5 w-full">
+                    <label className="text-sm font-medium text-[var(--foreground)]">
+                      Cargo
+                    </label>
+                    <input 
+                      type="text" 
+                      defaultValue="Administrador"
+                      className="
+                        w-full
+                        px-3 py-2 md:px-4 md:py-3
+                        rounded-full
+                        bg-transparent
+                        border border-[var(--on-background)]
+                        text-[var(--foreground)]
+                        placeholder:text-[var(--on-background)]
+                        transition-all
+                        outline-none
+                        focus:border-[var(--primary)]
+                        disabled:opacity-50
+                        disabled:cursor-not-allowed
+                      "
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "notifications" && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold text-[var(--foreground)]">
+                  Preferências de Notificação
+                </h3>
+                
+                <div className="space-y-3 md:space-y-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                    <div>
+                      <p className="font-medium text-[var(--foreground)]">Vendas</p>
+                      <p className="text-sm text-gray-500">Notificações sobre novas vendas</p>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <Checkbox
+                        checked={notifySales}
+                        onChange={setNotifySales}
+                        size="md"
+                        variant="primary"
+                        className="w-auto"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                    <div>
+                      <p className="font-medium text-[var(--foreground)]">Integrações</p>
+                      <p className="text-sm text-gray-500">Updates sobre integrações</p>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <Checkbox
+                        checked={notifyIntegrations}
+                        onChange={setNotifyIntegrations}
+                        size="md"
+                        variant="primary"
+                        className="w-auto"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                    <div>
+                      <p className="font-medium text-[var(--foreground)]">Relatórios</p>
+                      <p className="text-sm text-gray-500">Relatórios mensais e semanais</p>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <Checkbox
+                        checked={notifyReports}
+                        onChange={setNotifyReports}
+                        size="md"
+                        variant="primary"
+                        className="w-auto"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "security" && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold text-[var(--foreground)]">
+                  Segurança
+                </h3>
+                
+                <div className="space-y-6">
+                  <div className="flex flex-col gap-1.5 w-full">
+                    <label className="text-sm font-medium text-[var(--foreground)]">
+                      Senha Atual
+                    </label>
+                    <input 
+                      type="password" 
+                      placeholder="Digite sua senha atual"
+                      className="
+                        w-full
+                        px-3 py-2 md:px-4 md:py-3
+                        rounded-full
+                        bg-transparent
+                        border border-[var(--on-background)]
+                        text-[var(--foreground)]
+                        placeholder:text-[var(--on-background)]
+                        transition-all
+                        outline-none
+                        focus:border-[var(--primary)]
+                        disabled:opacity-50
+                        disabled:cursor-not-allowed
+                      "
+                    />
+                  </div>
+                  
+                  <div className="flex flex-col gap-1.5 w-full">
+                    <label className="text-sm font-medium text-[var(--foreground)]">
+                      Nova Senha
+                    </label>
+                    <input 
+                      type="password" 
+                      placeholder="Digite a nova senha"
+                      className="
+                        w-full
+                        px-3 py-2 md:px-4 md:py-3
+                        rounded-full
+                        bg-transparent
+                        border border-[var(--on-background)]
+                        text-[var(--foreground)]
+                        placeholder:text-[var(--on-background)]
+                        transition-all
+                        outline-none
+                        focus:border-[var(--primary)]
+                        disabled:opacity-50
+                        disabled:cursor-not-allowed
+                      "
+                    />
+                  </div>
+                  
+                  <div className="flex flex-col gap-1.5 w-full">
+                    <label className="text-sm font-medium text-[var(--foreground)]">
+                      Confirmar Nova Senha
+                    </label>
+                    <input 
+                      type="password" 
+                      placeholder="Confirme a nova senha"
+                      className="
+                        w-full
+                        px-3 py-2 md:px-4 md:py-3
+                        rounded-full
+                        bg-transparent
+                        border border-[var(--on-background)]
+                        text-[var(--foreground)]
+                        placeholder:text-[var(--on-background)]
+                        transition-all
+                        outline-none
+                        focus:border-[var(--primary)]
+                        disabled:opacity-50
+                        disabled:cursor-not-allowed
+                      "
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 p-4 md:p-6 border-t border-gray-200">
+          <Button className="text-sm md:text-base">
+            Salvar Alterações
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+
+  return createPortal(modalContent, document.body);
+}
