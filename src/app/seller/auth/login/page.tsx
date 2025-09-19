@@ -72,14 +72,14 @@ export default function Login() {
       <div className="w-full md:w-1/2 flex items-center justify-center p-4 md:p-8">
         <div className="w-full max-w-md space-y-8">
           {/* Logo */}
-          <div className="flex flex-col items-center gap-2 mb-8">
+          <div className="flex flex-col items-center gap-4 mb-8">
             <Image
               src="/logo.png"
               alt="Ckeet Logo"
-              width={180}
-              height={50}
+              width={120}
+              height={120}
               priority
-              className="h-auto"
+              className="w-30 h-30"
             />
             <h2 className="text-2xl font-semibold text-[var(--foreground)]">
               Login do Vendedor

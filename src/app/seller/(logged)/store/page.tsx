@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Input from '@/app/components/inputs/input';
 import ColorPicker from '@/app/components/inputs/colorPicker';
 import Button from '@/app/components/buttons/button';
-import Tabs from '@/app/components/tabs/tabs';
+import DomainModal from '@/app/components/modals/domainModal';
 import { Save, Settings, Store as StoreIcon, Palette, Image, Globe } from 'lucide-react';
 
 // Interface para os dados da loja
@@ -26,7 +26,7 @@ interface DomainConfig {
 }
 
 export default function Store() {
-  const [activeTab, setActiveTab] = useState('domain');
+  const [isDomainModalOpen, setIsDomainModalOpen] = useState(false);
   
   const [storeConfig, setStoreConfig] = useState<StoreConfig>({
     storeName: '',
@@ -72,81 +72,19 @@ export default function Store() {
   };
 
   const handleSave = () => {
-    if (activeTab === 'domain') {
-      console.log('Salvando configurações do domínio:', domainConfig);
-    } else {
-      console.log('Salvando configurações da loja:', storeConfig);
-    }
+    console.log('Salvando configurações da loja:', storeConfig);
     // Implementar lógica de salvamento
   };
 
-  // Conteúdo da aba Domínio
-  const domainTabContent = (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Coluna Esquerda */}
-      <div className="space-y-6">
-        {/* Configurações de Domínio */}
-        <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Globe size={20} className="text-[var(--primary)]" />
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">
-              Configurações de Domínio
-            </h2>
-          </div>
-          
-          <div className="space-y-4">
-            <Input
-              label="Subdomínio"
-              placeholder="minhaloja"
-              value={domainConfig.subdomain}
-              onChange={handleDomainChange('subdomain')}
-            />
-            <p className="text-sm text-[var(--on-background)]">
-              Sua loja ficará disponível em: <strong>{domainConfig.subdomain || 'minhaloja'}.ckeet.com</strong>
-            </p>
-          </div>
-        </div>
-      </div>
+  const handleDomainSave = (config: DomainConfig) => {
+    console.log('Salvando configurações do domínio:', config);
+    setDomainConfig(config);
+    // Implementar lógica de salvamento do domínio
+  };
 
-      {/* Coluna Direita */}
-      <div className="space-y-6">
-        {/* Informações sobre SSL */}
-        <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Settings size={20} className="text-[var(--primary)]" />
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">
-              Configurações Avançadas
-            </h2>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-[var(--background)] rounded-lg border border-[var(--on-background)]">
-              <div>
-                <p className="font-medium text-[var(--foreground)]">SSL Habilitado</p>
-                <p className="text-sm text-[var(--on-background)]">Certificado de segurança automático</p>
-              </div>
-              <div className="flex items-center">
-                <span className="text-sm text-[var(--secondary)] font-medium">Ativo</span>
-              </div>
-            </div>
-            
-            <div className="p-4 bg-[var(--secondary)]/10 rounded-lg border border-[var(--secondary)]">
-              <h3 className="font-medium text-[var(--foreground)] mb-2">Como configurar domínio personalizado:</h3>
-              <ol className="text-sm text-[var(--on-background)] space-y-1">
-                <li>1. Acesse o painel do seu provedor de domínio</li>
-                <li>2. Configure o DNS apontando para nossos servidores</li>
-                <li>3. Aguarde a propagação (até 24 horas)</li>
-                <li>4. Seu domínio estará ativo automaticamente</li>
-              </ol>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 
-  // Conteúdo da aba Configurações
-  const configTabContent = (
+  // Conteúdo das configurações da loja
+  const storeContent = (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Coluna Esquerda */}
       <div className="space-y-6">
@@ -240,45 +178,41 @@ export default function Store() {
     </div>
   );
 
-  // Configuração das abas
-  const tabItems = [
-    {
-      id: 'domain',
-      label: 'Domínio',
-      icon: Globe,
-      content: domainTabContent
-    },
-    {
-      id: 'config',
-      label: 'Configurações',
-      icon: Settings,
-      content: configTabContent
-    }
-  ];
 
   return (
     <div className="space-y-6">
-      {/* Cabeçalho Minimalista */}
+      {/* Cabeçalho */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-[var(--foreground)]">
-          Loja          
+          Configurações da Loja          
         </h1>
-        <div className="flex justify-end">
+        <div className="flex items-center gap-3">
+          <Button 
+            onClick={() => setIsDomainModalOpen(true)}
+            className="flex items-center gap-2 bg-transparent text-[var(--on-surface)] hover:bg-gray-100 border border-[var(--on-background)]"
+          >
+            <Globe size={18} />
+            Configurar Domínio
+          </Button>
           <Button 
             onClick={handleSave}
             className="flex items-center gap-2"
           >
             <Save size={18} />
-            Salvar {activeTab === 'domain' ? 'Domínio' : 'Configurações'}
+            Salvar Configurações
           </Button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <Tabs
-        items={tabItems}
-        activeTab={activeTab}
-        onChange={setActiveTab}
+      {/* Conteúdo da Loja */}
+      {storeContent}
+
+      {/* Modal de Domínio */}
+      <DomainModal
+        isOpen={isDomainModalOpen}
+        onClose={() => setIsDomainModalOpen(false)}
+        onSave={handleDomainSave}
+        initialConfig={domainConfig}
       />
     </div>
   );

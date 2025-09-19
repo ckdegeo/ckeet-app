@@ -74,7 +74,7 @@ const sampleOrders: OrderData[] = [
 ];
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<OrderData[]>(sampleOrders);
+  const [orders] = useState<OrderData[]>(sampleOrders);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   

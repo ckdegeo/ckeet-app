@@ -69,7 +69,7 @@ export default function ProductPage() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(product.isFavorite || false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-  const [isPurchasing, setIsPurchasing] = useState(false);
+  const [isPurchasing] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const formatCurrency = (value: number): string => {
