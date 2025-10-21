@@ -47,7 +47,7 @@ export default function Dashboard() {
     {
       key: 'faturamento',
       name: 'Faturamento Líquido',
-      color: '#6200EE',
+      color: '#b1031d',
       type: 'area' as const
     }
   ];

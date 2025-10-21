@@ -2,16 +2,16 @@
 
 :root {
   /* Cores Primárias */
-  --primary: #6200EE;
-  --primary-variant: #3700B3;
+  --primary: #bd253c;
+  --primary-variant: #970b27;
   
   /* Cores Secundárias */
-  --secondary: #03DAC6;
-  --secondary-variant: #018786;
+  --secondary: #da035d;
+  --secondary-variant: #d4055b;
   
   /* Cores de Sistema */
-  --background: #FFFFFF;
-  --surface: #FFFFFF;
+  --background: #fffefe;
+  --surface: #fffefe;
   --error: #B00020;
   
   /* Cores de Texto */

@@ -1,0 +1,349 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ===========================================
+// ENUMS
+// ===========================================
+
+enum StockType {
+  LINE    // Estoque por linha (emailconta.com:senha)
+  FIXED   // Estoque fixo (mesmo conteúdo sempre)
+  KEYAUTH // Integração KeyAuth
+}
+
+enum OrderStatus {
+  PENDING   // Pendente
+  PAID      // Pago
+  DELIVERED // Entregue
+  CANCELLED // Cancelado
+  REFUNDED  // Reembolsado
+}
+
+enum PaymentMethod {
+  CREDIT_CARD // Cartão de crédito
+  DEBIT_CARD  // Cartão de débito
+  PIX         // PIX
+  BOLETO      // Boleto
+  TRANSFER    // Transferência
+}
+
+enum PaymentStatus {
+  PENDING // Pendente
+  PAID    // Pago
+  FAILED  // Falhou
+  REFUNDED // Reembolsado
+}
+
+enum TransactionType {
+  SALE       // Venda
+  REFUND     // Reembolso
+  CHARGEBACK // Chargeback
+}
+
+enum TransactionStatus {
+  PENDING   // Pendente
+  COMPLETED // Completa
+  FAILED    // Falhou
+  CANCELLED // Cancelada
+}
+
+enum CustomerStatus {
+  ACTIVE // Ativo
+  BANNED // Banido
+}
+
+
+// ===========================================
+// SELLERS (VENDEDORES)
+// ===========================================
+
+model Seller {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  cpf       String?  @unique
+  phone     String?
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  store Store? // 1 seller = 1 store
+
+  @@map("sellers")
+}
+
+// ===========================================
+// CUSTOMERS (CLIENTES)
+// ===========================================
+
+model Customer {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  phone     String?
+  cpf       String?  @unique
+  password  String?
+  status    CustomerStatus @default(ACTIVE) // ACTIVE, BANNED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  orders       Order[]       // customer orders
+  purchases    Purchase[]    // digital products purchased
+  transactions Transaction[] // detailed transaction history
+
+  @@map("customers")
+}
+
+// ===========================================
+// STORE MANAGEMENT
+// ===========================================
+
+model Store {
+  id            String   @id @default(cuid())
+  name          String
+  contactEmail  String
+  description   String?
+  
+  // Visual Identity
+  logoUrl       String?
+  homeBannerUrl String?
+  storeBannerUrl String?
+  primaryColor  String   @default("#6200EE")
+  
+  // Domain Configuration
+  subdomain     String   @unique // {subdomain}.ckeet.com
+  customDomain  String?  // optional custom domain
+  sslEnabled    Boolean  @default(true)
+  
+  // Status
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relacionamentos
+  sellerId      String         @unique
+  seller        Seller         @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  categories    Category[]
+  products      Product[]
+  orders        Order[]
+  transactions  Transaction[]
+
+  @@map("stores")
+}
+
+// ===========================================
+// CATEGORIES & PRODUCTS
+// ===========================================
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  order       Int      @default(0) // Ordem vertical das categorias
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relacionamentos
+  storeId  String
+  store    Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  imageUrl    String?
+  image2Url   String?  // Segunda imagem
+  image3Url   String?  // Terceira imagem
+  videoUrl    String?  // URL do vídeo (opcional)
+  order       Int      @default(0) // Ordem horizontal dos produtos
+  
+  // Stock Configuration
+  stockType   StockType @default(LINE) // LINE, FIXED, KEYAUTH
+  
+  // Fixed Stock (for stockType = "fixed")
+  fixedContent String? // Conteúdo fixo que será sempre entregue
+  
+  // KeyAuth Integration (for stockType = "keyauth")
+  keyAuthDays      Int?    // Número de dias
+  keyAuthPublicKey String? // Chave pública KeyAuth
+  keyAuthSellerKey String? // Chave do vendedor KeyAuth
+  
+  // Status
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relacionamentos
+  storeId     String
+  store       Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  categoryId  String
+  category    Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  orderItems  OrderItem[]
+  stockLines  StockLine[]  // Estoque por linha
+  deliverables Deliverable[] // Links de entrega
+
+  @@map("products")
+}
+
+// ===========================================
+// STOCK MANAGEMENT (GESTÃO DE ESTOQUE)
+// ===========================================
+
+model StockLine {
+  id        String   @id @default(cuid())
+  content   String   // Conteúdo da linha (ex: emailconta.com:902139213senha)
+  isUsed    Boolean  @default(false) // Se já foi vendida/usada
+  usedAt    DateTime? // Quando foi usada
+  orderId   String?  // ID do pedido que usou esta linha
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("stock_lines")
+}
+
+model Deliverable {
+  id   String @id @default(cuid())
+  name String // Nome do entregável
+  url  String // URL de download
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("deliverables")
+}
+
+// ===========================================
+// ORDERS & PURCHASES
+// ===========================================
+
+model Order {
+  id          String   @id @default(cuid())
+  orderNumber String   @unique
+  totalAmount Float
+  status      OrderStatus @default(PENDING) // PENDING, PAID, DELIVERED, CANCELLED, REFUNDED
+  
+  // Customer Info
+  customerEmail String
+  customerName  String?
+  customerPhone String?
+  
+  // Payment Info
+  paymentMethod PaymentMethod? // CREDIT_CARD, DEBIT_CARD, PIX, BOLETO, TRANSFER
+  paymentStatus PaymentStatus? // PENDING, PAID, FAILED, REFUNDED
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  storeId       String
+  store         Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  customerId    String?       // se o customer estiver logado
+  customer      Customer?     @relation(fields: [customerId], references: [id])
+  products      OrderItem[]
+  purchases     Purchase[]
+  transactions  Transaction[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  quantity  Int     @default(1)
+  price     Float   // preço no momento da compra
+  
+  // Relacionamentos
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model Purchase {
+  id        String   @id @default(cuid())
+  
+  // Content Delivery (what was delivered to customer)
+  deliveredContent String? // Conteúdo entregue (linha de estoque, conteúdo fixo, etc)
+  stockLineId      String? // ID da linha de estoque usada (se aplicável)
+  
+  // Download tracking
+  downloadUrl   String?   // URL para download do produto (se aplicável)
+  expiresAt     DateTime? // data de expiração do download (opcional)
+  isDownloaded  Boolean   @default(false)
+  downloadCount Int       @default(0)
+  
+  createdAt DateTime @default(now())
+
+  // Relacionamentos
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("purchases")
+}
+
+// ===========================================
+// TRANSACTIONS (HISTÓRICO DETALHADO)
+// ===========================================
+
+model Transaction {
+  id          String   @id @default(cuid())
+  type        TransactionType   // SALE, REFUND, CHARGEBACK
+  amount      Float             // valor total da transação
+  status      TransactionStatus // PENDING, COMPLETED, FAILED, CANCELLED
+  description String?
+  
+  // Split Payment Info (Mercado Pago)
+  sellerAmount    Float   // valor que o seller recebe (93%)
+  platformAmount  Float   // valor da plataforma (7%)
+  commissionRate  Float   @default(0.07) // taxa de comissão (7%)
+  
+  // Payment Gateway Info
+  gatewayTransactionId String?
+  gatewayResponse      String?
+  splitTransactionId   String? // ID da transação de split no Mercado Pago
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  storeId    String
+  store      Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
+}

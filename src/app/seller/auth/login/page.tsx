@@ -60,7 +60,7 @@ export default function Login() {
       <div className="hidden md:flex md:w-1/2 bg-[var(--primary)] items-center justify-center p-8">
         <div className="max-w-md text-[var(--on-primary)]">
           <h1 className="text-4xl font-bold mb-4">
-            Bem-vindo ao Ckeet
+            Ckeet
           </h1>
           <p className="text-lg opacity-90">
             Gerencie sua loja online de forma simples e eficiente
@@ -79,7 +79,7 @@ export default function Login() {
               width={120}
               height={120}
               priority
-              className="w-30 h-30"
+              className="h-auto"
             />
             <h2 className="text-2xl font-semibold text-[var(--foreground)]">
               Login do Vendedor

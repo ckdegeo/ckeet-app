@@ -10,6 +10,8 @@ import Description from '@/app/components/inputs/description';
 import ValueInput from '@/app/components/inputs/valueInput';
 import Tabs from '@/app/components/tabs/tabs';
 import Table from '@/app/components/tables/table';
+import ImageUpload from '@/app/components/images/imageUpload';
+import { ProductFormData, StockType, StockLineFormData, DeliverableFormData } from '@/lib/types';
 
 // Dados do produto e configurações
 
@@ -19,11 +21,22 @@ export default function ProductPage() {
   const productId = params['product-id'];
   const isNewProduct = productId === 'new';
 
-  const [productData, setProductData] = useState({
+  const [productData, setProductData] = useState<ProductFormData>({
     name: '',
     description: '',
     price: 0,
     videoUrl: '',
+    image1: null,
+    image2: null,
+    image3: null,
+    stockType: StockType.LINE,
+    fixedContent: '',
+    keyAuthDays: 0,
+    keyAuthPublicKey: '',
+    keyAuthSellerKey: ''
+  });
+
+  const [imagePreviews, setImagePreviews] = useState({
     image1: '',
     image2: '',
     image3: ''
@@ -37,19 +50,9 @@ export default function ProductPage() {
   const [stockLines, setStockLines] = useState<Array<{id: string; line: number; content: string}>>([]);
   const [newStockContent, setNewStockContent] = useState('');
   
-  // Estado para estoque fixo
-  const [fixedStockContent, setFixedStockContent] = useState('');
-  
-  // Estados para KeyAuth
-  const [keyAuthConfig, setKeyAuthConfig] = useState({
-    days: 0,
-    publicKey: '',
-    sellerKey: ''
-  });
-  
   // Estados para entregáveis
   const [deliverableLinks, setDeliverableLinks] = useState<Array<{id: string; name: string; url: string}>>([]);
-  const [newDeliverable, setNewDeliverable] = useState({
+  const [newDeliverable, setNewDeliverable] = useState<DeliverableFormData>({
     name: '',
     url: ''
   });
@@ -87,6 +90,26 @@ export default function ProductPage() {
     }
   };
 
+  const handleImageChange = (imageKey: 'image1' | 'image2' | 'image3') => (file: File | null, preview: string | null) => {
+    setProductData(prev => ({
+      ...prev,
+      [imageKey]: file
+    }));
+    
+    setImagePreviews(prev => ({
+      ...prev,
+      [imageKey]: preview || ''
+    }));
+    
+    // Limpar erro do campo quando o usuário fizer upload
+    if (errors[imageKey]) {
+      setErrors(prev => ({
+        ...prev,
+        [imageKey]: undefined
+      }));
+    }
+  };
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
@@ -102,7 +125,7 @@ export default function ProductPage() {
       newErrors.price = 'Preço deve ser maior que zero';
     }
 
-    if (!productData.image1.trim()) {
+    if (!productData.image1) {
       newErrors.image1 = 'Pelo menos uma imagem é obrigatória';
     }
 
@@ -174,9 +197,9 @@ export default function ProductPage() {
   };
 
   // Handlers para KeyAuth
-  const handleKeyAuthChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = field === 'days' ? Number(e.target.value) : e.target.value;
-    setKeyAuthConfig(prev => ({
+  const handleKeyAuthChange = (field: 'keyAuthDays' | 'keyAuthPublicKey' | 'keyAuthSellerKey') => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = field === 'keyAuthDays' ? Number(e.target.value) : e.target.value;
+    setProductData(prev => ({
       ...prev,
       [field]: value
     }));
@@ -303,7 +326,7 @@ export default function ProductPage() {
       <div className="space-y-8">
         {/* Nome do Produto */}
         <Input
-          label="Nome do Produto"
+          label="Nome do produto"
           placeholder="Digite o nome do produto"
           value={productData.name}
           onChange={handleInputChange('name')}
@@ -313,7 +336,7 @@ export default function ProductPage() {
 
         {/* Descrição */}
         <Description
-          label="Descrição do Produto"
+          label="Descrição do produto"
           placeholder="Descreva detalhadamente o produto, suas características e benefícios..."
           value={productData.description}
           onChange={handleInputChange('description')}
@@ -325,7 +348,7 @@ export default function ProductPage() {
         {/* Grid de Preço e Vídeo */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <ValueInput
-            label="Preço do Produto"
+            label="Preço do produto"
             value={productData.price}
             onChange={handlePriceChange}
             error={errors.price}
@@ -333,7 +356,7 @@ export default function ProductPage() {
           />
 
           <Input
-            label="URL do Vídeo (Opcional)"
+            label="URL do vídeo (opcional)"
             placeholder="https://www.youtube.com/embed/..."
             value={productData.videoUrl}
             onChange={handleInputChange('videoUrl')}
@@ -343,28 +366,31 @@ export default function ProductPage() {
 
         {/* Grid de Imagens */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Input
-            label="Imagem Principal *"
-            placeholder="URL da imagem"
-            value={productData.image1}
-            onChange={handleInputChange('image1')}
+          <ImageUpload
+            label="Imagem principal"
+            value={imagePreviews.image1}
+            onChange={handleImageChange('image1')}
             error={errors.image1}
+            placeholder="Clique para fazer upload da imagem principal"
+            maxSize={5}
           />
 
-          <Input
-            label="Segunda Imagem"
-            placeholder="URL da imagem"
-            value={productData.image2}
-            onChange={handleInputChange('image2')}
+          <ImageUpload
+            label="Segunda imagem"
+            value={imagePreviews.image2}
+            onChange={handleImageChange('image2')}
             error={errors.image2}
+            placeholder="Clique para fazer upload da segunda imagem"
+            maxSize={5}
           />
 
-          <Input
-            label="Terceira Imagem"
-            placeholder="URL da imagem"
-            value={productData.image3}
-            onChange={handleInputChange('image3')}
+          <ImageUpload
+            label="Terceira imagem"
+            value={imagePreviews.image3}
+            onChange={handleImageChange('image3')}
             error={errors.image3}
+            placeholder="Clique para fazer upload da terceira imagem"
+            maxSize={5}
           />
         </div>
 
@@ -457,8 +483,8 @@ export default function ProductPage() {
                     <Description
                       label="Conteúdo a ser entregue"
                       placeholder="Digite o conteúdo que será entregue..."
-                      value={fixedStockContent}
-                      onChange={(e) => setFixedStockContent(e.target.value)}
+                      value={productData.fixedContent || ''}
+                      onChange={(e) => setProductData(prev => ({ ...prev, fixedContent: e.target.value }))}
                       maxLength={2000}
                       showCharCount={true}
                       className="min-h-[200px]"
@@ -474,29 +500,29 @@ export default function ProductPage() {
                   <div className="space-y-6">
                     {/* Número de dias */}
                     <Input
-                      label="Número de Dias"
+                      label="Número de dias"
                       type="number"
                       placeholder="30"
-                      value={keyAuthConfig.days.toString()}
-                      onChange={handleKeyAuthChange('days')}
+                      value={productData.keyAuthDays?.toString() || ''}
+                      onChange={handleKeyAuthChange('keyAuthDays')}
                       min="1"
                       max="3650"
                     />
 
                     {/* Public Key */}
                     <Input
-                      label="Public Key"
+                      label="Chave pública"
                       placeholder="Digite sua chave pública KeyAuth"
-                      value={keyAuthConfig.publicKey}
-                      onChange={handleKeyAuthChange('publicKey')}
+                      value={productData.keyAuthPublicKey || ''}
+                      onChange={handleKeyAuthChange('keyAuthPublicKey')}
                     />
 
                     {/* Seller Key */}
                     <Input
-                      label="Seller Key"
+                      label="Seller key"
                       placeholder="Digite sua chave de vendedor KeyAuth"
-                      value={keyAuthConfig.sellerKey}
-                      onChange={handleKeyAuthChange('sellerKey')}
+                      value={productData.keyAuthSellerKey || ''}
+                      onChange={handleKeyAuthChange('keyAuthSellerKey')}
                     />
                   </div>
                 )
@@ -519,14 +545,14 @@ export default function ProductPage() {
           {/* Inputs para adicionar novo entregável */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
-              placeholder="Nome do entregável..."
+              placeholder="Digite o nome do entregável..."
               value={newDeliverable.name}
               onChange={(e) => setNewDeliverable(prev => ({ ...prev, name: e.target.value }))}
               onKeyDown={(e) => e.key === 'Enter' && handleAddDeliverable()}
             />
             <div className="flex gap-2">
               <Input
-                placeholder="URL de download..."
+                placeholder="Digite a URL de download..."
                 value={newDeliverable.url}
                 onChange={(e) => setNewDeliverable(prev => ({ ...prev, url: e.target.value }))}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddDeliverable()}

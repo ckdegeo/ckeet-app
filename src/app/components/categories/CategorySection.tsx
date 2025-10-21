@@ -5,6 +5,7 @@ import { Edit2, Trash2, Plus, ChevronUp, ChevronDown, GripVertical } from 'lucid
 import ProductCard from '@/app/components/products/productCard';
 import IconOnlyButton from '@/app/components/buttons/iconOnlyButton';
 import Button from '@/app/components/buttons/button';
+import { Product } from '@/lib/types';
 import {
   DndContext,
   closestCenter,
@@ -80,8 +81,8 @@ function SortableProductCard({ product, onEdit, onDelete }: {
   );
 }
 
-// Interface para o produto
-interface Product {
+// Interface local para compatibilidade com dados existentes
+interface ProductDisplay {
   id: string;
   title: string;
   price: number;

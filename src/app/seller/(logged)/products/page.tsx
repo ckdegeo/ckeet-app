@@ -5,9 +5,10 @@ import Button from '@/app/components/buttons/button';
 import { Plus } from 'lucide-react';
 import CategorySection from '@/app/components/categories/CategorySection';
 import CategoryModal from '@/app/components/modals/categoryModal';
+import { Product } from '@/lib/types';
 
-// Interface para o produto
-interface Product {
+// Interface local para compatibilidade com dados existentes
+interface ProductDisplay {
   id: string;
   title: string;
   price: number;
@@ -131,7 +132,7 @@ export default function Products() {
     })));
   };
 
-  const handleReorderProducts = (categoryId: string, reorderedProducts: Product[]) => {
+  const handleReorderProducts = (categoryId: string, reorderedProducts: ProductDisplay[]) => {
     console.log('Reordenar produtos na categoria:', categoryId, reorderedProducts);
     // TODO: Implementar lógica de reordenação quando necessário
   };

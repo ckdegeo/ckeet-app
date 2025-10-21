@@ -38,11 +38,6 @@ const menuItems = [
     href: "/master/sales",
     icon: TrendingUp,
   },
-  {
-    label: "Saques",
-    href: "/master/withdraws",
-    icon: Banknote,
-  }
 ];
 
 export default function Sidebar({ className = "" }) {

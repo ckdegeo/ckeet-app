@@ -51,8 +51,8 @@ const menuItems = [
     icon: ShoppingCart,
   },
   {
-    label: "Financeiro",
-    href: "/seller/financial",
+    label: "Integrações",
+    href: "/seller/integrations",
     icon: CreditCard,
   },
 ];

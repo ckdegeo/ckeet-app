@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import ShopProductCard from '@/app/components/products/shopProductCard';
+import { Product } from '@/lib/types';
 
-// Interface para o produto
-interface Product {
+// Interface local para compatibilidade com dados existentes
+interface ProductDisplay {
   id: string;
   title: string;
   price: number;
