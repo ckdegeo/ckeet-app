@@ -131,6 +131,11 @@ export default function Store() {
               value={storeConfig.primaryColor}
               onChange={handleColorChange('primaryColor')}
             />
+               <ColorPicker
+              label="Cor secundária"
+              value={storeConfig.secondaryColor}
+              onChange={handleColorChange('secondaryColor')}
+            />
           </div>
         </div>
       </div>
