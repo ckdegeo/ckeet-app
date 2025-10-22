@@ -72,9 +72,9 @@ export default function DeleteCategoryModal({
           <p className="text-[var(--on-background)] mb-2">
             Tem certeza que deseja excluir a categoria
           </p>
-          <p className="font-semibold text-[var(--foreground)] mb-4">
-            "{categoryName}"?
-          </p>
+           <p className="font-semibold text-[var(--foreground)] mb-4">
+             &ldquo;{categoryName}&rdquo;?
+           </p>
 
           {/* Actions */}
           <div className="flex gap-3 mt-6">

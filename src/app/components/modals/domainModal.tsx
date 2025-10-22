@@ -54,7 +54,7 @@ export default function DomainModal({
   ) => {
     setDomainConfig(prev => ({
       ...prev,
-      [field]: e.target.type === 'checkbox' ? e.target.checked : e.target.value
+      [field]: e.target.type === 'checkbox' ? String(e.target.checked) : e.target.value
     }));
   };
 

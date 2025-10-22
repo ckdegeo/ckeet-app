@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Input from '@/app/components/inputs/input';
 import ImageUpload from '@/app/components/images/imageUpload';
@@ -27,7 +27,7 @@ interface DomainConfig {
   subdomain: string;
 }
 
-export default function Store() {
+function StorePageContent() {
   const searchParams = useSearchParams();
   const [isDomainModalOpen, setIsDomainModalOpen] = useState(false);
 
@@ -110,7 +110,7 @@ export default function Store() {
   ) => {
     setDomainConfig(prev => ({
       ...prev,
-      [field]: e.target.type === 'checkbox' ? e.target.checked : e.target.value
+      [field]: e.target.type === 'checkbox' ? String(e.target.checked) : e.target.value
     }));
   };
 
@@ -332,5 +332,13 @@ export default function Store() {
         initialConfig={domainConfig}
       />
     </div>
+  );
+}
+
+export default function StorePage() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <StorePageContent />
+    </Suspense>
   );
 }

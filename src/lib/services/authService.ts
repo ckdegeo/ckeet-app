@@ -218,7 +218,6 @@ export class AuthService {
       data: {
         name: 'Minha Loja',
         contactEmail: '', // Será preenchido pelo seller depois
-        description: 'Descrição da sua loja',
         subdomain: `loja-${Date.now()}`, // Subdomínio único temporário
         sellerId,
       },
