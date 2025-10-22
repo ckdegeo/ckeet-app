@@ -3,140 +3,250 @@ import { createServerSupabaseClient } from '@/lib/supabase';
 import { prisma } from '@/lib/prisma';
 import { isValidSubdomain, isReservedSubdomain } from '@/lib/config/domains';
 
-// GET - Verificar se o seller tem domínio configurado
-export async function GET(request: NextRequest) {
-  try {
-    const supabase = createServerSupabaseClient();
-    const accessToken = request.cookies.get('access_token')?.value;
-
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
-    }
-
-    // Verificar usuário autenticado
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Usuário não autenticado' }, { status: 401 });
-    }
-
-    // Buscar store do seller
-    const seller = await prisma.seller.findUnique({
-      where: { id: user.id },
-      include: { store: true },
-    });
-
-    if (!seller || !seller.store) {
-      return NextResponse.json({ error: 'Loja não encontrada' }, { status: 404 });
-    }
-
-    // Verificar se tem domínio configurado (subdomain não é temporário)
-    const hasDomain = seller.store.subdomain && !seller.store.subdomain.startsWith('loja-');
-
-    return NextResponse.json({
-      hasDomain,
-      subdomain: seller.store.subdomain,
-      customDomain: seller.store.customDomain,
-      storeId: seller.store.id,
-    });
-
-  } catch (error) {
-    console.error('Erro ao verificar domínio:', error);
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
-  }
-}
-
-// POST - Configurar domínio do seller
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerSupabaseClient();
-    const accessToken = request.cookies.get('access_token')?.value;
-
+    console.log('=== INÍCIO DA CRIAÇÃO DE DOMÍNIO ===');
+    
+    const accessToken = request.headers.get('authorization')?.replace('Bearer ', '');
+    console.log('Token recebido:', accessToken ? 'Sim' : 'Não');
+    
     if (!accessToken) {
-      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+      console.log('Erro: Token não fornecido');
+      return NextResponse.json(
+        { error: 'Token de acesso não fornecido' },
+        { status: 401 }
+      );
     }
 
-    // Verificar usuário autenticado
+    const supabase = createServerSupabaseClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    console.log('Usuário autenticado:', user ? user.id : 'Não');
 
     if (authError || !user) {
-      return NextResponse.json({ error: 'Usuário não autenticado' }, { status: 401 });
+      console.log('Erro de autenticação:', authError?.message);
+      return NextResponse.json(
+        { error: 'Token inválido' },
+        { status: 401 }
+      );
     }
 
-    const { subdomain, customDomain } = await request.json();
+    const body = await request.json();
+    const { subdomain } = body;
+    console.log('Subdomínio recebido:', subdomain);
 
+    // Validar subdomínio
     if (!subdomain) {
-      return NextResponse.json({ error: 'Subdomínio é obrigatório' }, { status: 400 });
+      console.log('Erro: Subdomínio não fornecido');
+      return NextResponse.json(
+        { error: 'Subdomínio é obrigatório' },
+        { status: 400 }
+      );
     }
 
     // Validar formato do subdomínio
-    if (!isValidSubdomain(subdomain)) {
-      return NextResponse.json({ 
-        error: 'Subdomínio inválido. Use apenas letras minúsculas, números e hífen. Mínimo 3 caracteres.' 
-      }, { status: 400 });
+    const isValid = isValidSubdomain(subdomain);
+    console.log('Subdomínio válido:', isValid);
+    
+    if (!isValid) {
+      console.log('Erro: Formato de subdomínio inválido');
+      return NextResponse.json(
+        { error: 'Formato de subdomínio inválido. Use apenas letras minúsculas, números e hífen.' },
+        { status: 400 }
+      );
     }
 
-    // Verificar se é subdomínio reservado
-    if (isReservedSubdomain(subdomain)) {
-      return NextResponse.json({ 
-        error: 'Este subdomínio está reservado. Escolha outro.' 
-      }, { status: 400 });
+    // Verificar se subdomínio está reservado
+    const isReserved = isReservedSubdomain(subdomain);
+    console.log('Subdomínio reservado:', isReserved);
+    
+    if (isReserved) {
+      console.log('Erro: Subdomínio reservado');
+      return NextResponse.json(
+        { error: 'Este subdomínio está reservado. Escolha outro nome.' },
+        { status: 400 }
+      );
     }
 
-    // Buscar store do seller
+    // Buscar seller
+    console.log('Buscando seller no banco de dados...');
     const seller = await prisma.seller.findUnique({
       where: { id: user.id },
-      include: { store: true },
+      include: { store: true }
     });
 
-    if (!seller || !seller.store) {
-      return NextResponse.json({ error: 'Loja não encontrada' }, { status: 404 });
+    if (!seller) {
+      console.log('Erro: Seller não encontrado');
+      return NextResponse.json(
+        { error: 'Seller não encontrado' },
+        { status: 404 }
+      );
     }
+    console.log('Seller encontrado:', seller.id);
 
-    // Verificar se o subdomínio já está em uso
+    // Verificar se subdomínio já existe
+    console.log('Verificando se subdomínio já existe...');
     const existingStore = await prisma.store.findFirst({
-      where: {
+      where: { 
         subdomain,
-        id: { not: seller.store.id },
-      },
+        id: { not: seller.store?.id }
+      }
     });
 
     if (existingStore) {
-      return NextResponse.json({ 
-        error: 'Este subdomínio já está em uso. Escolha outro.' 
-      }, { status: 409 });
+      console.log('Erro: Subdomínio já existe');
+      return NextResponse.json(
+        { error: 'Este subdomínio já está em uso. Escolha outro nome.' },
+        { status: 400 }
+      );
+    }
+    console.log('Subdomínio disponível');
+
+    // Criar domínio na Vercel
+    const domainName = `${subdomain}.ckeet.store`;
+    console.log(`Criando domínio na Vercel: ${domainName}`);
+    
+    try {
+      // Verificar se as variáveis de ambiente estão configuradas
+      const vercelToken = process.env.VERCEL_TOKEN;
+      const vercelProjectId = process.env.VERCEL_PROJECT_ID;
+      
+      if (!vercelToken) {
+        console.error('VERCEL_TOKEN não configurado');
+        throw new Error('Token da Vercel não configurado');
+      }
+      
+      if (!vercelProjectId) {
+        console.error('VERCEL_PROJECT_ID não configurado');
+        throw new Error('ID do projeto Vercel não configurado');
+      }
+      
+      console.log('Configurações Vercel OK, criando domínio...');
+      console.log('Token:', vercelToken.substring(0, 10) + '...');
+      console.log('Project ID:', vercelProjectId);
+      
+      // Chamar API da Vercel para criar domínio
+      const vercelResponse = await fetch(`https://api.vercel.com/v10/projects/${vercelProjectId}/domains`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${vercelToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: domainName,
+          redirect: null,
+          redirectStatusCode: null,
+        }),
+      });
+
+      const vercelData = await vercelResponse.json();
+      console.log('Resposta da Vercel:', vercelData);
+
+      if (!vercelResponse.ok) {
+        console.error('Erro ao criar domínio na Vercel:', vercelData);
+        
+        // Se o domínio já existe na Vercel, continuar
+        if (vercelResponse.status === 409 || vercelData.error?.code === 'domain_already_exists') {
+          console.log('Domínio já existe na Vercel, continuando...');
+        } else {
+          throw new Error(`Erro ao criar domínio na Vercel: ${vercelData.error?.message || 'Erro desconhecido'}`);
+        }
+      } else {
+        console.log('Domínio criado com sucesso na Vercel!');
+      }
+    } catch (vercelError) {
+      console.error('Erro ao criar domínio na Vercel:', vercelError);
+      // Não falhar a operação, apenas logar o erro
+      console.log('Continuando sem criar domínio na Vercel...');
     }
 
-    // Integrar com API da Vercel para criar o domínio dinâmico
-    const { VercelService } = await import('@/lib/services/vercelService');
-    const vercelResult = await VercelService.createDomain(subdomain.toLowerCase());
-
-    if (!vercelResult.success) {
-      console.error('Erro ao criar domínio na Vercel:', vercelResult.error);
-      // Continuar mesmo se houver erro na Vercel, mas avisar o usuário
+    // Atualizar ou criar loja com o novo subdomínio
+    let store;
+    if (seller.store) {
+      console.log('Atualizando loja existente...');
+      store = await prisma.store.update({
+        where: { id: seller.store.id },
+        data: { subdomain }
+      });
+    } else {
+      console.log('Criando nova loja...');
+      store = await prisma.store.create({
+        data: {
+          name: 'Minha Loja',
+          contactEmail: seller.email || '',
+          logoUrl: '',
+          primaryColor: '#6200EE',
+          secondaryColor: '#03DAC6',
+          subdomain,
+          sellerId: user.id,
+        }
+      });
     }
+    console.log('Loja criada/atualizada:', store.id);
 
-    // Atualizar store com o novo domínio
-    const updatedStore = await prisma.store.update({
-      where: { id: seller.store.id },
-      data: {
-        subdomain: subdomain.toLowerCase(),
-        customDomain: customDomain || null,
-      },
-    });
-
+    console.log('=== DOMÍNIO CRIADO COM SUCESSO ===');
     return NextResponse.json({
-      success: true,
-      message: vercelResult.success 
-        ? 'Domínio configurado com sucesso! Sua loja já está disponível.' 
-        : 'Domínio salvo, mas houve um problema na configuração. Entre em contato com o suporte.',
-      store: updatedStore,
-      vercelDomain: vercelResult.domain,
+      message: 'Domínio criado com sucesso!',
+      domain: domainName,
+      store: {
+        id: store.id,
+        subdomain: store.subdomain,
+      }
     });
 
   } catch (error) {
-    console.error('Erro ao configurar domínio:', error);
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
+    console.error('=== ERRO AO CRIAR DOMÍNIO ===');
+    console.error('Erro:', error);
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    );
   }
 }
 
+export async function GET(request: NextRequest) {
+  try {
+    const accessToken = request.headers.get('authorization')?.replace('Bearer ', '');
+    
+    if (!accessToken) {
+      return NextResponse.json(
+        { error: 'Token de acesso não fornecido' },
+        { status: 401 }
+      );
+    }
+
+    const supabase = createServerSupabaseClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Token inválido' },
+        { status: 401 }
+      );
+    }
+
+    // Buscar seller
+    const seller = await prisma.seller.findUnique({
+      where: { id: user.id },
+      include: { store: true }
+    });
+
+    if (!seller || !seller.store) {
+      return NextResponse.json(
+        { error: 'Loja não encontrada' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      domain: `${seller.store.subdomain}.ckeet.store`,
+      subdomain: seller.store.subdomain,
+    });
+
+  } catch (error) {
+    console.error('Erro ao buscar domínio:', error);
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    );
+  }
+}

@@ -66,6 +66,10 @@ export const clearAuthData = () => {
   localStorage.removeItem('access_token');
   localStorage.removeItem('refresh_token');
   localStorage.removeItem('expires_at');
+  
+  // Limpar qualquer cache de domínio para garantir verificação limpa
+  // para a próxima conta que fizer login
+  localStorage.removeItem('domain_cache');
 };
 
 // Renovar token usando refresh token

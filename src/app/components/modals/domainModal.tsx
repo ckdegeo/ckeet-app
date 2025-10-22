@@ -5,7 +5,8 @@ import { createPortal } from "react-dom";
 import { X, Globe } from "lucide-react";
 import Button from "../buttons/button";
 import Input from "../inputs/input";
-import { DOMAIN_CONFIG } from "@/lib/config/domains";
+import { getAccessToken } from "@/lib/utils/authUtils";
+import { showSuccessToast, showErrorToast } from "@/lib/utils/toastUtils";
 
 interface DomainConfig {
   customDomain: string;
@@ -20,6 +21,7 @@ interface DomainModalProps {
   initialConfig?: DomainConfig;
   className?: string;
   isLoading?: boolean;
+  required?: boolean; // Se true, modal não pode ser fechado até domínio ser criado
 }
 
 export default function DomainModal({ 
@@ -32,7 +34,8 @@ export default function DomainModal({
     sslEnabled: true
   },
   className = "",
-  isLoading = false
+  isLoading = false,
+  required = false
 }: DomainModalProps) {
   const [mounted, setMounted] = useState(false);
   const [domainConfig, setDomainConfig] = useState<DomainConfig>(initialConfig);
@@ -61,25 +64,55 @@ export default function DomainModal({
 
   const handleSave = async () => {
     if (!domainConfig.subdomain) {
+      showErrorToast('Subdomínio é obrigatório');
       return;
     }
 
     setInternalLoading(true);
+    
     try {
-      const result = onSave?.(domainConfig);
-      
-      // Se onSave retornar uma Promise, aguardar
-      if (result instanceof Promise) {
-        const success = await result;
-        if (success) {
-          onClose();
-        }
-      } else {
-        onClose();
+      // Criar domínio no banco de dados via API
+      const accessToken = getAccessToken();
+      if (!accessToken) {
+        throw new Error('Token de acesso não encontrado');
       }
+
+      const response = await fetch('/api/seller/store/domain', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          subdomain: domainConfig.subdomain,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao criar domínio');
+      }
+
+      showSuccessToast('Domínio criado com sucesso!');
+      
+      // Fechar modal automaticamente após sucesso
+      onClose();
+      
+    } catch (error) {
+      console.error('Erro ao criar domínio:', error);
+      showErrorToast(error instanceof Error ? error.message : 'Erro ao criar domínio');
     } finally {
       setInternalLoading(false);
     }
+  };
+
+  const handleClose = () => {
+    // Se for obrigatório, não permitir fechar manualmente
+    if (required) {
+      return;
+    }
+    onClose();
   };
 
   const loading = isLoading || internalLoading;
@@ -89,7 +122,7 @@ export default function DomainModal({
       {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-black/60 z-[9999]"
-        onClick={onClose}
+        onClick={required ? undefined : handleClose}
       />
       
       {/* Modal */}
@@ -108,7 +141,8 @@ export default function DomainModal({
             </h2>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
+            disabled={required}
             className="
               cursor-pointer
               flex items-center justify-center
@@ -132,12 +166,6 @@ export default function DomainModal({
         {/* Content */}
         <div className="p-4 md:p-6">
           <div className="space-y-6">
-            {/* Alerta informativo */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-800">
-                <strong>Configure seu domínio para continuar.</strong> Este será o endereço da sua loja online.
-              </p>
-            </div>
 
             {/* Configurações de Domínio */}
             <div className="bg-[var(--background)] border border-[var(--on-background)] rounded-2xl p-6">              
@@ -150,29 +178,26 @@ export default function DomainModal({
                   disabled={loading}
                 />
                 <p className="text-sm text-[var(--on-background)]">
-                  Sua loja ficará disponível em: <strong>{domainConfig.subdomain || 'minhaloja'}{DOMAIN_CONFIG.STORE_SUBDOMAIN_SUFFIX}</strong>
+                  Sua loja ficará disponível em: <strong>{domainConfig.subdomain || 'minhaloja'}.ckeet.store</strong>
                 </p>
-                <p className="text-xs text-gray-500">
-                  Use apenas letras minúsculas, números e hífen. Exemplo: minha-loja
-                </p>
-                <p className="text-xs text-blue-600 mt-2">
-                  💡 Em breve: Migração para ckeet.store
-                </p>
+                
               </div>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-4 md:p-6 border-t border-[var(--on-background)]">
-          <Button 
-            onClick={handleSave}
-            disabled={loading || !domainConfig.subdomain}
-            className="flex items-center gap-2"
-          >
-            <Globe size={18} />
-            {loading ? 'Salvando...' : 'Salvar e continuar'}
-          </Button>
+        <div className="flex items-center justify-end p-4 md:p-6 border-t border-[var(--on-background)]">
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={handleSave}
+              disabled={loading || !domainConfig.subdomain}
+              className="flex items-center gap-2"
+            >
+              <Globe size={18} />
+              {loading ? 'Criando domínio...' : 'Criar domínio'}
+            </Button>
+          </div>
         </div>
       </div>
     </>

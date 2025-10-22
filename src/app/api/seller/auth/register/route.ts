@@ -98,8 +98,7 @@ export async function POST(request: NextRequest) {
       password: '', // Senha gerenciada pelo Supabase
     });
 
-    // Criar loja padrão para o seller
-    const store = await AuthService.createDefaultStore(seller.id);
+    // Não criar loja automaticamente - será criada quando o usuário configurar o domínio
 
     return NextResponse.json({
       success: true,
@@ -110,7 +109,7 @@ export async function POST(request: NextRequest) {
         name: authData.user!.user_metadata?.name,
         user_type: 'seller',
         seller_id: seller.id,
-        store_id: store.id,
+        store_id: null, // Será criado quando configurar domínio
       },
       // Nota: Tokens só são retornados se email_confirmed_at não for null
       ...(authData.session && {

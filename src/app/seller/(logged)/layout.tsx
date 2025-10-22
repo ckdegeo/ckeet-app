@@ -33,18 +33,15 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
         </main>
       </div>
 
-      {/* Modal de Domínio - Persistente até ser preenchido */}
+      {/* Modal de Domínio - Obrigatório até ser criado */}
       {!isChecking && (
         <DomainModal
           isOpen={showDomainModal}
-          onClose={() => {
-            // Não permitir fechar o modal se não tiver domínio configurado
-            if (domainConfig.subdomain) {
-              setShowDomainModal(false);
-            }
-          }}
+          onClose={() => setShowDomainModal(false)}
           onSave={saveDomainConfig}
           initialConfig={domainConfig}
+          required={true}
+          isLoading={isLoading}
         />
       )}
     </div>

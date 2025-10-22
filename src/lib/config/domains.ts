@@ -22,8 +22,19 @@ export function getStoreUrl(subdomain: string): string {
 export function isValidSubdomain(subdomain: string): boolean {
   // Regex: apenas letras minúsculas, números e hífen
   // Não pode começar ou terminar com hífen
-  // Mínimo 3 caracteres, máximo 63 caracteres
-  const regex = /^[a-z0-9]([a-z0-9-]{1,61}[a-z0-9])?$/;
+  // Mínimo 1 caractere, máximo 63 caracteres
+  const regex = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
+  
+  // Verificar se tem pelo menos 1 caractere e no máximo 63
+  if (subdomain.length < 1 || subdomain.length > 63) {
+    return false;
+  }
+  
+  // Verificar se não começa ou termina com hífen
+  if (subdomain.startsWith('-') || subdomain.endsWith('-')) {
+    return false;
+  }
+  
   return regex.test(subdomain);
 }
 
