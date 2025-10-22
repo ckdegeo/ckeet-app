@@ -1,37 +1,31 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { clearAllToasts } from '@/lib/utils/toastUtils';
 
 interface ToastProviderProps {
   children: React.ReactNode;
 }
 
 export function ToastProvider({ children }: ToastProviderProps) {
-  useEffect(() => {
-    // Limpar toasts antigos ao inicializar
-    clearAllToasts();
-  }, []);
-
   return (
     <>
-      {children}
       <ToastContainer
         position="top-right"
         autoClose={4000}
         hideProgressBar={false}
-        newestOnTop={true}
-        closeOnClick={true}
+        newestOnTop
+        closeOnClick
         rtl={false}
         pauseOnFocusLoss={false}
-        pauseOnHover={false}
-        draggable={false}
+        pauseOnHover={true}
+        draggable
         theme="light"
-        toastClassName="rounded-lg"
         limit={3}
+        style={{ zIndex: 99999 }}
       />
+      {children}
     </>
   );
 }

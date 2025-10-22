@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import Input from '@/app/components/inputs/input';
 import Button from '@/app/components/buttons/button';
@@ -9,19 +9,42 @@ import IconOnlyButton from '@/app/components/buttons/iconOnlyButton';
 interface CategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (categoryName: string) => void;
+  onSave: (categoryName: string) => Promise<void>;
+  editMode?: boolean;
+  initialName?: string;
 }
 
-export default function CategoryModal({ isOpen, onClose, onSave }: CategoryModalProps) {
-  const [categoryName, setCategoryName] = useState('');
+export default function CategoryModal({ 
+  isOpen, 
+  onClose, 
+  onSave, 
+  editMode = false,
+  initialName = '' 
+}: CategoryModalProps) {
+  const [categoryName, setCategoryName] = useState(initialName);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Atualizar categoryName quando initialName mudar (modo de edição)
+  useEffect(() => {
+    if (isOpen) {
+      setCategoryName(initialName);
+    }
+  }, [isOpen, initialName]);
 
   if (!isOpen) return null;
 
-  const handleSave = () => {
-    if (categoryName.trim()) {
-      onSave(categoryName.trim());
-      setCategoryName('');
-      onClose();
+  const handleSave = async () => {
+    if (categoryName.trim() && !isLoading) {
+      try {
+        setIsLoading(true);
+        await onSave(categoryName.trim());
+        setCategoryName('');
+        onClose();
+      } catch (error) {
+        // Erro já é tratado no hook
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -45,7 +68,7 @@ export default function CategoryModal({ isOpen, onClose, onSave }: CategoryModal
         {/* Header */}
         <div className="flex items-center justify-between p-6 pb-4">
           <h2 className="text-xl font-bold text-[var(--foreground)]">
-            Nova Categoria
+            {editMode ? 'Editar Categoria' : 'Nova Categoria'}
           </h2>
           <IconOnlyButton
             icon={X}
@@ -83,10 +106,10 @@ export default function CategoryModal({ isOpen, onClose, onSave }: CategoryModal
             <Button
               variant="primary"
               onClick={handleSave}
-              disabled={!categoryName.trim()}
+              disabled={!categoryName.trim() || isLoading}
               className="flex-1"
             >
-              Salvar
+              {isLoading ? 'Salvando...' : 'Salvar'}
             </Button>
           </div>
         </div>

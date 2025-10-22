@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Button from '@/app/components/buttons/button';
-import { Plus } from 'lucide-react';
+import { Plus, Save } from 'lucide-react';
 import CategorySection from '@/app/components/categories/CategorySection';
 import CategoryModal from '@/app/components/modals/categoryModal';
-import { Product } from '@/lib/types';
+import DeleteCategoryModal from '@/app/components/modals/deleteCategoryModal';
+import { useCategories, Category } from '@/lib/hooks/useCategories';
+import { toast } from 'react-toastify';
 
 // Interface local para compatibilidade com dados existentes
 interface ProductDisplay {
@@ -17,100 +19,84 @@ interface ProductDisplay {
   order: number;
 }
 
-// Dados de exemplo
-const sampleCategories = [
-  {
-    id: '1',
-    name: 'Eletrônicos',
-    order: 0,
-    products: [
-      {
-        id: '101',
-        title: 'Smartphone XYZ',
-        price: 1299.90,
-        imageUrl: '/product1.gif',
-        stock: 15,
-        order: 0
-      },
-      {
-        id: '102',
-        title: 'Fone de Ouvido Bluetooth',
-        price: 199.90,
-        imageUrl: '/product2.webp',
-        stock: 5,
-        order: 1
-      },
-      {
-        id: '103',
-        title: 'Smartwatch',
-        price: 499.90,
-        imageUrl: '/product1.gif',
-        stock: 0,
-        order: 2
-      }
-    ]
-  },
-  {
-    id: '2',
-    name: 'Roupas',
-    order: 1,
-    products: [
-      {
-        id: '201',
-        title: 'Camiseta Básica',
-        price: 49.90,
-        imageUrl: '/product2.webp',
-        stock: 25,
-        order: 0
-      },
-      {
-        id: '202',
-        title: 'Calça Jeans',
-        price: 129.90,
-        imageUrl: '/product1.gif',
-        stock: 8,
-        order: 1
-      }
-    ]
-  }
-];
-
 export default function Products() {
-  // Estado para controlar a abertura de um modal (quando implementado)
+  // Hook para gerenciar categorias
+  const { 
+    categories, 
+    isLoading, 
+    createCategory, 
+    editCategory, 
+    deleteCategory,
+    saveCategoriesOrder
+  } = useCategories();
+
+  // Estado para controlar modais
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // Estado para armazenar as categorias
-  const [categories, setCategories] = useState(sampleCategories);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = useState<string>('');
+  
+  // Estado para modal de exclusão
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null);
+  const [deletingCategoryName, setDeletingCategoryName] = useState<string>('');
+
+  // Estado local para gerenciar ordem temporária
+  const [localCategories, setLocalCategories] = useState<Category[]>([]);
+  const [hasOrderChanges, setHasOrderChanges] = useState(false);
+
+  // Atualizar categorias locais quando as categorias do servidor mudarem
+  useEffect(() => {
+    setLocalCategories(categories);
+    setHasOrderChanges(false);
+  }, [categories]);
 
   const handleCreateCategory = () => {
     setIsModalOpen(true);
   };
 
-  const handleSaveCategory = (categoryName: string) => {
-    // Criar nova categoria
-    const newCategory = {
-      id: Date.now().toString(),
-      name: categoryName,
-      order: categories.length,
-      products: []
-    };
-    
-    setCategories([...categories, newCategory]);
-    console.log('Nova categoria criada:', categoryName);
+  const handleSaveCategory = async (categoryName: string) => {
+    if (editingCategoryId) {
+      // Editar categoria existente
+      await editCategory(editingCategoryId, categoryName);
+      setEditingCategoryId(null);
+      setEditingCategoryName('');
+    } else {
+      // Criar nova categoria
+      await createCategory(categoryName);
+    }
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setEditingCategoryId(null);
+    setEditingCategoryName('');
   };
 
   const handleEditCategory = (categoryId: string) => {
-    console.log('Editar categoria:', categoryId);
-    // Implementar lógica para editar categoria
+    const category = categories.find(cat => cat.id === categoryId);
+    if (category) {
+      setEditingCategoryId(categoryId);
+      setEditingCategoryName(category.name);
+      setIsModalOpen(true);
+    }
   };
 
   const handleDeleteCategory = (categoryId: string) => {
-    console.log('Excluir categoria:', categoryId);
-    // Implementar lógica para excluir categoria
-    setCategories(categories.filter(category => category.id !== categoryId));
+    const category = categories.find(cat => cat.id === categoryId);
+    if (category) {
+      setDeletingCategoryId(categoryId);
+      setDeletingCategoryName(category.name);
+      setIsDeleteModalOpen(true);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deletingCategoryId) {
+      await deleteCategory(deletingCategoryId);
+      setIsDeleteModalOpen(false);
+      setDeletingCategoryId(null);
+      setDeletingCategoryName('');
+    }
   };
 
   const handleAddProduct = (categoryId: string) => {
@@ -125,11 +111,7 @@ export default function Products() {
 
   const handleDeleteProduct = (productId: string) => {
     console.log('Excluir produto:', productId);
-    // Implementar lógica para excluir produto
-    setCategories(categories.map(category => ({
-      ...category,
-      products: category.products.filter(product => product.id !== productId)
-    })));
+    // TODO: Implementar exclusão de produto via API
   };
 
   const handleReorderProducts = (categoryId: string, reorderedProducts: ProductDisplay[]) => {
@@ -138,36 +120,122 @@ export default function Products() {
   };
 
   const handleMoveCategoryUp = (categoryId: string) => {
-    console.log('Mover categoria para cima:', categoryId);
-    // TODO: Implementar lógica de movimentação quando necessário
+    // Ordenar categorias por order para verificar posição real
+    const sortedCategories = [...localCategories].sort((a, b) => a.order - b.order);
+    const currentIndex = sortedCategories.findIndex(cat => cat.id === categoryId);
+    
+    // Verificar se já está no topo
+    if (currentIndex <= 0) {
+      return; // Não faz nada se já está no topo ou não encontrou
+    }
+    
+    // Trocar posições localmente
+    const newCategories = [...sortedCategories];
+    const temp = newCategories[currentIndex].order;
+    newCategories[currentIndex].order = newCategories[currentIndex - 1].order;
+    newCategories[currentIndex - 1].order = temp;
+    
+    setLocalCategories(newCategories);
+    setHasOrderChanges(true);
   };
 
   const handleMoveCategoryDown = (categoryId: string) => {
-    console.log('Mover categoria para baixo:', categoryId);
-    // TODO: Implementar lógica de movimentação quando necessário
+    // Ordenar categorias por order para verificar posição real
+    const sortedCategories = [...localCategories].sort((a, b) => a.order - b.order);
+    const currentIndex = sortedCategories.findIndex(cat => cat.id === categoryId);
+    
+    // Verificar se já está no final
+    if (currentIndex === -1 || currentIndex >= sortedCategories.length - 1) {
+      return; // Não faz nada se já está no final ou não encontrou
+    }
+    
+    // Trocar posições localmente
+    const newCategories = [...sortedCategories];
+    const temp = newCategories[currentIndex].order;
+    newCategories[currentIndex].order = newCategories[currentIndex + 1].order;
+    newCategories[currentIndex + 1].order = temp;
+    
+    setLocalCategories(newCategories);
+    setHasOrderChanges(true);
   };
+
+  const handleSaveOrder = async () => {
+    try {
+      console.log('Iniciando salvamento da ordem...');
+      await saveCategoriesOrder(localCategories);
+      console.log('Ordem salva com sucesso!');
+      setHasOrderChanges(false);
+      
+      // Garantir que o toast apareça
+      setTimeout(() => {
+        toast.success('Ordem das categorias salva com sucesso!');
+      }, 100);
+    } catch (error) {
+      console.error('Erro ao salvar ordem:', error);
+      toast.error('Erro ao salvar ordem das categorias');
+    }
+  };
+
+  const handleCancelOrder = () => {
+    setLocalCategories(categories);
+    setHasOrderChanges(false);
+    toast.info('Alterações canceladas');
+  };
+
+  // Exibir loading
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)] mx-auto"></div>
+          <p className="mt-4 text-[var(--on-background)]">Carregando categorias...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Cabeçalho com título e botão de ação */}
+      {/* Cabeçalho com título e botões de ação */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-[var(--foreground)]">
           Produtos
         </h1>
         
-        <Button 
-          onClick={handleCreateCategory}
-          className="flex items-center gap-2"
-        >
-          <Plus size={18} />
-          Criar Categoria
-        </Button>
+        <div className="flex items-center gap-3 flex-wrap">
+          {hasOrderChanges && (
+            <>
+              <Button 
+                onClick={handleCancelOrder}
+                variant="secondary"
+                className="flex items-center gap-2 px-4 py-2 min-h-[44px] cursor-pointer"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleSaveOrder}
+                variant="primary"
+                className="flex items-center gap-2 px-4 py-2 min-h-[44px] cursor-pointer bg-[var(--primary)] hover:bg-[var(--primary-variant)]"
+              >
+                <Save size={18} />
+                Salvar
+              </Button>
+            </>
+          )}
+          <Button 
+            onClick={handleCreateCategory}
+            className="flex items-center gap-2 px-4 py-2 min-h-[44px] cursor-pointer"
+          >
+            <Plus size={18} />
+            Criar Categoria
+          </Button>
+        </div>
       </div>
 
       {/* Lista de categorias */}
-      {categories.length > 0 ? (
+      {localCategories.length > 0 ? (
         <div className="space-y-6">
-          {categories
+          {localCategories
             .sort((a, b) => a.order - b.order)
             .map(category => (
             <CategorySection
@@ -176,7 +244,7 @@ export default function Products() {
               name={category.name}
               products={category.products}
               order={category.order}
-              totalCategories={categories.length}
+              totalCategories={localCategories.length}
               onEditCategory={handleEditCategory}
               onDeleteCategory={handleDeleteCategory}
               onAddProduct={handleAddProduct}
@@ -189,19 +257,36 @@ export default function Products() {
           ))}
         </div>
       ) : (
-        <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-lg p-6">
-          <p className="text-[var(--on-background)] text-center py-12">
-            Você ainda não tem categorias cadastradas. 
-            Crie uma categoria para começar a adicionar produtos.
+        <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-2xl p-12 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-[var(--foreground)] mb-2">
+            Nenhuma categoria criada
+          </h3>
+          <p className="text-[var(--on-background)] mb-6">
+            Crie sua primeira categoria para começar a organizar seus produtos
           </p>
         </div>
       )}
 
-      {/* Modal de criação de categoria */}
+      {/* Modal de criação/edição de categoria */}
       <CategoryModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSave={handleSaveCategory}
+        editMode={!!editingCategoryId}
+        initialName={editingCategoryName}
+      />
+
+      {/* Modal de exclusão de categoria */}
+      <DeleteCategoryModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        categoryName={deletingCategoryName}
       />
     </div>
   );

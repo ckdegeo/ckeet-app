@@ -97,6 +97,9 @@ export default function DomainModal({
       // Fechar modal automaticamente após sucesso
       onClose();
       
+      // Recarregar a página para atualizar o estado
+      window.location.reload();
+      
     } catch (error) {
       console.error('Erro ao criar domínio:', error);
       showErrorToast(error instanceof Error ? error.message : 'Erro ao criar domínio');
