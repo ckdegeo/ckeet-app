@@ -76,7 +76,7 @@ export class ProductService {
   }
 
   // Atualizar produto
-  static async updateProduct(id: string, data: Partial<Product>) {
+  static async updateProduct(id: string, data: any) {
     return await prisma.product.update({
       where: { id },
       data,

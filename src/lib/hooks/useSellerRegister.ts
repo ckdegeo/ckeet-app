@@ -55,7 +55,7 @@ export function useSellerRegister(): UseSellerRegisterReturn {
         const zodErrors = JSON.parse(error.message);
         const fieldErrors: Record<string, string> = {};
         
-        zodErrors.forEach((err: any) => {
+        zodErrors.forEach((err: { path: string[]; message: string }) => {
           fieldErrors[err.path[0]] = err.message;
         });
         

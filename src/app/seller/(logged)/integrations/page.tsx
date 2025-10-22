@@ -12,7 +12,7 @@ export default function Integrations() {
       id: '1',
       name: 'Mercado Pago',
       description: 'Processamento de pagamentos com PIX, cartão de crédito e débito',
-      status: 'active',
+      status: 'active' as const,
       icon: CreditCard,
       lastSync: '15/01/2024 às 10:30'
     }

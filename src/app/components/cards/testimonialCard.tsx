@@ -49,7 +49,7 @@ export default function TestimonialCard({
 
       {/* Testimonial Content */}
       <p className="text-[var(--on-background)] mb-4 italic leading-relaxed">
-        "{content}"
+        &ldquo;{content}&rdquo;
       </p>
 
       {/* Author Info */}

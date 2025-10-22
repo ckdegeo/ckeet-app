@@ -6,6 +6,16 @@ import ProductCard from '@/app/components/products/productCard';
 import IconOnlyButton from '@/app/components/buttons/iconOnlyButton';
 import Button from '@/app/components/buttons/button';
 import { Product } from '@/lib/types';
+
+// Interface local para compatibilidade com dados existentes
+interface ProductDisplay {
+  id: string;
+  title: string;
+  price: number;
+  imageUrl: string;
+  stock?: number;
+  order: number;
+}
 import {
   DndContext,
   closestCenter,
@@ -28,7 +38,7 @@ import { CSS } from '@dnd-kit/utilities';
 
 // Componente wrapper para ProductCard com drag and drop
 function SortableProductCard({ product, onEdit, onDelete }: {
-  product: Product;
+  product: ProductDisplay;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
@@ -71,8 +81,7 @@ function SortableProductCard({ product, onEdit, onDelete }: {
         id={product.id}
         title={product.title}
         price={product.price}
-        imageUrl={product.imageUrl}
-        stock={product.stock}
+        imageUrl={product.imageUrl || ''}
         onEdit={onEdit}
         onDelete={onDelete}
         className="ml-2" // Adiciona margem para não sobrepor o handle
@@ -95,7 +104,7 @@ interface ProductDisplay {
 interface CategorySectionProps {
   id: string;
   name: string;
-  products: Product[];
+  products: ProductDisplay[];
   order: number;
   totalCategories: number;
   onEditCategory: (id: string) => void;
@@ -103,7 +112,7 @@ interface CategorySectionProps {
   onAddProduct: (categoryId: string) => void;
   onEditProduct: (productId: string) => void;
   onDeleteProduct: (productId: string) => void;
-  onReorderProducts: (categoryId: string, products: Product[]) => void;
+  onReorderProducts: (categoryId: string, products: ProductDisplay[]) => void;
   onMoveCategoryUp: (categoryId: string) => void;
   onMoveCategoryDown: (categoryId: string) => void;
 }
@@ -265,8 +274,7 @@ export default function CategorySection({
                     id={product.id}
                     title={product.title}
                     price={product.price}
-                    imageUrl={product.imageUrl}
-                    stock={product.stock}
+                    imageUrl={product.imageUrl || ''}
                     onEdit={onEditProduct}
                     onDelete={onDeleteProduct}
                   />

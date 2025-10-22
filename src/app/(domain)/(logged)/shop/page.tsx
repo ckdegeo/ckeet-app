@@ -7,17 +7,16 @@ import { Product } from '@/lib/types';
 // Interface local para compatibilidade com dados existentes
 interface ProductDisplay {
   id: string;
-  title: string;
+  name: string;
   price: number;
   imageUrl: string;
-  stock: number;
 }
 
 // Interface para a categoria
 interface Category {
   id: string;
   name: string;
-  products: Product[];
+  products: ProductDisplay[];
 }
 
 // Dados de exemplo
@@ -28,31 +27,27 @@ const sampleCategories: Category[] = [
     products: [
       {
         id: '101',
-        title: 'Smartphone XYZ',
+        name: 'Smartphone XYZ',
         price: 1299.90,
         imageUrl: '/product1.gif',
-        stock: 15
       },
       {
         id: '102',
-        title: 'Fone de Ouvido Bluetooth',
+        name: 'Fone de Ouvido Bluetooth',
         price: 199.90,
         imageUrl: '/product2.webp',
-        stock: 5
       },
       {
         id: '103',
-        title: 'Smartwatch',
+        name: 'Smartwatch',
         price: 499.90,
         imageUrl: '/product1.gif',
-        stock: 0
       },
       {
         id: '104',
-        title: 'Tablet Android',
+        name: 'Tablet Android',
         price: 899.90,
         imageUrl: '/product2.webp',
-        stock: 8
       }
     ]
   },
@@ -62,38 +57,33 @@ const sampleCategories: Category[] = [
     products: [
       {
         id: '201',
-        title: 'Camiseta Básica',
+        name: 'Camiseta Básica',
         price: 49.90,
         imageUrl: '/product2.webp',
-        stock: 25
       },
       {
         id: '202',
-        title: 'Calça Jeans',
+        name: 'Calça Jeans',
         price: 129.90,
         imageUrl: '/product1.gif',
-        stock: 8
       },
       {
         id: '203',
-        title: 'Jaqueta de Couro',
+        name: 'Jaqueta de Couro',
         price: 299.90,
         imageUrl: '/product2.webp',
-        stock: 3
       },
       {
         id: '204',
-        title: 'Tênis Esportivo',
+        name: 'Tênis Esportivo',
         price: 179.90,
         imageUrl: '/product1.gif',
-        stock: 12
       },
       {
         id: '205',
-        title: 'Boné Trucker',
+        name: 'Boné Trucker',
         price: 39.90,
         imageUrl: '/product2.webp',
-        stock: 20
       }
     ]
   },
@@ -103,17 +93,15 @@ const sampleCategories: Category[] = [
     products: [
       {
         id: '301',
-        title: 'Vaso Decorativo',
+        name: 'Vaso Decorativo',
         price: 89.90,
         imageUrl: '/product1.gif',
-        stock: 6
       },
       {
         id: '302',
-        title: 'Luminária LED',
+        name: 'Luminária LED',
         price: 159.90,
         imageUrl: '/product2.webp',
-        stock: 4
       }
     ]
   }
@@ -150,10 +138,9 @@ export default function ShopPage() {
               <ShopProductCard
                 key={product.id}
                 id={product.id}
-                title={product.title}
+                title={product.name}
                 price={product.price}
                 imageUrl={product.imageUrl}
-                stock={product.stock}
                 onAddToCart={handleAddToCart}
                 onToggleFavorite={handleToggleFavorite}
                 isFavorite={favorites.includes(product.id)}

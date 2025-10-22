@@ -5,6 +5,17 @@ import { Upload, X, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import Button from '../buttons/button';
 
 // Props do componente ImageUpload
+interface ImageUploadProps {
+  label: string;
+  value: File | null;
+  onChange: (file: File | null) => void;
+  accept?: string;
+  maxSize?: number;
+  error?: string;
+  className?: string;
+  placeholder?: string;
+  disabled?: boolean;
+}
 
 export default function ImageUpload({
   label,
@@ -16,13 +27,13 @@ export default function ImageUpload({
   className = "",
   placeholder = "Clique para fazer upload ou arraste uma imagem",
   disabled = false
-}) {
+}: ImageUploadProps) {
   const [isDragOver, setIsDragOver] = useState(false);
-  const [preview, setPreview] = useState(value || null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (file) => {
+  const handleFileSelect = (file: File) => {
     if (disabled) return;
 
     // Validação de tamanho
@@ -43,14 +54,14 @@ export default function ImageUpload({
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result;
-      setPreview(result);
-      onChange?.(file, result);
+      setPreview(result as string);
+      onChange?.(file);
       setIsUploading(false);
     };
     reader.readAsDataURL(file);
   };
 
-  const handleDrop = (e) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragOver(false);
     
@@ -60,7 +71,7 @@ export default function ImageUpload({
     }
   };
 
-  const handleDragOver = (e) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     if (!disabled) {
       setIsDragOver(true);
@@ -79,7 +90,7 @@ export default function ImageUpload({
 
   const handleRemove = () => {
     setPreview(null);
-    onChange?.(null, null);
+    onChange?.(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -173,7 +184,7 @@ export default function ImageUpload({
                   </p>
                 </div>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   className="mt-2"
                   onClick={(e) => {
                     e.stopPropagation();

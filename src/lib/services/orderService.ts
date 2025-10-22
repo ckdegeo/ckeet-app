@@ -1,5 +1,5 @@
 import { prisma } from '../prisma';
-import { Order, OrderStatus, PaymentMethod, PaymentStatus, ProductService } from '../types';
+import { Order, OrderStatus, PaymentMethod, PaymentStatus } from '../types';
 import { ProductService as ProductServiceClass } from './productService';
 
 // ===========================================
@@ -210,7 +210,7 @@ export class OrderService {
 
   // Obter estatísticas de pedidos da loja
   static async getOrderStats(storeId: string, startDate?: Date, endDate?: Date) {
-    const whereClause: any = { storeId };
+    const whereClause: { storeId: string; createdAt?: { gte?: Date; lte?: Date } } = { storeId };
     
     if (startDate || endDate) {
       whereClause.createdAt = {};

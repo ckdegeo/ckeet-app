@@ -17,7 +17,7 @@ export class AuthService {
   // ===========================================
 
   // Sincronizar usuário Supabase com Prisma
-  static async syncUser(supabaseUser: any) {
+  static async syncUser(supabaseUser: { id: string; email?: string; user_metadata?: { user_type?: string; name?: string } }) {
     const userType = supabaseUser.user_metadata?.user_type;
     
     if (userType === 'seller') {
@@ -32,9 +32,9 @@ export class AuthService {
   }
 
   // Sincronizar Seller
-  static async syncSeller(supabaseUser: any) {
+  static async syncSeller(supabaseUser: { id: string; email?: string; user_metadata?: { user_type?: string; name?: string; cpf?: string; phone?: string } }) {
     return await prisma.seller.upsert({
-      where: { email: supabaseUser.email },
+      where: { email: supabaseUser.email || '' },
       update: {
         name: supabaseUser.user_metadata?.name,
         cpf: supabaseUser.user_metadata?.cpf,
@@ -42,7 +42,7 @@ export class AuthService {
       },
       create: {
         id: supabaseUser.id,
-        email: supabaseUser.email,
+        email: supabaseUser.email || '',
         name: supabaseUser.user_metadata?.name,
         cpf: supabaseUser.user_metadata?.cpf,
         phone: supabaseUser.user_metadata?.phone,
@@ -52,16 +52,16 @@ export class AuthService {
   }
 
   // Sincronizar Customer
-  static async syncCustomer(supabaseUser: any) {
+  static async syncCustomer(supabaseUser: { id: string; email?: string; user_metadata?: { user_type?: string; name?: string; phone?: string } }) {
     return await prisma.customer.upsert({
-      where: { email: supabaseUser.email },
+      where: { email: supabaseUser.email || '' },
       update: {
         name: supabaseUser.user_metadata?.name,
         phone: supabaseUser.user_metadata?.phone,
       },
       create: {
         id: supabaseUser.id,
-        email: supabaseUser.email,
+        email: supabaseUser.email || '',
         name: supabaseUser.user_metadata?.name,
         phone: supabaseUser.user_metadata?.phone,
         password: '', // Senha gerenciada pelo Supabase

@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AuthService } from '@/lib/services/authService';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,8 +25,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Resetar senha
-    await AuthService.resetPassword(access_token, new_password);
+    // Resetar senha usando Supabase
+    const { error } = await supabase.auth.updateUser({
+      password: new_password
+    });
+
+    if (error) {
+      console.error('Erro ao resetar senha:', error);
+      return NextResponse.json(
+        { error: 'Erro ao resetar senha' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,

@@ -74,7 +74,7 @@ export class AuthMiddleware {
   }
 
   // Criar resposta de sucesso
-  static createSuccessResponse(data: any, message?: string) {
+  static createSuccessResponse(data: unknown, message?: string) {
     return NextResponse.json({
       success: true,
       message,
@@ -94,7 +94,7 @@ export async function withAuth(
   const authResult = await AuthMiddleware.verifyAuth(request);
   
   if ('error' in authResult) {
-    return AuthMiddleware.createErrorResponse(authResult.error, authResult.status);
+    return AuthMiddleware.createErrorResponse(authResult.error || 'Erro de autenticação', authResult.status || 401);
   }
 
   return handler(request, authResult.user, authResult.accessToken);
@@ -107,7 +107,7 @@ export async function withSellerAuth(
   const authResult = await AuthMiddleware.verifySeller(request);
   
   if ('error' in authResult) {
-    return AuthMiddleware.createErrorResponse(authResult.error, authResult.status);
+    return AuthMiddleware.createErrorResponse(authResult.error || 'Erro de autenticação', authResult.status || 401);
   }
 
   return handler(request, authResult.user, authResult.accessToken);
@@ -120,7 +120,7 @@ export async function withCustomerAuth(
   const authResult = await AuthMiddleware.verifyCustomer(request);
   
   if ('error' in authResult) {
-    return AuthMiddleware.createErrorResponse(authResult.error, authResult.status);
+    return AuthMiddleware.createErrorResponse(authResult.error || 'Erro de autenticação', authResult.status || 401);
   }
 
   return handler(request, authResult.user, authResult.accessToken);

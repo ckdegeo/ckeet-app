@@ -5,7 +5,11 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { clearAllToasts } from '@/lib/utils/toastUtils';
 
-export function ToastProvider({ children }) {
+interface ToastProviderProps {
+  children: React.ReactNode;
+}
+
+export function ToastProvider({ children }: ToastProviderProps) {
   useEffect(() => {
     // Limpar toasts antigos ao inicializar
     clearAllToasts();
@@ -26,7 +30,6 @@ export function ToastProvider({ children }) {
         draggable={false}
         theme="light"
         toastClassName="rounded-lg"
-        bodyClassName="text-sm font-medium"
         limit={3}
       />
     </>

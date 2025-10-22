@@ -180,7 +180,7 @@ export class TransactionService {
 
   // Obter estatísticas financeiras da loja
   static async getStoreFinancialStats(storeId: string, startDate?: Date, endDate?: Date) {
-    const whereClause: any = { 
+    const whereClause: { storeId: string; status: TransactionStatus; createdAt?: { gte?: Date; lte?: Date } } = { 
       storeId,
       status: TransactionStatus.COMPLETED,
     };
@@ -224,7 +224,7 @@ export class TransactionService {
 
   // Obter estatísticas da plataforma
   static async getPlatformStats(startDate?: Date, endDate?: Date) {
-    const whereClause: any = { 
+    const whereClause: { status: TransactionStatus; createdAt?: { gte?: Date; lte?: Date } } = { 
       status: TransactionStatus.COMPLETED,
     };
     

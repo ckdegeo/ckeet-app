@@ -90,16 +90,12 @@ export default function ProductPage() {
     }
   };
 
-  const handleImageChange = (imageKey: 'image1' | 'image2' | 'image3') => (file: File | null, preview: string | null) => {
+  const handleImageChange = (imageKey: 'image1' | 'image2' | 'image3') => (file: File | null) => {
     setProductData(prev => ({
       ...prev,
       [imageKey]: file
     }));
     
-    setImagePreviews(prev => ({
-      ...prev,
-      [imageKey]: preview || ''
-    }));
     
     // Limpar erro do campo quando o usuário fizer upload
     if (errors[imageKey]) {
@@ -368,7 +364,7 @@ export default function ProductPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <ImageUpload
             label="Imagem principal"
-            value={imagePreviews.image1}
+            value={productData.image1}
             onChange={handleImageChange('image1')}
             error={errors.image1}
             placeholder="Clique para fazer upload da imagem principal"
@@ -377,7 +373,7 @@ export default function ProductPage() {
 
           <ImageUpload
             label="Segunda imagem"
-            value={imagePreviews.image2}
+            value={productData.image2}
             onChange={handleImageChange('image2')}
             error={errors.image2}
             placeholder="Clique para fazer upload da segunda imagem"
@@ -386,7 +382,7 @@ export default function ProductPage() {
 
           <ImageUpload
             label="Terceira imagem"
-            value={imagePreviews.image3}
+            value={productData.image3}
             onChange={handleImageChange('image3')}
             error={errors.image3}
             placeholder="Clique para fazer upload da terceira imagem"

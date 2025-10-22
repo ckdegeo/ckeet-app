@@ -155,10 +155,13 @@ export default function Store() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <ImageUpload
             label="Logotipo da loja"
-            value={storeConfig.logoUrl}
-            onChange={(file, preview) => {
-              if (preview) {
-                setStoreConfig(prev => ({ ...prev, logoUrl: preview }));
+            value={null}
+            onChange={(file) => {
+              if (file) {
+                // Aqui você pode fazer upload do arquivo e obter a URL
+                // Por enquanto, vamos simular com uma URL temporária
+                const tempUrl = URL.createObjectURL(file);
+                setStoreConfig(prev => ({ ...prev, logoUrl: tempUrl }));
               }
             }}
             placeholder="Arraste seu logotipo aqui ou clique para selecionar"
@@ -168,10 +171,11 @@ export default function Store() {
           
           <ImageUpload
             label="Banner da tela inicial"
-            value={storeConfig.homeBannerUrl}
-            onChange={(file, preview) => {
-              if (preview) {
-                setStoreConfig(prev => ({ ...prev, homeBannerUrl: preview }));
+            value={null}
+            onChange={(file) => {
+              if (file) {
+                const tempUrl = URL.createObjectURL(file);
+                setStoreConfig(prev => ({ ...prev, homeBannerUrl: tempUrl }));
               }
             }}
             placeholder="Arraste o banner da tela inicial aqui"
@@ -181,10 +185,11 @@ export default function Store() {
           
           <ImageUpload
             label="Banner da loja"
-            value={storeConfig.storeBannerUrl}
-            onChange={(file, preview) => {
-              if (preview) {
-                setStoreConfig(prev => ({ ...prev, storeBannerUrl: preview }));
+            value={null}
+            onChange={(file) => {
+              if (file) {
+                const tempUrl = URL.createObjectURL(file);
+                setStoreConfig(prev => ({ ...prev, storeBannerUrl: tempUrl }));
               }
             }}
             placeholder="Arraste o banner da loja aqui"
