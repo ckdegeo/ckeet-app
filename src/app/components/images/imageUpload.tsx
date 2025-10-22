@@ -3,18 +3,20 @@
 import { useState, useRef } from 'react';
 import { Upload, X, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import Button from '../buttons/button';
+import { ImageService } from '@/lib/services/imageService';
 
 // Props do componente ImageUpload
 interface ImageUploadProps {
   label: string;
-  value: File | null;
-  onChange: (file: File | null) => void;
+  value: File | null | { url: string }; // Suporta File ou objeto com URL
+  onChange: (file: File | null, url?: string) => void;
   accept?: string;
   maxSize?: number;
   error?: string;
   className?: string;
   placeholder?: string;
   disabled?: boolean;
+  folder?: string; // Pasta no bucket para organizar as imagens
 }
 
 export default function ImageUpload({
@@ -26,14 +28,21 @@ export default function ImageUpload({
   error,
   className = "",
   placeholder = "Clique para fazer upload ou arraste uma imagem",
-  disabled = false
+  disabled = false,
+  folder = "store"
 }: ImageUploadProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (file: File) => {
+  // Determinar se há uma imagem existente (URL) ou nova (File)
+  const hasExistingImage = value && typeof value === 'object' && 'url' in value;
+  const existingImageUrl = hasExistingImage ? value.url : null;
+  const currentImageUrl = uploadedUrl || existingImageUrl;
+
+  const handleFileSelect = async (file: File) => {
     if (disabled) return;
 
     // Validação de tamanho
@@ -50,15 +59,32 @@ export default function ImageUpload({
 
     setIsUploading(true);
 
-    // Criar preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result;
-      setPreview(result as string);
-      onChange?.(file);
+    try {
+      // Criar preview local primeiro
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result;
+        setPreview(result as string);
+      };
+      reader.readAsDataURL(file);
+
+      // Fazer upload para o Supabase
+      const uploadResult = await ImageService.uploadImage(file, folder);
+      
+      if (uploadResult.success && uploadResult.url) {
+        setUploadedUrl(uploadResult.url);
+        onChange?.(file, uploadResult.url);
+      } else {
+        alert(`Erro no upload: ${uploadResult.error}`);
+        setPreview(null);
+      }
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      alert('Erro no upload da imagem');
+      setPreview(null);
+    } finally {
       setIsUploading(false);
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -88,8 +114,18 @@ export default function ImageUpload({
     }
   };
 
-  const handleRemove = () => {
+  const handleRemove = async () => {
+    // Deletar imagem do Supabase se for uma URL válida
+    if (currentImageUrl && ImageService.isSupabaseUrl(currentImageUrl)) {
+      try {
+        await ImageService.deleteImage(currentImageUrl);
+      } catch (error) {
+        console.error('Erro ao deletar imagem do Supabase:', error);
+      }
+    }
+
     setPreview(null);
+    setUploadedUrl(null);
     onChange?.(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -137,10 +173,10 @@ export default function ImageUpload({
           disabled={disabled}
         />
 
-        {preview ? (
+        {(preview || currentImageUrl) ? (
           <div className="relative w-full h-full rounded-2xl overflow-hidden">
             <img
-              src={preview}
+              src={preview || currentImageUrl || ''}
               alt="Preview da imagem"
               className="w-full h-full object-contain bg-gray-50"
             />

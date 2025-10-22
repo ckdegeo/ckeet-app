@@ -4,24 +4,19 @@ import { useState, useEffect } from 'react';
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 
 interface DomainConfig {
-  customDomain: string;
   subdomain: string;
-  sslEnabled: boolean;
 }
 
 interface DomainCheckResult {
   hasDomain: boolean;
   subdomain: string | null;
-  customDomain: string | null;
   storeId: string | null;
 }
 
 export function useDomainCheck() {
   const [showDomainModal, setShowDomainModal] = useState(false);
   const [domainConfig, setDomainConfig] = useState<DomainConfig>({
-    customDomain: '',
     subdomain: '',
-    sslEnabled: true,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
@@ -52,8 +47,6 @@ export function useDomainCheck() {
         // Se ESTE usuário já tem domínio, não mostrar o modal
         setDomainConfig({
           subdomain: data.subdomain || '',
-          customDomain: '',
-          sslEnabled: true,
         });
         setShowDomainModal(false);
       } else if (response.status === 404) {

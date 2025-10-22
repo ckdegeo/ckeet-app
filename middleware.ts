@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { storeSetupGuard } from '@/lib/middleware/storeSetupGuard';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -38,6 +39,9 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/seller/auth/login', request.url));
       }
     }
+
+    // Verificar se a loja está completa usando o guard
+    return storeSetupGuard(request);
   }
 
   return NextResponse.next();
@@ -45,13 +49,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { 
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import Button from "@/app/components/buttons/button";
 import IconOnlyButton from "@/app/components/buttons/iconOnlyButton";
+import { useStoreCompletion } from "@/lib/hooks/useStoreCompletion";
 import SidebarButton from "@/app/components/buttons/sidebarButton";
 
 interface SidebarProps {
@@ -61,6 +62,8 @@ export default function Sidebar({ className = "" }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const { storeStatus, isLoading } = useStoreCompletion();
 
   // Force desktop-only collapse behavior
   const toggleCollapse = () => {
@@ -91,6 +94,30 @@ export default function Sidebar({ className = "" }: SidebarProps) {
   // Force collapsed to false on mobile during render
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
   const effectiveIsCollapsed = isMobile ? false : isCollapsed;
+
+  // Função para verificar se pode navegar
+  const canNavigate = (href: string) => {
+    // Se está na página de configuração da loja, permitir navegação
+    if (href === '/seller/store') {
+      return true;
+    }
+    
+    // Se a loja está completa, permitir navegação
+    if (storeStatus?.isComplete) {
+      return true;
+    }
+    
+    // Se a loja não está completa e não é a página de configuração, bloquear
+    return false;
+  };
+
+  // Função para lidar com clique nos links
+  const handleLinkClick = (href: string, e: React.MouseEvent) => {
+    if (!canNavigate(href)) {
+      e.preventDefault();
+      router.push('/seller/store?incomplete=true');
+    }
+  };
 
   return (
     <>
@@ -153,11 +180,17 @@ export default function Sidebar({ className = "" }: SidebarProps) {
                 const isActive = pathname === item.href;
                 const Icon = item.icon;
                 
+                const canNavigateToItem = canNavigate(item.href);
+                
                 return (
                   <li key={item.href}>
                     <Link
                       href={item.href}
-                      onClick={() => setIsMobileOpen(false)}
+                      onClick={(e) => {
+                        setIsMobileOpen(false);
+                        handleLinkClick(item.href, e);
+                      }}
+                      className={!canNavigateToItem ? 'opacity-50 cursor-not-allowed' : ''}
                     >
                       <>
                         {/* Desktop: usando SidebarButton com ícones alinhados */}
@@ -167,6 +200,7 @@ export default function Sidebar({ className = "" }: SidebarProps) {
                             label={item.label}
                             isActive={isActive}
                             collapsed={effectiveIsCollapsed}
+                            disabled={!canNavigateToItem}
                           />
                         </div>
                         
@@ -177,6 +211,7 @@ export default function Sidebar({ className = "" }: SidebarProps) {
                             label={item.label}
                             isActive={isActive}
                             collapsed={false}
+                            disabled={!canNavigateToItem}
                           />
                         </div>
                       </>

@@ -9,9 +9,7 @@ import { getAccessToken } from "@/lib/utils/authUtils";
 import { showSuccessToast, showErrorToast } from "@/lib/utils/toastUtils";
 
 interface DomainConfig {
-  customDomain: string;
   subdomain: string;
-  sslEnabled: boolean;
 }
 
 interface DomainModalProps {
@@ -29,9 +27,7 @@ export default function DomainModal({
   onClose, 
   onSave,
   initialConfig = {
-    customDomain: '',
-    subdomain: '',
-    sslEnabled: true
+    subdomain: ''
   },
   className = "",
   isLoading = false,
@@ -91,7 +87,9 @@ export default function DomainModal({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erro ao criar domínio');
+        const errorMessage = data.error || 'Erro ao criar domínio';
+        showErrorToast(errorMessage);
+        return; // Não fazer throw, apenas mostrar toast e retornar
       }
 
       showSuccessToast('Domínio criado com sucesso!');

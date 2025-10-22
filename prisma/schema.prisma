@@ -117,18 +117,16 @@ model Store {
   id            String   @id @default(cuid())
   name          String
   contactEmail  String
-  description   String?
   
   // Visual Identity
   logoUrl       String?
   homeBannerUrl String?
   storeBannerUrl String?
   primaryColor  String   @default("#6200EE")
+  secondaryColor String  @default("#03DAC6")
   
   // Domain Configuration
   subdomain     String   @unique // {subdomain}.ckeet.com
-  customDomain  String?  // optional custom domain
-  sslEnabled    Boolean  @default(true)
   
   // Status
   isActive      Boolean  @default(true)

@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Input from '@/app/components/inputs/input';
 import ImageUpload from '@/app/components/images/imageUpload';
 import ColorPicker from '@/app/components/inputs/colorPicker';
 import Button from '@/app/components/buttons/button';
 import DomainModal from '@/app/components/modals/domainModal';
 import { Save, Settings, Store as StoreIcon, Palette, Image, Globe } from 'lucide-react';
+import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
+import { getAccessToken } from '@/lib/utils/authUtils';
 
 // Interface para os dados da loja
 interface StoreConfig {
@@ -21,13 +24,54 @@ interface StoreConfig {
 
 // Interface para dados do domínio
 interface DomainConfig {
-  customDomain: string;
   subdomain: string;
-  sslEnabled: boolean;
 }
 
 export default function Store() {
+  const searchParams = useSearchParams();
   const [isDomainModalOpen, setIsDomainModalOpen] = useState(false);
+
+  // Verificar se veio do middleware e mostrar toast
+  useEffect(() => {
+    if (searchParams.get('incomplete') === 'true') {
+      showErrorToast('Complete a configuração da sua loja para acessar outras funcionalidades');
+    }
+  }, [searchParams]);
+
+  // Carregar dados existentes da loja
+  useEffect(() => {
+    const loadStoreData = async () => {
+      try {
+        const accessToken = getAccessToken();
+        if (!accessToken) return;
+
+        const response = await fetch('/api/seller/store/config', {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+          },
+        });
+
+                if (response.ok) {
+                  const data = await response.json();
+                  if (data.store) {
+                    setStoreConfig({
+                      storeName: data.store.name || '',
+                      contactEmail: data.store.contactEmail || '',
+                      logoUrl: data.store.logoUrl || '',
+                      homeBannerUrl: data.store.homeBannerUrl || '',
+                      storeBannerUrl: data.store.storeBannerUrl || '',
+                      primaryColor: data.store.primaryColor || '#6200EE',
+                      secondaryColor: data.store.secondaryColor || '#03DAC6'
+                    });
+                  }
+                }
+      } catch (error) {
+        // Erro silencioso
+      }
+    };
+
+    loadStoreData();
+  }, []);
   
   const [storeConfig, setStoreConfig] = useState<StoreConfig>({
     storeName: '',
@@ -40,9 +84,7 @@ export default function Store() {
   });
 
   const [domainConfig, setDomainConfig] = useState<DomainConfig>({
-    customDomain: '',
-    subdomain: '',
-    sslEnabled: true
+    subdomain: ''
   });
 
   const handleInputChange = (field: keyof StoreConfig) => (
@@ -54,7 +96,7 @@ export default function Store() {
     }));
   };
 
-  const handleColorChange = (field: 'primaryColor') => (
+  const handleColorChange = (field: 'primaryColor' | 'secondaryColor') => (
     color: string
   ) => {
     setStoreConfig(prev => ({
@@ -72,13 +114,74 @@ export default function Store() {
     }));
   };
 
-  const handleSave = () => {
-    console.log('Salvando configurações da loja:', storeConfig);
-    // Implementar lógica de salvamento
+  const handleSave = async () => {
+    try {
+      // Verificar se todos os campos obrigatórios estão preenchidos
+      const requiredFields = [
+        { field: 'storeName', label: 'Nome da loja' },
+        { field: 'contactEmail', label: 'Email de contato' },
+        { field: 'logoUrl', label: 'Logotipo da loja' },
+        { field: 'homeBannerUrl', label: 'Banner da tela inicial' },
+        { field: 'storeBannerUrl', label: 'Banner da loja' }
+      ];
+
+      const missingFields = requiredFields.filter(({ field }) => {
+        const value = storeConfig[field as keyof StoreConfig];
+        return !value || value.trim() === '';
+      });
+
+      if (missingFields.length > 0) {
+        const missingLabels = missingFields.map(({ label }) => label).join(', ');
+        showErrorToast(`Campos obrigatórios: ${missingLabels}`);
+        return;
+      }
+
+      // Obter token de acesso
+      const accessToken = getAccessToken();
+      if (!accessToken) {
+        showErrorToast('Token de acesso não encontrado');
+        return;
+      }
+
+              const requestData = {
+                name: storeConfig.storeName,
+                contactEmail: storeConfig.contactEmail,
+                logoUrl: storeConfig.logoUrl,
+                homeBannerUrl: storeConfig.homeBannerUrl,
+                storeBannerUrl: storeConfig.storeBannerUrl,
+                primaryColor: storeConfig.primaryColor,
+                secondaryColor: storeConfig.secondaryColor,
+              };
+
+      // Salvar configurações da loja
+      const response = await fetch('/api/seller/store/config', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao salvar configurações');
+      }
+
+      showSuccessToast('Configurações da loja salvas com sucesso!');
+      
+      // Redirecionar para dashboard após salvar com sucesso
+      setTimeout(() => {
+        window.location.href = '/seller/dashboard';
+      }, 1500);
+
+            } catch (error) {
+              showErrorToast(error instanceof Error ? error.message : 'Erro ao salvar configurações');
+            }
   };
 
   const handleDomainSave = (config: DomainConfig) => {
-    console.log('Salvando configurações do domínio:', config);
     setDomainConfig(config);
     // Implementar lógica de salvamento do domínio
   };
@@ -131,10 +234,10 @@ export default function Store() {
               value={storeConfig.primaryColor}
               onChange={handleColorChange('primaryColor')}
             />
-               <ColorPicker
+            <ColorPicker
               label="Cor secundária"
               value={storeConfig.secondaryColor}
-              onChange={handleColorChange('primaryColor')}
+              onChange={handleColorChange('secondaryColor')}
             />
           </div>
         </div>
@@ -155,46 +258,44 @@ export default function Store() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <ImageUpload
             label="Logotipo da loja"
-            value={null}
-            onChange={(file) => {
-              if (file) {
-                // Aqui você pode fazer upload do arquivo e obter a URL
-                // Por enquanto, vamos simular com uma URL temporária
-                const tempUrl = URL.createObjectURL(file);
-                setStoreConfig(prev => ({ ...prev, logoUrl: tempUrl }));
+            value={storeConfig.logoUrl ? { url: storeConfig.logoUrl } : null}
+            onChange={(file, url) => {
+              if (file && url) {
+                setStoreConfig(prev => ({ ...prev, logoUrl: url }));
               }
             }}
             placeholder="Arraste seu logotipo aqui ou clique para selecionar"
             maxSize={5}
             error=""
+            folder="logos"
           />
           
           <ImageUpload
             label="Banner da tela inicial"
-            value={null}
-            onChange={(file) => {
-              if (file) {
-                const tempUrl = URL.createObjectURL(file);
-                setStoreConfig(prev => ({ ...prev, homeBannerUrl: tempUrl }));
+            value={storeConfig.homeBannerUrl ? { url: storeConfig.homeBannerUrl } : null}
+            onChange={(file, url) => {
+              if (file && url) {
+                setStoreConfig(prev => ({ ...prev, homeBannerUrl: url }));
               }
             }}
             placeholder="Arraste o banner da tela inicial aqui"
             maxSize={10}
             error=""
+            folder="home-banner"
           />
           
           <ImageUpload
             label="Banner da loja"
-            value={null}
-            onChange={(file) => {
-              if (file) {
-                const tempUrl = URL.createObjectURL(file);
-                setStoreConfig(prev => ({ ...prev, storeBannerUrl: tempUrl }));
+            value={storeConfig.storeBannerUrl ? { url: storeConfig.storeBannerUrl } : null}
+            onChange={(file, url) => {
+              if (file && url) {
+                setStoreConfig(prev => ({ ...prev, storeBannerUrl: url }));
               }
             }}
             placeholder="Arraste o banner da loja aqui"
             maxSize={10}
             error=""
+            folder="store-banner"
           />
         </div>
       </div>
@@ -215,7 +316,7 @@ export default function Store() {
             className="flex items-center gap-2"
           >
             <Save size={18} />
-            Salvar configurações
+            Salvar
           </Button>
         </div>
       </div>

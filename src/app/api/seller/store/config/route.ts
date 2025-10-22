@@ -36,20 +36,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({
-      store: {
-        id: seller.store.id,
-        name: seller.store.name,
-        contactEmail: seller.store.contactEmail,
-        logoUrl: seller.store.logoUrl,
-        primaryColor: seller.store.primaryColor,
-        secondaryColor: seller.store.secondaryColor,
-        subdomain: seller.store.subdomain,
-      }
-    });
+    const storeData = {
+      id: seller.store.id,
+      name: seller.store.name,
+      contactEmail: seller.store.contactEmail,
+      logoUrl: seller.store.logoUrl,
+      homeBannerUrl: seller.store.homeBannerUrl,
+      storeBannerUrl: seller.store.storeBannerUrl,
+      primaryColor: seller.store.primaryColor,
+      secondaryColor: seller.store.secondaryColor,
+      subdomain: seller.store.subdomain,
+    };
+
+            return NextResponse.json({
+              store: storeData
+            });
 
   } catch (error) {
-    console.error('Erro ao buscar configurações da loja:', error);
     return NextResponse.json(
       { error: 'Erro interno do servidor' },
       { status: 500 }
@@ -57,7 +60,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const accessToken = request.headers.get('authorization')?.replace('Bearer ', '');
     
@@ -78,13 +81,31 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { name, contactEmail, logoUrl, primaryColor, secondaryColor } = body;
+    let body;
+    try {
+      body = await request.json();
+    } catch (error) {
+      console.error('Erro ao fazer parse do JSON:', error);
+      return NextResponse.json(
+        { error: 'Dados inválidos no request' },
+        { status: 400 }
+      );
+    }
+
+    const { 
+      name, 
+      contactEmail, 
+      logoUrl, 
+      homeBannerUrl, 
+      storeBannerUrl, 
+      primaryColor, 
+      secondaryColor 
+    } = body;
 
     // Validar dados obrigatórios
-    if (!name || !contactEmail) {
+    if (!name || !contactEmail || !logoUrl || !homeBannerUrl || !storeBannerUrl) {
       return NextResponse.json(
-        { error: 'Nome e email de contato são obrigatórios' },
+        { error: 'Todos os campos são obrigatórios para completar a configuração da loja' },
         { status: 400 }
       );
     }
@@ -103,24 +124,28 @@ export async function PUT(request: NextRequest) {
     }
 
     // Atualizar ou criar loja
-    let store;
-    if (seller.store) {
-      store = await prisma.store.update({
-        where: { id: seller.store.id },
-        data: {
-          name,
-          contactEmail,
-          logoUrl,
-          primaryColor,
-          secondaryColor,
-        }
-      });
-    } else {
+            let store;
+            if (seller.store) {
+              store = await prisma.store.update({
+                where: { id: seller.store.id },
+                data: {
+                  name,
+                  contactEmail,
+                  logoUrl,
+                  homeBannerUrl,
+                  storeBannerUrl,
+                  primaryColor,
+                  secondaryColor,
+                }
+              });
+            } else {
       store = await prisma.store.create({
         data: {
           name,
           contactEmail,
           logoUrl,
+          homeBannerUrl,
+          storeBannerUrl,
           primaryColor,
           secondaryColor,
           subdomain: `loja-${Date.now()}`, // Subdomínio temporário
@@ -136,6 +161,8 @@ export async function PUT(request: NextRequest) {
         name: store.name,
         contactEmail: store.contactEmail,
         logoUrl: store.logoUrl,
+        homeBannerUrl: store.homeBannerUrl,
+        storeBannerUrl: store.storeBannerUrl,
         primaryColor: store.primaryColor,
         secondaryColor: store.secondaryColor,
         subdomain: store.subdomain,
@@ -143,10 +170,13 @@ export async function PUT(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Erro ao salvar configurações da loja:', error);
     return NextResponse.json(
       { error: 'Erro interno do servidor' },
       { status: 500 }
     );
   }
+}
+
+export async function PUT(request: NextRequest) {
+  return POST(request); // Usar a mesma lógica do POST
 }

@@ -226,8 +226,6 @@ export interface Store {
   
   // Domain Configuration
   subdomain: string;
-  customDomain?: string;
-  sslEnabled: boolean;
   
   // Status
   isActive: boolean;

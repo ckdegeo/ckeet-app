@@ -5,6 +5,7 @@ import Sidebar from '@/app/seller/patterns/sidebar';
 import Navbar from '@/app/seller/patterns/navbar';
 import DomainModal from '@/app/components/modals/domainModal';
 import { useDomainCheck } from '@/lib/hooks/useDomainCheck';
+import { useStoreCompletion } from '@/lib/hooks/useStoreCompletion';
 
 export default function SellerLayout({ children }: { children: React.ReactNode }) {
   const [pageTitle, setPageTitle] = useState('Seller');
@@ -16,6 +17,9 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
     isLoading,
     isChecking 
   } = useDomainCheck();
+  
+  // Verificar completude da loja
+  const { storeStatus } = useStoreCompletion();
 
   return (
     <div className="flex h-screen bg-[var(--background)]">
