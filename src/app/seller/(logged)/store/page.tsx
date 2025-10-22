@@ -211,13 +211,6 @@ export default function Store() {
         </h1>
         <div className="flex items-center gap-3">
           <Button 
-            onClick={() => setIsDomainModalOpen(true)}
-            className="flex items-center gap-2 bg-transparent text-[var(--on-surface)] hover:bg-gray-100 border border-[var(--on-background)]"
-          >
-            <Globe size={18} />
-            Configurar domínio
-          </Button>
-          <Button 
             onClick={handleSave}
             className="flex items-center gap-2"
           >

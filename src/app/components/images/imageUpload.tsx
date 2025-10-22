@@ -184,7 +184,7 @@ export default function ImageUpload({
                   </p>
                 </div>
                 <Button
-                  variant="secondary"
+                  variant="primary"
                   className="mt-2"
                   onClick={(e) => {
                     e.stopPropagation();

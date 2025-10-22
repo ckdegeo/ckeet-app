@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Globe, Settings } from "lucide-react";
+import { X, Globe } from "lucide-react";
 import Button from "../buttons/button";
 import Input from "../inputs/input";
+import { DOMAIN_CONFIG } from "@/lib/config/domains";
 
 interface DomainConfig {
   customDomain: string;
@@ -15,9 +16,10 @@ interface DomainConfig {
 interface DomainModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave?: (config: DomainConfig) => void;
+  onSave?: (config: DomainConfig) => Promise<boolean> | void;
   initialConfig?: DomainConfig;
   className?: string;
+  isLoading?: boolean;
 }
 
 export default function DomainModal({ 
@@ -29,10 +31,12 @@ export default function DomainModal({
     subdomain: '',
     sslEnabled: true
   },
-  className = "" 
+  className = "",
+  isLoading = false
 }: DomainModalProps) {
   const [mounted, setMounted] = useState(false);
   const [domainConfig, setDomainConfig] = useState<DomainConfig>(initialConfig);
+  const [internalLoading, setInternalLoading] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -55,10 +59,30 @@ export default function DomainModal({
     }));
   };
 
-  const handleSave = () => {
-    onSave?.(domainConfig);
-    onClose();
+  const handleSave = async () => {
+    if (!domainConfig.subdomain) {
+      return;
+    }
+
+    setInternalLoading(true);
+    try {
+      const result = onSave?.(domainConfig);
+      
+      // Se onSave retornar uma Promise, aguardar
+      if (result instanceof Promise) {
+        const success = await result;
+        if (success) {
+          onClose();
+        }
+      } else {
+        onClose();
+      }
+    } finally {
+      setInternalLoading(false);
+    }
   };
+
+  const loading = isLoading || internalLoading;
 
   const modalContent = (
     <>
@@ -108,17 +132,31 @@ export default function DomainModal({
         {/* Content */}
         <div className="p-4 md:p-6">
           <div className="space-y-6">
+            {/* Alerta informativo */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                <strong>Configure seu domínio para continuar.</strong> Este será o endereço da sua loja online.
+              </p>
+            </div>
+
             {/* Configurações de Domínio */}
             <div className="bg-[var(--background)] border border-[var(--on-background)] rounded-2xl p-6">              
               <div className="space-y-4">
                 <Input
-                  label="Subdomínio"
+                  label="Subdomínio *"
                   placeholder="minhaloja"
                   value={domainConfig.subdomain}
                   onChange={handleInputChange('subdomain')}
+                  disabled={loading}
                 />
                 <p className="text-sm text-[var(--on-background)]">
-                  Sua loja ficará disponível em: <strong>{domainConfig.subdomain || 'minhaloja'}.ckeet.com</strong>
+                  Sua loja ficará disponível em: <strong>{domainConfig.subdomain || 'minhaloja'}{DOMAIN_CONFIG.STORE_SUBDOMAIN_SUFFIX}</strong>
+                </p>
+                <p className="text-xs text-gray-500">
+                  Use apenas letras minúsculas, números e hífen. Exemplo: minha-loja
+                </p>
+                <p className="text-xs text-blue-600 mt-2">
+                  💡 Em breve: Migração para ckeet.store
                 </p>
               </div>
             </div>
@@ -128,17 +166,12 @@ export default function DomainModal({
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 p-4 md:p-6 border-t border-[var(--on-background)]">
           <Button 
-            onClick={onClose}
-            className="bg-transparent text-[var(--on-surface)] hover:bg-gray-100 border border-[var(--on-background)]"
-          >
-            Cancelar
-          </Button>
-          <Button 
             onClick={handleSave}
+            disabled={loading || !domainConfig.subdomain}
             className="flex items-center gap-2"
           >
             <Globe size={18} />
-            Salvar configurações
+            {loading ? 'Salvando...' : 'Salvar e continuar'}
           </Button>
         </div>
       </div>

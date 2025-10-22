@@ -3,9 +3,19 @@
 import { useState } from 'react';
 import Sidebar from '@/app/seller/patterns/sidebar';
 import Navbar from '@/app/seller/patterns/navbar';
+import DomainModal from '@/app/components/modals/domainModal';
+import { useDomainCheck } from '@/lib/hooks/useDomainCheck';
 
 export default function SellerLayout({ children }: { children: React.ReactNode }) {
   const [pageTitle, setPageTitle] = useState('Seller');
+  const { 
+    showDomainModal, 
+    setShowDomainModal, 
+    domainConfig, 
+    saveDomainConfig, 
+    isLoading,
+    isChecking 
+  } = useDomainCheck();
 
   return (
     <div className="flex h-screen bg-[var(--background)]">
@@ -22,6 +32,21 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
           {children}
         </main>
       </div>
+
+      {/* Modal de Domínio - Persistente até ser preenchido */}
+      {!isChecking && (
+        <DomainModal
+          isOpen={showDomainModal}
+          onClose={() => {
+            // Não permitir fechar o modal se não tiver domínio configurado
+            if (domainConfig.subdomain) {
+              setShowDomainModal(false);
+            }
+          }}
+          onSave={saveDomainConfig}
+          initialConfig={domainConfig}
+        />
+      )}
     </div>
   );
 }
