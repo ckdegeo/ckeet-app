@@ -5,52 +5,29 @@ import Input from "@/app/components/inputs/input";
 import Button from "@/app/components/buttons/button";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-interface LoginErrors {
-  email?: string;
-  password?: string;
-}
+import { useSellerLogin } from "@/lib/hooks/useSellerLogin";
+import { loginSchema, type LoginData } from "@/lib/validations/authSchemas";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<LoginErrors>({});
   const router = useRouter();
+  
+  const { isLoading, errors, login } = useSellerLogin();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrors({});
-    setIsLoading(true);
 
-    try {
-      // Validação básica
-      const newErrors: LoginErrors = {};
-      
-      if (!email) {
-        newErrors.email = "Email é obrigatório";
-      }
-      
-      if (!password) {
-        newErrors.password = "Senha é obrigatória";
-      }
-      
-      if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        return;
-      }
+    const formData: LoginData = {
+      email,
+      password,
+    };
 
-      // Simular login - aqui você pode implementar sua lógica de autenticação
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+    const success = await login(formData);
+    
+    if (success) {
       // Redirecionar para dashboard
       router.push('/seller/dashboard');
-      
-    } catch (error) {
-      console.error('Erro no login:', error);
-      setErrors({ email: "Erro ao fazer login. Verifique suas credenciais." });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -111,24 +88,59 @@ export default function Login() {
               disabled={isLoading}
             />
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 rounded border-[var(--on-background)] text-[var(--primary)]"
-                />
-                <span className="text-sm text-[var(--foreground)]">
-                  Lembrar-me
-                </span>
-              </label>
+                   <div className="flex items-center justify-between">
+                     <label className="flex items-center gap-2">
+                       <input
+                         type="checkbox"
+                         className="w-4 h-4 rounded border-[var(--on-background)] text-[var(--primary)]"
+                       />
+                       <span className="text-sm text-[var(--foreground)]">
+                         Lembrar-me
+                       </span>
+                     </label>
 
-              <a
-                href="#"
-                className="text-sm text-[var(--primary)] hover:opacity-90"
-              >
-                Esqueceu a senha?
-              </a>
-            </div>
+                     <a
+                       href="#"
+                       className="text-sm text-[var(--primary)] hover:opacity-90"
+                     >
+                       Esqueceu a senha?
+                     </a>
+                   </div>
+
+                   {/* Botão para reenviar confirmação */}
+                   <div className="text-center">
+                     <button
+                       type="button"
+                       onClick={async () => {
+                         const email = (document.querySelector('input[type="email"]') as HTMLInputElement)?.value;
+                         if (!email) {
+                           alert('Digite seu email primeiro');
+                           return;
+                         }
+                         
+                         try {
+                           const response = await fetch('/api/seller/auth/resend-confirmation', {
+                             method: 'POST',
+                             headers: { 'Content-Type': 'application/json' },
+                             body: JSON.stringify({ email }),
+                           });
+                           
+                           const result = await response.json();
+                           
+                           if (response.ok) {
+                             alert('Email de confirmação reenviado! Verifique sua caixa de entrada.');
+                           } else {
+                             alert(result.error || 'Erro ao reenviar email');
+                           }
+                         } catch (error) {
+                           alert('Erro ao reenviar email');
+                         }
+                       }}
+                       className="text-sm text-[var(--primary)] hover:opacity-90 underline"
+                     >
+                       Não recebeu o email de confirmação? Clique aqui
+                     </button>
+                   </div>
 
             <Button className="w-full" disabled={isLoading} type="submit">
               {isLoading ? 'Entrando...' : 'Entrar'}

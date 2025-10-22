@@ -3,6 +3,8 @@
 import { Search as SearchIcon, Store } from "lucide-react";
 import UserMenu from "@/app/components/user/userMenu";
 import IconOnlyButton from "@/app/components/buttons/iconOnlyButton";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { useState, useEffect } from "react";
 
 interface NavbarProps {
   className?: string;
@@ -10,6 +12,29 @@ interface NavbarProps {
 }
 
 export default function Navbar({ className = "", title = "Seller" }: NavbarProps) {
+  const { user } = useAuth();
+  const [sellerName, setSellerName] = useState<string>("");
+  
+  // Buscar nome do seller diretamente do banco
+  useEffect(() => {
+    const fetchSellerName = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const response = await fetch(`/api/seller/profile/name?userId=${user.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setSellerName(data.name || user.name || "Usuário");
+        } else {
+          setSellerName(user.name || "Usuário");
+        }
+      } catch (error) {
+        setSellerName(user.name || "Usuário");
+      }
+    };
+
+    fetchSellerName();
+  }, [user?.id, user?.name]);
 
   return (
     <nav className={`

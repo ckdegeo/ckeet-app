@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User, Settings, LogOut, ChevronDown } from "lucide-react";
 import Button from "../buttons/button";
 import SettingsModal from "../modals/settingsModal";
+import { useLogout } from "@/lib/hooks/useLogout";
+import { useAuth } from "@/lib/hooks/useAuth";
 
 interface UserMenuProps {
   className?: string;
@@ -15,23 +17,62 @@ interface UserMenuProps {
 
 export default function UserMenu({ 
   className = "",
-  userName = "Admin",
-  userEmail = "admin@void.com",
+  userName,
+  userEmail,
   userAvatar,
   onLogout
 }: UserMenuProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [sellerName, setSellerName] = useState<string>("");
+  const { logout } = useLogout();
+  const { user } = useAuth();
+
+  // Buscar nome do seller diretamente do banco
+  useEffect(() => {
+    const fetchSellerName = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const response = await fetch(`/api/seller/profile/name?userId=${user.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setSellerName(data.name || user.name || "Usuário");
+        } else {
+          setSellerName(user.name || "Usuário");
+        }
+      } catch (error) {
+        setSellerName(user.name || "Usuário");
+      }
+    };
+
+    fetchSellerName();
+  }, [user?.id, user?.name]);
+
+  // Usar dados do usuário logado ou fallback para props
+  const displayName = sellerName || user?.name || userName || "Usuário";
+  const displayEmail = user?.email || userEmail || "usuario@exemplo.com";
+  const displayAvatar = userAvatar;
 
   const handleSettingsClick = () => {
     setShowUserMenu(false);
     setShowSettingsModal(true);
   };
 
-  const handleLogoutClick = () => {
-    setShowUserMenu(false);
-    if (onLogout) {
-      onLogout();
+  const handleLogoutClick = async () => {
+    try {
+      // Executar logout usando o hook
+      await logout();
+
+      // Chamar callback se fornecido
+      if (onLogout) {
+        onLogout();
+      }
+
+      // Fechar menu
+      setShowUserMenu(false);
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
     }
   };
 
@@ -42,10 +83,10 @@ export default function UserMenu({
           onClick={() => setShowUserMenu(!showUserMenu)}
           className="flex items-center gap-2 p-2 rounded-lg transition-colors cursor-pointer"
         >
-          {userAvatar ? (
-            <img 
-              src={userAvatar} 
-              alt={userName}
+          {displayAvatar ? (
+            <img
+              src={displayAvatar}
+              alt={displayName}
               className="w-8 h-8 rounded-full object-cover"
             />
           ) : (
@@ -53,10 +94,10 @@ export default function UserMenu({
               <User size={16} className="text-[var(--on-primary)]" />
             </div>
           )}
-          
+
           <div className="hidden md:block text-left">
-            <p className="text-sm font-medium text-[var(--foreground)]">{userName}</p>
-            <p className="text-xs text-gray-500">{userEmail}</p>
+            <p className="text-xs font-medium text-[var(--foreground)]">{displayName}</p>
+            <p className="text-xs text-gray-500">{displayEmail}</p>
           </div>
           <ChevronDown size={16} className="text-gray-500" />
         </button>
@@ -64,26 +105,7 @@ export default function UserMenu({
         {/* User Dropdown */}
         {showUserMenu && (
           <div className="absolute right-0 mt-2 w-56 bg-[var(--surface)] border border-gray-200 rounded-lg shadow-lg z-50">
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center gap-3">
-                {userAvatar ? (
-                  <img 
-                    src={userAvatar} 
-                    alt={userName}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-10 h-10 bg-[var(--primary)] rounded-full flex items-center justify-center">
-                    <User size={20} className="text-[var(--on-primary)]" />
-                  </div>
-                )}
-                <div>
-                  <p className="font-medium text-[var(--foreground)]">{userName}</p>
-                  <p className="text-sm text-gray-500">{userEmail}</p>
-                </div>
-              </div>
-            </div>
-            
+
             <div className="p-2 space-y-1">
               <Button
                 onClick={handleSettingsClick}
@@ -113,7 +135,7 @@ export default function UserMenu({
       )}
 
       {/* Settings Modal */}
-      <SettingsModal 
+      <SettingsModal
         isOpen={showSettingsModal}
         onClose={() => setShowSettingsModal(false)}
       />

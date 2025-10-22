@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { LogOut } from "lucide-react";
 import Button from "../buttons/button";
+import { useLogout } from "@/lib/hooks/useLogout";
 
 interface UserDropdownProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export default function UserDropdown({
   onLogout 
 }: UserDropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { logout } = useLogout();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -33,9 +35,21 @@ export default function UserDropdown({
     };
   }, [isOpen, onClose]);
 
-  const handleLogout = () => {
-    onLogout();
-    onClose();
+  const handleLogout = async () => {
+    try {
+      // Executar logout usando o hook
+      await logout();
+      
+      // Chamar callback se fornecido
+      if (onLogout) {
+        onLogout();
+      }
+      
+      // Fechar dropdown
+      onClose();
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
   };
 
   if (!isOpen) return null;

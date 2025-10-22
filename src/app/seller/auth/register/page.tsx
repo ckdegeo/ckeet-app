@@ -6,14 +6,8 @@ import PhoneInput from "@/app/components/inputs/phoneInput";
 import Button from "@/app/components/buttons/button";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-interface RegisterErrors {
-  name?: string;
-  email?: string;
-  phone?: string;
-  password?: string;
-  confirmPassword?: string;
-}
+import { useSellerRegister } from "@/lib/hooks/useSellerRegister";
+import { sellerRegisterSchema, type SellerRegisterData } from "@/lib/validations/authSchemas";
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -22,66 +16,31 @@ export default function Register() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [errors, setErrors] = useState<RegisterErrors>({});
-  const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const router = useRouter();
+  
+  const { isLoading, errors, register } = useSellerRegister();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrors({});
-    setIsLoading(true);
 
-    try {
-      // Validação básica
-      const newErrors: RegisterErrors = {};
-      
-      if (!name.trim()) {
-        newErrors.name = "Nome é obrigatório";
-      }
-      
-      if (!email.trim()) {
-        newErrors.email = "Email é obrigatório";
-      } else if (!/\S+@\S+\.\S+/.test(email)) {
-        newErrors.email = "Email inválido";
-      }
-      
-      if (!phone.trim()) {
-        newErrors.phone = "Telefone é obrigatório";
-      }
-      
-      if (!password) {
-        newErrors.password = "Senha é obrigatória";
-      } else if (password.length < 8) {
-        newErrors.password = "Senha deve ter pelo menos 8 caracteres";
-      }
-      
-      if (!confirmPassword) {
-        newErrors.confirmPassword = "Confirmação de senha é obrigatória";
-      } else if (password !== confirmPassword) {
-        newErrors.confirmPassword = "Senhas não coincidem";
-      }
-      
-      if (Object.keys(newErrors).length > 0) {
-        setErrors(newErrors);
-        return;
-      }
+    const formData: SellerRegisterData = {
+      name,
+      email,
+      cpf,
+      phone,
+      password,
+      confirmPassword,
+    };
 
-      // Simular registro
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+    const success = await register(formData);
+    
+    if (success) {
       setSuccess(true);
-      
       // Redirecionar para login após 2 segundos
       setTimeout(() => {
         router.push('/seller/auth/login');
       }, 2000);
-
-    } catch (error) {
-      console.error('Erro no registro:', error);
-      setErrors({ email: "Erro ao criar conta. Tente novamente." });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -150,6 +109,7 @@ export default function Register() {
               placeholder="Digite seu CPF"
               maxLength={11}
               required
+              error={errors?.cpf}
               disabled={isLoading || success}
             />
 
@@ -167,7 +127,7 @@ export default function Register() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Digite sua senha (mín. 8 caracteres)"
+              placeholder="Digite sua senha (mín. 6 caracteres)"
               required
               error={errors?.password}
               disabled={isLoading || success}

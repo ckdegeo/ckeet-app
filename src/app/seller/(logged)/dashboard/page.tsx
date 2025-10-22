@@ -11,8 +11,9 @@ import ValueCard from '@/app/components/cards/valueCard';
 import NumberCard from '@/app/components/cards/numberCard';
 import AreaChartCard from '@/app/components/cards/areaChart';
 import DatePicker from '@/app/components/selectors/datePicker';
+import { AuthGuard } from '@/lib/components/AuthGuard';
 
-export default function Dashboard() {
+function DashboardContent() {
   // Estado para o datepicker
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
     new Date(new Date().setMonth(new Date().getMonth() - 1)), // 1 mês atrás
@@ -118,5 +119,13 @@ export default function Dashboard() {
         />
       </div>
     </div>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <AuthGuard>
+      <DashboardContent />
+    </AuthGuard>
   );
 }

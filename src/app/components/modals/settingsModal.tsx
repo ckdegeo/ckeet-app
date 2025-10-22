@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, User, Bell, Shield, Palette, Globe } from "lucide-react";
+import { X, User, Shield } from "lucide-react";
 import Button from "../buttons/button";
-import ColorPicker from "../inputs/colorPicker";
-import Checkbox from "../checkbox/checkbox";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -20,20 +20,71 @@ export default function SettingsModal({
 }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState("profile");
   const [mounted, setMounted] = useState(false);
-  const [primaryColor, setPrimaryColor] = useState("#6200EE");
-  const [notifySales, setNotifySales] = useState(true);
-  const [notifyIntegrations, setNotifyIntegrations] = useState(true);
-  const [notifyReports, setNotifyReports] = useState(false);
+  const [name, setName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { user, refresh } = useAuth();
+
+  // Carregar dados do usuário quando o modal abrir
+  useEffect(() => {
+    const fetchSellerName = async () => {
+      if (!isOpen || !user?.id) return;
+      
+      try {
+        const response = await fetch(`/api/seller/profile/name?userId=${user.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setName(data.name || user.name || "");
+        } else {
+          setName(user.name || "");
+        }
+      } catch (error) {
+        setName(user.name || "");
+      }
+    };
+
+    fetchSellerName();
+  }, [isOpen, user?.id, user?.name]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  const handleSave = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      // Fazer chamada para a API para atualizar o nome
+      const response = await fetch('/api/seller/profile/update-name', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Falha ao atualizar o nome.');
+      }
+
+      showSuccessToast(result.message || 'Nome atualizado com sucesso!');
+      
+      // Fechar modal após salvar
+      onClose();
+    } catch (error) {
+      console.error('Erro ao salvar perfil:', error);
+      showErrorToast(error instanceof Error ? error.message : 'Erro ao atualizar o nome');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (!isOpen || !mounted) return null;
 
   const tabs = [
     { id: "profile", label: "Perfil", icon: User },
-    { id: "notifications", label: "Notificações", icon: Bell },
     { id: "security", label: "Segurança", icon: Shield }
   ];
 
@@ -148,7 +199,8 @@ export default function SettingsModal({
                     </label>
                     <input 
                       type="text" 
-                      defaultValue="Admin"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
                       className="
                         w-full
                         px-3 py-2 md:px-4 md:py-3
@@ -172,7 +224,8 @@ export default function SettingsModal({
                     </label>
                     <input 
                       type="email" 
-                      defaultValue="admin@void.com"
+                      value={user?.email || ""}
+                      disabled
                       className="
                         w-full
                         px-3 py-2 md:px-4 md:py-3
@@ -196,7 +249,8 @@ export default function SettingsModal({
                     </label>
                     <input 
                       type="text" 
-                      defaultValue="Administrador"
+                      value="Seller"
+                      disabled
                       className="
                         w-full
                         px-3 py-2 md:px-4 md:py-3
@@ -217,63 +271,6 @@ export default function SettingsModal({
               </div>
             )}
 
-            {activeTab === "notifications" && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-[var(--foreground)]">
-                  Preferências de Notificação
-                </h3>
-                
-                <div className="space-y-3 md:space-y-4">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-                    <div>
-                      <p className="font-medium text-[var(--foreground)]">Vendas</p>
-                      <p className="text-sm text-gray-500">Notificações sobre novas vendas</p>
-                    </div>
-                    <div className="flex-shrink-0">
-                      <Checkbox
-                        checked={notifySales}
-                        onChange={setNotifySales}
-                        size="md"
-                        variant="primary"
-                        className="w-auto"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-                    <div>
-                      <p className="font-medium text-[var(--foreground)]">Integrações</p>
-                      <p className="text-sm text-gray-500">Updates sobre integrações</p>
-                    </div>
-                    <div className="flex-shrink-0">
-                      <Checkbox
-                        checked={notifyIntegrations}
-                        onChange={setNotifyIntegrations}
-                        size="md"
-                        variant="primary"
-                        className="w-auto"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-                    <div>
-                      <p className="font-medium text-[var(--foreground)]">Relatórios</p>
-                      <p className="text-sm text-gray-500">Relatórios mensais e semanais</p>
-                    </div>
-                    <div className="flex-shrink-0">
-                      <Checkbox
-                        checked={notifyReports}
-                        onChange={setNotifyReports}
-                        size="md"
-                        variant="primary"
-                        className="w-auto"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {activeTab === "security" && (
               <div className="space-y-6">
@@ -361,8 +358,12 @@ export default function SettingsModal({
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 p-4 md:p-6 border-t border-gray-200">
-          <Button className="text-sm md:text-base">
-            Salvar Alterações
+          <Button 
+            onClick={handleSave}
+            disabled={isLoading}
+            className="text-sm md:text-base"
+          >
+            {isLoading ? 'Salvando...' : 'Salvar Alterações'}
           </Button>
         </div>
       </div>
