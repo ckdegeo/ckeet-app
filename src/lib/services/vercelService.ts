@@ -3,8 +3,8 @@
 
 import { DOMAIN_CONFIG } from '../config/domains';
 
-const VERCEL_TOKEN = process.env.VERCEL_TOKEN || 'NfYIOlCNRMER79hw2zNuTyA8';
-const VERCEL_PROJECT_ID = process.env.VERCEL_PROJECT_ID || 'prj_FD6lyYS1EoIgRlK6yJLyXetsDJ29';
+const VERCEL_TOKEN = process.env.VERCEL_TOKEN!;
+const VERCEL_PROJECT_ID = process.env.VERCEL_PROJECT_ID!;
 const VERCEL_API_URL = 'https://api.vercel.com';
 
 // Domínio base para os subdomínios das lojas
