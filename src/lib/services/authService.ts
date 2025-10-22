@@ -1,11 +1,6 @@
 import { prisma } from '../prisma';
-import { createClient } from '@supabase/supabase-js';
+import { createServerSupabaseClient } from '../supabase';
 import { Seller, Store } from '../types';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // ===========================================
 // AUTH SERVICE
@@ -189,10 +184,7 @@ export class AuthService {
   }
 
   static async refreshToken(refreshToken: string) {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = createServerSupabaseClient();
 
     const { data, error } = await supabase.auth.refreshSession({
       refresh_token: refreshToken,
@@ -211,10 +203,7 @@ export class AuthService {
 
   // Logout
   static async logout(accessToken: string) {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = createServerSupabaseClient();
 
     await supabase.auth.admin.signOut(accessToken);
   }
@@ -238,6 +227,7 @@ export class AuthService {
 
   // Verificar token válido
   static async verifyToken(accessToken: string) {
+    const supabase = createServerSupabaseClient();
     const { data, error } = await supabase.auth.getUser(accessToken);
     
     if (error) {

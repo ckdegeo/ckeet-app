@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createServerSupabaseClient } from '@/lib/supabase';
 import { AuthService } from '@/lib/services/authService';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function PUT(request: NextRequest) {
   try {
@@ -15,6 +10,8 @@ export async function PUT(request: NextRequest) {
     if (!accessToken) {
       return NextResponse.json({ error: 'Token de acesso não encontrado' }, { status: 401 });
     }
+
+    const supabase = createServerSupabaseClient();
 
     // Verificar usuário autenticado
     const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
