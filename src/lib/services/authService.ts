@@ -243,6 +243,7 @@ export class AuthService {
 
   // Solicitar reset de senha
   static async requestPasswordReset(email: string) {
+    const supabase = createServerSupabaseClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/reset-password`,
     });
@@ -256,6 +257,7 @@ export class AuthService {
 
   // Atualizar senha
   static async updatePassword(accessToken: string, newPassword: string) {
+    const supabase = createServerSupabaseClient();
     const { error } = await supabase.auth.updateUser({
       password: newPassword,
     });
@@ -273,6 +275,7 @@ export class AuthService {
 
   // Reenviar email de verificação
   static async resendVerificationEmail(email: string) {
+    const supabase = createServerSupabaseClient();
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email,
