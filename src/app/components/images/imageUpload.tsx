@@ -141,7 +141,7 @@ export default function ImageUpload({
           <div className="relative w-full h-full rounded-2xl overflow-hidden">
             <img
               src={preview}
-              alt="Preview"
+              alt="Preview da imagem"
               className="w-full h-full object-contain bg-gray-50"
             />
             {!disabled && (

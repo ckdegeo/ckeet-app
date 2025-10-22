@@ -89,7 +89,7 @@ export class AuthMiddleware {
 
 export async function withAuth(
   request: NextRequest,
-  handler: (request: NextRequest, user: any, accessToken: string) => Promise<NextResponse>
+  handler: (request: NextRequest, user: { id: string; email?: string; user_metadata?: Record<string, unknown> }, accessToken: string) => Promise<NextResponse>
 ) {
   const authResult = await AuthMiddleware.verifyAuth(request);
   
@@ -102,7 +102,7 @@ export async function withAuth(
 
 export async function withSellerAuth(
   request: NextRequest,
-  handler: (request: NextRequest, user: any, accessToken: string) => Promise<NextResponse>
+  handler: (request: NextRequest, user: { id: string; email?: string; user_metadata?: Record<string, unknown> }, accessToken: string) => Promise<NextResponse>
 ) {
   const authResult = await AuthMiddleware.verifySeller(request);
   
@@ -115,7 +115,7 @@ export async function withSellerAuth(
 
 export async function withCustomerAuth(
   request: NextRequest,
-  handler: (request: NextRequest, user: any, accessToken: string) => Promise<NextResponse>
+  handler: (request: NextRequest, user: { id: string; email?: string; user_metadata?: Record<string, unknown> }, accessToken: string) => Promise<NextResponse>
 ) {
   const authResult = await AuthMiddleware.verifyCustomer(request);
   

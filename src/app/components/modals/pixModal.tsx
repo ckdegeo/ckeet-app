@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import Button from "../buttons/button";
 import Input from "../inputs/input";
 
 // Ícones SVG
@@ -60,7 +59,6 @@ interface PixModalProps {
   productPrice: number;
   pixCode?: string;
   onCopyPix?: (pixCode: string) => void;
-  onVerifyPayment?: () => void;
   className?: string;
 }
 
@@ -70,7 +68,6 @@ export default function PixModal({
   productPrice,
   pixCode = "00020126580014BR.GOV.BCB.PIX01364c2f6f6c-7b8a-4d5e-9f3e-1a2b3c4d5e6f7890520400005303986540599.905802BR5925NOME DO RECEBEDOR AQUI6014CIDADE AQUI62070503***6304",
   onCopyPix,
-  onVerifyPayment,
   className = "" 
 }: PixModalProps) {
   const [mounted, setMounted] = useState(false);
