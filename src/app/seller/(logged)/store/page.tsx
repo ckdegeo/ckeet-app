@@ -262,6 +262,9 @@ function StorePageContent() {
             onChange={(file, url) => {
               if (file && url) {
                 setStoreConfig(prev => ({ ...prev, logoUrl: url }));
+              } else if (file === null) {
+                // Quando file é null, significa que a imagem foi removida
+                setStoreConfig(prev => ({ ...prev, logoUrl: '' }));
               }
             }}
             placeholder="Arraste seu logotipo aqui ou clique para selecionar"
@@ -276,6 +279,9 @@ function StorePageContent() {
             onChange={(file, url) => {
               if (file && url) {
                 setStoreConfig(prev => ({ ...prev, homeBannerUrl: url }));
+              } else if (file === null) {
+                // Quando file é null, significa que a imagem foi removida
+                setStoreConfig(prev => ({ ...prev, homeBannerUrl: '' }));
               }
             }}
             placeholder="Arraste o banner da tela inicial aqui"
@@ -290,6 +296,9 @@ function StorePageContent() {
             onChange={(file, url) => {
               if (file && url) {
                 setStoreConfig(prev => ({ ...prev, storeBannerUrl: url }));
+              } else if (file === null) {
+                // Quando file é null, significa que a imagem foi removida
+                setStoreConfig(prev => ({ ...prev, storeBannerUrl: '' }));
               }
             }}
             placeholder="Arraste o banner da loja aqui"
