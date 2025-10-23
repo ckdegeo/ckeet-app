@@ -175,7 +175,7 @@ export default function LoginPage() {
             <p className="text-center text-sm text-[var(--on-background)]">
               Não tem uma conta?{" "}
               <Link
-                href="/auth/register"
+                href="/shop/auth/register"
                 className="text-[var(--primary)] hover:opacity-90"
               >
                 Cadastre-se

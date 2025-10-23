@@ -139,7 +139,7 @@ export default function RegisterPage() {
               />
             )}
             <h2 className="text-2xl font-semibold text-[var(--foreground)]">
-              Cadastro de Cliente
+              Cadastro de cliente
             </h2>
           </div>
 
@@ -225,7 +225,7 @@ export default function RegisterPage() {
             <p className="text-center text-sm text-[var(--on-background)]">
               Já tem uma conta?{" "}
               <Link
-                href="/auth/login"
+                href="/shop/auth/login"
                 className="text-[var(--primary)] hover:opacity-90"
               >
                 Faça login
