@@ -124,7 +124,7 @@ export default function LoginPage() {
               />
             )}
             <h2 className="text-2xl font-semibold text-[var(--foreground)]">
-              Login do Cliente
+              Login do cliente
             </h2>
           </div>
 
