@@ -137,7 +137,12 @@ export default function ProductPage() {
         <div className="mb-6">
           <button
             onClick={() => router.push('/shop')}
-            className="flex items-center gap-2 px-5 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 border-2 border-gray-200 rounded-full transition-all"
+            className="px-5 py-2 text-sm rounded-full transition-all flex items-center gap-2"
+            style={{
+              backgroundColor: store.primaryColor || '#6200EE',
+              color: 'white',
+              border: `2px solid ${store.secondaryColor || '#03DAC6'}`
+            }}
           >
             <ArrowLeft className="w-4 h-4" />
             Voltar
