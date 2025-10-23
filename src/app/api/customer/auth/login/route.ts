@@ -4,13 +4,26 @@ import { AuthService } from '@/lib/services/authService';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const { 
+      email, 
+      password,
+      subdomain // Novo: subdomain da loja
+    } = await request.json();
 
     // Validar dados de entrada
-    if (!email || !password) {
+    if (!email || !password || !subdomain) {
       return NextResponse.json(
-        { error: 'Email e senha são obrigatórios' },
+        { error: 'Email, senha e subdomain são obrigatórios' },
         { status: 400 }
+      );
+    }
+
+    // Buscar seller pelo subdomain
+    const seller = await AuthService.getSellerBySubdomain(subdomain);
+    if (!seller) {
+      return NextResponse.json(
+        { error: 'Loja não encontrada' },
+        { status: 404 }
       );
     }
     
@@ -38,11 +51,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verificar se o customer pertence a esta loja específica
+    const customer = await AuthService.getCustomerByEmailAndSeller(email, seller.id);
+    if (!customer) {
+      return NextResponse.json(
+        { error: 'Cliente não encontrado nesta loja' },
+        { status: 404 }
+      );
+    }
+
     // Sincronizar usuário com Prisma
     await AuthService.syncUser(authData.user);
-
-    // Obter dados do customer
-    const customer = await AuthService.getCustomerByEmail(email);
 
     return NextResponse.json({
       success: true,
@@ -52,7 +71,8 @@ export async function POST(request: NextRequest) {
         email: authData.user.email,
         name: authData.user.user_metadata?.name,
         user_type: 'customer',
-        customer_id: customer?.id,
+        customer_id: customer.id,
+        seller_id: seller.id,
       },
       tokens: {
         access_token: authData.session?.access_token,
