@@ -231,7 +231,7 @@ export default function ShopPage() {
                                 }
                                 
                                 // Fallback para compatibilidade com dados antigos - mostrar estoque real
-                                const stock = (product as any).stock || 0;
+                                const stock = (product as Product & { stock?: number }).stock || 0;
                                 return (
                                   <span className={`
                                     px-2 py-1 rounded-full text-xs font-medium
