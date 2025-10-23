@@ -360,7 +360,7 @@ export default function ProductPage() {
                 className="w-full py-4 text-base font-semibold text-white shadow-lg hover:shadow-xl rounded-full transition-all hover:opacity-90"
                 style={{ backgroundColor: store.secondaryColor || '#03DAC6' }}
               >
-                Comprar Agora
+                Comprar agora
               </button>
             </div>
           </div>
