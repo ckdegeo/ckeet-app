@@ -49,11 +49,17 @@ export class AuthService {
   // Sincronizar Customer
   static async syncCustomer(supabaseUser: { id: string; email?: string; user_metadata?: { user_type?: string; name?: string; phone?: string; sellerId?: string } }) {
     // Como email não é mais único, vamos usar findFirst e create/update manualmente
+    const whereClause: { email: string; sellerId?: string } = { 
+      email: supabaseUser.email || ''
+    };
+    
+    // Só adiciona sellerId se ele existir
+    if (supabaseUser.user_metadata?.sellerId) {
+      whereClause.sellerId = supabaseUser.user_metadata.sellerId;
+    }
+
     const existingCustomer = await prisma.customer.findFirst({
-      where: { 
-        email: supabaseUser.email || '',
-        sellerId: supabaseUser.user_metadata?.sellerId 
-      }
+      where: whereClause
     });
 
     if (existingCustomer) {
@@ -71,7 +77,7 @@ export class AuthService {
           email: supabaseUser.email || '',
           name: supabaseUser.user_metadata?.name,
           phone: supabaseUser.user_metadata?.phone,
-          sellerId: supabaseUser.user_metadata?.sellerId,
+          sellerId: supabaseUser.user_metadata?.sellerId || null,
           password: '', // Senha gerenciada pelo Supabase
         }
       });
