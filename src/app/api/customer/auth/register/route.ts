@@ -8,13 +8,14 @@ export async function POST(request: NextRequest) {
       email, 
       password, 
       name, 
-      phone 
+      phone,
+      subdomain // Novo: subdomain da loja
     } = await request.json();
 
     // Validar dados de entrada
-    if (!email || !password || !name) {
+    if (!email || !password || !name || !subdomain) {
       return NextResponse.json(
-        { error: 'Email, senha e nome são obrigatórios' },
+        { error: 'Email, senha, nome e subdomain são obrigatórios' },
         { status: 400 }
       );
     }
@@ -38,11 +39,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar se email já existe
-    const existingCustomer = await AuthService.getCustomerByEmail(email);
+    // Buscar seller pelo subdomain
+    const seller = await AuthService.getSellerBySubdomain(subdomain);
+    if (!seller) {
+      return NextResponse.json(
+        { error: 'Loja não encontrada' },
+        { status: 404 }
+      );
+    }
+
+    // Verificar se email já existe nesta loja específica
+    const existingCustomer = await AuthService.getCustomerByEmailAndSeller(email, seller.id);
     if (existingCustomer) {
       return NextResponse.json(
-        { error: 'Email já cadastrado' },
+        { error: 'Email já cadastrado nesta loja' },
         { status: 409 }
       );
     }
@@ -55,6 +65,7 @@ export async function POST(request: NextRequest) {
         data: {
           user_type: 'customer',
           name,
+          sellerId: seller.id, // Incluir sellerId nos metadados
           ...(phone && { phone }),
         },
       },
@@ -73,6 +84,7 @@ export async function POST(request: NextRequest) {
       email,
       name,
       phone: phone || '',
+      sellerId: seller.id, // Incluir sellerId
       password: '', // Senha gerenciada pelo Supabase
     });
 

@@ -147,6 +147,7 @@ export class AuthService {
     name: string;
     phone: string;
     password?: string; // Opcional, pois Supabase gerencia
+    sellerId?: string; // Seller que "possui" este customer
   }) {
     return await prisma.customer.create({
       data: {
@@ -154,6 +155,7 @@ export class AuthService {
         email: data.email,
         name: data.name,
         phone: data.phone,
+        sellerId: data.sellerId || null,
         password: data.password || '', // Senha gerenciada pelo Supabase
       },
     });
@@ -166,11 +168,47 @@ export class AuthService {
     });
   }
 
+  // Buscar customer por email e sellerId
+  static async getCustomerByEmailAndSeller(email: string, sellerId: string) {
+    return await prisma.customer.findFirst({
+      where: { 
+        email,
+        sellerId 
+      },
+    });
+  }
+
   // Buscar customer por ID
   static async getCustomerById(id: string) {
     return await prisma.customer.findUnique({
       where: { id },
     });
+  }
+
+  // ===========================================
+  // STORE OPERATIONS
+  // ===========================================
+
+  // Buscar seller por subdomain
+  static async getSellerBySubdomain(subdomain: string) {
+    const store = await prisma.store.findUnique({
+      where: { 
+        subdomain,
+        isActive: true 
+      },
+      select: {
+        sellerId: true,
+        seller: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          }
+        }
+      }
+    });
+
+    return store?.seller || null;
   }
 
   // ===========================================
