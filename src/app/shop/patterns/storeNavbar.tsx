@@ -69,7 +69,7 @@ export default function StoreNavbar({
                 {/* Avatar do Usuário */}
                 <div 
                   className="flex items-center gap-2 px-4 py-2 rounded-full text-white"
-                  style={{ backgroundColor: `${secondaryColor}20` }}
+                  style={{ backgroundColor: `${primaryColor}20` }}
                 >
                   <div 
                     className="w-8 h-8 rounded-full flex items-center justify-center"
@@ -88,8 +88,8 @@ export default function StoreNavbar({
                   title="Sair"
                   className="text-white hover:bg-white/20 border-white/30 hover:border-white/50"
                   style={{ 
-                    backgroundColor: `${secondaryColor}20`,
-                    borderColor: `${secondaryColor}40`
+                    backgroundColor: `${primaryColor}20`,
+                    borderColor: `${primaryColor}40`
                   }}
                 />
               </div>
@@ -124,12 +124,18 @@ export default function StoreNavbar({
                   onClick={() => {
                     window.location.href = '/shop/orders';
                   }}
-                  variant="surface"
                   title="Pedidos"
                   className="text-white hover:bg-white/20 border-white/30 hover:border-white/50"
+                  style={{ 
+                    backgroundColor: `${primaryColor}20`,
+                    borderColor: `${primaryColor}40`
+                  }}
                 />
                 {/* Badge de quantidade */}
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                <span 
+                  className="absolute -top-1 -right-1 w-5 h-5 text-white text-xs rounded-full flex items-center justify-center font-bold"
+                  style={{ backgroundColor: secondaryColor }}
+                >
                   0
                 </span>
               </div>
@@ -144,13 +150,20 @@ export default function StoreNavbar({
                 <IconOnlyButton
                   icon={Backpack}
                   onClick={() => {
-    
+                    window.location.href = '/shop/orders';
                   }}
                   variant="surface"
                   title="Pedidos"
                   className="text-white hover:bg-white/20 border-white/30 hover:border-white/50 w-10 h-10"
+                  style={{ 
+                    backgroundColor: `${primaryColor}20`,
+                    borderColor: `${primaryColor}40`
+                  }}
                 />
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold text-[10px]">
+               <span 
+                  className="absolute -top-1 -right-1 w-5 h-5 text-white text-xs rounded-full flex items-center justify-center font-bold"
+                  style={{ backgroundColor: secondaryColor }}
+                >
                   0
                 </span>
               </div>
