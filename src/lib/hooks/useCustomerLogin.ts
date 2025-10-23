@@ -57,8 +57,11 @@ export function useCustomerLogin(): UseCustomerLoginReturn {
 
       // Sucesso - salvar dados de autenticação
       if (result.tokens && result.user) {
-        // Salvar no localStorage
-        saveAuthData(result.user, result.tokens);
+        // Salvar no localStorage com chaves específicas de customer
+        localStorage.setItem('customer_user_data', JSON.stringify(result.user));
+        localStorage.setItem('customer_access_token', result.tokens.access_token);
+        localStorage.setItem('customer_refresh_token', result.tokens.refresh_token);
+        localStorage.setItem('customer_expires_at', result.tokens.expires_at.toString());
         
         // Salvar nos cookies para o middleware
         saveAuthCookies(result.user, result.tokens);
