@@ -9,6 +9,10 @@ export function middleware(request: NextRequest) {
   // Extrair subdomínio
   const subdomain = hostname.split('.')[0];
   
+  console.log('🔍 Middleware - Hostname:', hostname);
+  console.log('🔍 Middleware - Subdomain:', subdomain);
+  console.log('🔍 Middleware - Pathname:', pathname);
+  
   // Verificar se é um subdomínio de loja (não é um subdomínio reservado)
   const isStorefrontDomain = 
     !RESERVED_SUBDOMAINS.includes(subdomain.toLowerCase()) &&
@@ -17,10 +21,15 @@ export function middleware(request: NextRequest) {
     !pathname.startsWith('/customer/') &&
     !pathname.startsWith('/api/') &&
     subdomain !== 'localhost' &&
-    subdomain !== 'localhost:3000';
+    subdomain !== 'localhost:3000' &&
+    subdomain !== 'www' &&
+    subdomain !== 'ckeet';
+
+  console.log('🏪 Is Storefront Domain:', isStorefrontDomain);
 
   // Se for um subdomínio de loja, permitir acesso às rotas da storefront
   if (isStorefrontDomain) {
+    console.log('🔄 Redirecting to /shop');
     // Permitir acesso direto às rotas da storefront
     if (pathname === '/' || pathname.startsWith('/shop')) {
       return NextResponse.next();
