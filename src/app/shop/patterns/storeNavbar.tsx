@@ -1,8 +1,9 @@
 'use client';
 
 import Link from "next/link";
-import { ShoppingCart, User, Menu } from "lucide-react";
+import { User, Menu, Backpack } from "lucide-react";
 import Button from "@/app/components/buttons/button";
+import IconOnlyButton from "@/app/components/buttons/iconOnlyButton";
 import { useState } from "react";
 
 interface StoreNavbarProps {
@@ -131,31 +132,47 @@ export default function StoreNavbar({
               </div>
             )}
 
-            {/* Carrinho (placeholder para futuro) */}
-            <button 
-              className="relative p-2 rounded-full hover:bg-white/10 transition-colors text-white"
-              title="Carrinho"
-            >
-              <ShoppingCart size={22} />
-              {/* Badge de quantidade */}
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                0
-              </span>
-            </button>
+            {/* Inventário (só aparece se autenticado) */}
+            {isAuthenticated && (
+              <div className="relative">
+                <IconOnlyButton
+                  icon={Backpack}
+                  onClick={() => {
+                    // Lógica do inventário
+                    console.log('🎒 Inventário clicado');
+                  }}
+                  variant="surface"
+                  title="Meu Inventário"
+                  className="text-white hover:bg-white/20 border-white/30 hover:border-white/50"
+                />
+                {/* Badge de quantidade */}
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                  0
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-2">
-            {/* Carrinho Mobile */}
-            <button 
-              className="relative p-2 rounded-full hover:bg-white/10 transition-colors text-white"
-              title="Carrinho"
-            >
-              <ShoppingCart size={20} />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold text-[10px]">
-                0
-              </span>
-            </button>
+            {/* Inventário Mobile (só aparece se autenticado) */}
+            {isAuthenticated && (
+              <div className="relative">
+                <IconOnlyButton
+                  icon={Backpack}
+                  onClick={() => {
+                    // Lógica do inventário
+                    console.log('🎒 Inventário clicado');
+                  }}
+                  variant="surface"
+                  title="Meu Inventário"
+                  className="text-white hover:bg-white/20 border-white/30 hover:border-white/50 w-10 h-10"
+                />
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold text-[10px]">
+                  0
+                </span>
+              </div>
+            )}
 
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
