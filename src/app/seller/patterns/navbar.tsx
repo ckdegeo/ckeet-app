@@ -74,7 +74,7 @@ export default function Navbar({ className = "", title = "Seller" }: NavbarProps
             onClick={() => {
               if (storeSubdomain) {
                 // Navegar para a loja dinâmica do seller
-                const storeUrl = `https://${storeSubdomain}.ckeet.vercel.app`;
+                const storeUrl = `https://${storeSubdomain}.ckeet.store`;
                 window.open(storeUrl, '_blank');
               } else {
                 // Se não tem subdomínio, redirecionar para configuração da loja
@@ -82,7 +82,7 @@ export default function Navbar({ className = "", title = "Seller" }: NavbarProps
               }
             }}
             variant="surface"
-            title={storeSubdomain ? `Visualizar minha loja (${storeSubdomain}.ckeet.vercel.app)` : "Configurar loja"}
+            title={storeSubdomain ? `Visualizar minha loja (${storeSubdomain}.ckeet.store)` : "Configurar loja"}
           />
 
           {/* User Menu */}
