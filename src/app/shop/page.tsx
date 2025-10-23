@@ -139,7 +139,7 @@ export default function ShopPage() {
                 {/* Nome da Categoria com linha decorativa */}
                 <div className="flex items-center gap-4 mb-8">
                   <h2 
-                    className="text-4xl font-bold"
+                    className="text-3xl font-bold"
                     style={{ color: store.primaryColor || '#6200EE' }}
                   >
                     {category.name}
@@ -181,13 +181,13 @@ export default function ShopPage() {
 
                         {/* Conteúdo */}
                         <div className="p-4">
-                          <h3 className="text-lg font-medium text-gray-900 mb-2 line-clamp-2 group-hover:text-gray-700 transition-colors">
+                          <h3 className="text-base font-medium text-gray-900 mb-2 line-clamp-2 group-hover:text-gray-700 transition-colors">
                             {product.name}
                           </h3>
                           
                           <div className="flex items-center justify-between mb-3">
                             <span 
-                              className="text-xl font-bold"
+                              className="text-lg font-bold"
                               style={{ color: store.primaryColor || '#6200EE' }}
                             >
                               R$ {product.price.toFixed(2)}
