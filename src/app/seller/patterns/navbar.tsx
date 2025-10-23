@@ -14,17 +14,26 @@ interface NavbarProps {
 export default function Navbar({ className = "", title = "Seller" }: NavbarProps) {
   const { user } = useAuth();
   const [sellerName, setSellerName] = useState<string>("");
+  const [storeSubdomain, setStoreSubdomain] = useState<string>("");
   
-  // Buscar nome do seller diretamente do banco
+  // Buscar nome do seller e subdomínio da loja
   useEffect(() => {
-    const fetchSellerName = async () => {
+    const fetchSellerData = async () => {
       if (!user?.id) return;
       
       try {
-        const response = await fetch(`/api/seller/profile/name?userId=${user.id}`);
+        // Buscar dados do seller e loja
+        const response = await fetch(`/api/seller/store/config`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
         if (response.ok) {
           const data = await response.json();
           setSellerName(data.name || user.name || "Usuário");
+          setStoreSubdomain(data.subdomain || "");
         } else {
           setSellerName(user.name || "Usuário");
         }
@@ -33,7 +42,7 @@ export default function Navbar({ className = "", title = "Seller" }: NavbarProps
       }
     };
 
-    fetchSellerName();
+    fetchSellerData();
   }, [user?.id, user?.name]);
 
   return (
@@ -63,11 +72,17 @@ export default function Navbar({ className = "", title = "Seller" }: NavbarProps
           <IconOnlyButton
             icon={Store}
             onClick={() => {
-              // Navegar para a lojinha do usuário
-              window.open('https://minhaloja.ckeet.com', '_blank');
+              if (storeSubdomain) {
+                // Navegar para a loja dinâmica do seller
+                const storeUrl = `https://${storeSubdomain}.ckeet.vercel.app`;
+                window.open(storeUrl, '_blank');
+              } else {
+                // Se não tem subdomínio, redirecionar para configuração da loja
+                window.location.href = '/seller/store';
+              }
             }}
             variant="surface"
-            title="Visualizar minha loja"
+            title={storeSubdomain ? `Visualizar minha loja (${storeSubdomain}.ckeet.vercel.app)` : "Configurar loja"}
           />
 
           {/* User Menu */}
