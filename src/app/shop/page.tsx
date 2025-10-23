@@ -180,12 +180,12 @@ export default function ShopPage() {
                         )}
 
                         {/* Conteúdo */}
-                        <div className="p-4">
-                          <h3 className="text-base font-medium text-gray-900 mb-2 line-clamp-2 group-hover:text-gray-700 transition-colors">
+                        <div className="p-3">
+                          <h3 className="text-base font-medium text-gray-900 mb-1.5 line-clamp-2 group-hover:text-gray-700 transition-colors">
                             {product.name}
                           </h3>
                           
-                          <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center justify-between mb-2">
                             <span 
                               className="text-lg font-bold"
                               style={{ color: store.primaryColor || '#6200EE' }}
@@ -238,7 +238,7 @@ export default function ShopPage() {
                         </div>
                         
                         {/* Ações */}
-                        <div className="flex items-center justify-end gap-2 p-4 pt-0">
+                        <div className="flex items-center justify-end gap-2 p-3 pt-0">
                           <button
                             className="cursor-pointer flex items-center justify-center gap-2 px-6 py-3 rounded-full font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed text-white hover:opacity-90"
                             style={{ backgroundColor: store.secondaryColor || '#03DAC6' }}
