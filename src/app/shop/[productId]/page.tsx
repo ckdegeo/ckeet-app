@@ -130,89 +130,99 @@ export default function ProductPage() {
       />
 
       {/* Conteúdo do Produto */}
-      <main className="container mx-auto px-8 py-12">
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
-            {/* Galeria de Imagens */}
-            <div className="space-y-4">
-              {/* Imagem Principal */}
-              {selectedImage ? (
-                <div className="aspect-square bg-gray-50 rounded-2xl overflow-hidden relative group">
+      <main className="container mx-auto px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Galeria de Imagens */}
+          <div className="space-y-3">
+            {/* Imagem/Vídeo Principal */}
+            <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden relative group">
+              {selectedImage === 'video' && product.videoUrl ? (
+                <iframe
+                  src={product.videoUrl}
+                  title="Vídeo do produto"
+                  className="w-full h-full"
+                  allowFullScreen
+                />
+              ) : selectedImage ? (
+                <>
                   <img
                     src={selectedImage}
                     alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
-                </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent"></div>
+                </>
               ) : (
-                <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center">
+                <div className="flex items-center justify-center h-full">
                   <svg className="w-16 h-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
               )}
-
-              {/* Miniaturas */}
-              {images.length > 1 && (
-                <div className="grid grid-cols-3 gap-3">
-                  {images.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(image!)}
-                      className={`aspect-square bg-gray-50 rounded-xl overflow-hidden border-2 transition-all hover:scale-105 ${
-                        selectedImage === image
-                          ? 'border-current shadow-md'
-                          : 'border-transparent hover:border-gray-200'
-                      }`}
-                      style={{ 
-                        borderColor: selectedImage === image ? store.primaryColor : 'transparent' 
-                      }}
-                    >
-                      <img
-                        src={image!}
-                        alt={`${product.name} - ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Vídeo (se disponível) */}
-              {product.videoUrl && (
-                <div className="aspect-video bg-gray-50 rounded-2xl overflow-hidden">
-                  <iframe
-                    src={product.videoUrl}
-                    title="Vídeo do produto"
-                    className="w-full h-full"
-                    allowFullScreen
-                  />
-                </div>
-              )}
             </div>
 
-            {/* Informações do Produto */}
-            <div className="space-y-6">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-3">
-                  {product.name}
-                </h1>
-                <div className="flex items-center justify-between mb-4">
-                  <p 
-                    className="text-4xl font-bold"
-                    style={{ color: store.primaryColor || '#6200EE' }}
-                  >
-                    R$ {product.price.toFixed(2)}
-                  </p>
-                  <div className="flex items-center gap-1">
+            {/* Miniaturas */}
+            <div className="grid grid-cols-4 gap-2">
+              {images.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImage(image!)}
+                  className={`aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 transition-all ${
+                    selectedImage === image
+                      ? 'border-current'
+                      : 'border-transparent hover:border-gray-300'
+                  }`}
+                  style={{ 
+                    borderColor: selectedImage === image ? store.primaryColor : 'transparent' 
+                  }}
+                >
+                  <img
+                    src={image!}
+                    alt={`${product.name} - ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+              
+              {/* Miniatura do Vídeo */}
+              {product.videoUrl && (
+                <button
+                  onClick={() => setSelectedImage('video')}
+                  className={`aspect-square bg-gray-900 rounded-lg overflow-hidden border-2 transition-all flex items-center justify-center relative ${
+                    selectedImage === 'video'
+                      ? 'border-current'
+                      : 'border-transparent hover:border-gray-300'
+                  }`}
+                  style={{ 
+                    borderColor: selectedImage === 'video' ? store.primaryColor : 'transparent' 
+                  }}
+                >
+                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                  <div className="absolute inset-0 bg-black/30"></div>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Informações do Produto */}
+          <div className="flex flex-col">
+            {/* Header do Produto */}
+            <div className="pb-6 border-b border-gray-200">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                    {product.name}
+                  </h1>
+                  <div className="flex items-center gap-2">
                     {(() => {
                       // Se for estoque por linha, mostrar quantidade de linhas disponíveis
                       if (product.stockType === 'LINE') {
                         const linesCount = product.stockLines?.filter(line => !line.isUsed).length || 0;
                         return (
                           <span className={`
-                            px-3 py-1 rounded-full text-sm font-medium
+                            px-2.5 py-1 rounded-full text-xs font-semibold
                             ${linesCount > 10 
                               ? 'bg-green-100 text-green-800' 
                               : linesCount > 0 
@@ -228,7 +238,7 @@ export default function ProductPage() {
                       // Se for estoque fixo, mostrar badge "FIXO"
                       if (product.stockType === 'FIXED') {
                         return (
-                          <span className="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
                             FIXO
                           </span>
                         );
@@ -237,7 +247,7 @@ export default function ProductPage() {
                       // Se for KeyAuth, mostrar badge "KEYAUTH"
                       if (product.stockType === 'KEYAUTH') {
                         return (
-                          <span className="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
                             KEYAUTH
                           </span>
                         );
@@ -247,7 +257,7 @@ export default function ProductPage() {
                       const stock = (product as Product & { stock?: number }).stock || 0;
                       return (
                         <span className={`
-                          px-3 py-1 rounded-full text-sm font-medium
+                          px-2.5 py-1 rounded-full text-xs font-semibold
                           ${stock > 10 
                             ? 'bg-green-100 text-green-800' 
                             : stock > 0 
@@ -262,59 +272,71 @@ export default function ProductPage() {
                   </div>
                 </div>
               </div>
+              
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold" style={{ color: store.primaryColor || '#6200EE' }}>
+                  R$ {product.price.toFixed(2)}
+                </span>
+              </div>
+            </div>
 
-              {product.description && (
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-3">Descrição</h2>
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
-                      {product.description}
-                    </p>
+            {/* Descrição */}
+            {product.description && (
+              <div className="py-6 border-b border-gray-200">
+                <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">
+                  Sobre o produto
+                </h2>
+                <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
+                  {product.description}
+                </p>
+              </div>
+            )}
+
+            {/* Features */}
+            <div className="py-6 border-b border-gray-200">
+              <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">
+                Vantagens
+              </h2>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0 w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
                   </div>
+                  <span className="text-sm text-gray-700">Entrega instantânea</span>
                 </div>
-              )}
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0 w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center">
+                    <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5z" />
+                    </svg>
+                  </div>
+                  <span className="text-sm text-gray-700">Suporte 24/7</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex-shrink-0 w-5 h-5 bg-purple-100 rounded-full flex items-center justify-center">
+                    <svg className="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <span className="text-sm text-gray-700">Pagamento seguro</span>
+                </div>
+              </div>
+            </div>
 
-              {/* Botão de Compra */}
+            {/* Botão de Compra */}
+            <div className="pt-6">
               <Button
                 onClick={() => {
                   // TODO: Implementar lógica de carrinho/checkout
                   alert('Funcionalidade de compra em desenvolvimento!');
                 }}
-                className="w-full py-4 text-lg font-semibold"
+                className="w-full py-4 text-base font-semibold shadow-lg hover:shadow-xl"
                 style={{ backgroundColor: store.secondaryColor || '#03DAC6' }}
               >
                 Comprar Agora
               </Button>
-
-              {/* Informações Adicionais */}
-              <div className="border-t border-gray-200 pt-6">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 text-gray-700">
-                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span className="font-medium">Entrega instantânea</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-gray-700">
-                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5z" />
-                      </svg>
-                    </div>
-                    <span className="font-medium">Suporte 24/7</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-gray-700">
-                    <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
-                      <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                    </div>
-                    <span className="font-medium">Pagamento seguro</span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
