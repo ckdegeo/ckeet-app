@@ -82,6 +82,68 @@ export class ImageService {
   }
 
   /**
+   * Upload de uma imagem de produto para o Supabase Storage via API do servidor
+   */
+  static async uploadProductImage(
+    file: File,
+    productId?: string,
+    imageType: 'image1' | 'image2' | 'image3' = 'image1'
+  ): Promise<UploadResult> {
+    try {
+      console.log('[ImageService] Iniciando upload de imagem de produto...');
+      
+      // Obter token de acesso
+      const accessToken = getAccessToken();
+      if (!accessToken) {
+        console.log('[ImageService] Token de acesso não encontrado');
+        return {
+          success: false,
+          error: 'Token de acesso não encontrado'
+        };
+      }
+
+      // Criar FormData para enviar o arquivo
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('imageType', imageType);
+      if (productId) {
+        formData.append('productId', productId);
+      }
+
+      // Fazer upload via API do servidor
+      console.log('[ImageService] Enviando requisição para API de produtos...');
+      const response = await fetch('/api/seller/products/upload-image', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: result.error || 'Erro no upload'
+        };
+      }
+
+      return {
+        success: true,
+        url: result.url
+      };
+
+    } catch (error) {
+      console.error('Erro no upload da imagem do produto:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro desconhecido no upload'
+      };
+    }
+  }
+
+  /**
    * Deletar uma imagem do Supabase Storage via API do servidor
    */
   static async deleteImage(imageUrl: string): Promise<DeleteResult> {

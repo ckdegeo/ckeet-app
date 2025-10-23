@@ -31,9 +31,23 @@ export const getUserData = (): UserData | null => {
   return userData ? JSON.parse(userData) : null;
 };
 
-// Obter access token do localStorage
-export const getAccessToken = (): string | null => {
-  return localStorage.getItem('access_token');
+// Obter access token do localStorage (client-side) ou headers (server-side)
+export const getAccessToken = (request?: Request): string | null => {
+  // Se estiver no servidor (API route), ler do header Authorization
+  if (request) {
+    const authHeader = request.headers.get('authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      return authHeader.substring(7);
+    }
+    return null;
+  }
+  
+  // Se estiver no cliente, usar localStorage
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('access_token');
+  }
+  
+  return null;
 };
 
 // Obter refresh token do localStorage

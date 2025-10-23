@@ -43,7 +43,6 @@ export default function Tabs({
               onClick={() => !tab.disabled && onChange(tab.id)}
               disabled={tab.disabled}
               className={`
-                cursor-pointer
                 px-6 py-3
                 rounded-full
                 font-medium
@@ -55,8 +54,11 @@ export default function Tabs({
                     ? "bg-[var(--primary)] text-[var(--on-primary)]"
                     : "text-[var(--foreground)] hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
                 }
-                disabled:opacity-50
-                disabled:cursor-not-allowed
+                ${
+                  tab.disabled
+                    ? "opacity-40 cursor-not-allowed"
+                    : "cursor-pointer"
+                }
               `}
             >
               {tab.icon && <tab.icon size={18} />}

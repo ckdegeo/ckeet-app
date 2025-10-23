@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Button from '@/app/components/buttons/button';
 import { Plus, Save } from 'lucide-react';
 import CategorySection from '@/app/components/categories/CategorySection';
 import CategoryModal from '@/app/components/modals/categoryModal';
 import DeleteCategoryModal from '@/app/components/modals/deleteCategoryModal';
+import DeleteProductModal from '@/app/components/modals/deleteProductModal';
 import { useCategories, Category } from '@/lib/hooks/useCategories';
 import { toast } from 'react-toastify';
 
@@ -20,6 +22,7 @@ interface ProductDisplay {
 }
 
 export default function Products() {
+  const router = useRouter();
   // Hook para gerenciar categorias
   const { 
     categories, 
@@ -35,19 +38,30 @@ export default function Products() {
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState<string>('');
   
-  // Estado para modal de exclusão
+  // Estado para modal de exclusão de categoria
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null);
   const [deletingCategoryName, setDeletingCategoryName] = useState<string>('');
+  
+  // Estado para modal de exclusão de produto
+  const [isDeleteProductModalOpen, setIsDeleteProductModalOpen] = useState(false);
+  const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
+  const [deletingProductName, setDeletingProductName] = useState<string>('');
 
   // Estado local para gerenciar ordem temporária
   const [localCategories, setLocalCategories] = useState<Category[]>([]);
   const [hasOrderChanges, setHasOrderChanges] = useState(false);
+  
+  // Estado para controlar mudanças de ordem de produtos
+  const [hasProductOrderChanges, setHasProductOrderChanges] = useState(false);
+  const [productOrderChangesByCategory, setProductOrderChangesByCategory] = useState<Record<string, boolean>>({});
 
   // Atualizar categorias locais quando as categorias do servidor mudarem
   useEffect(() => {
     setLocalCategories(categories);
     setHasOrderChanges(false);
+    setHasProductOrderChanges(false);
+    setProductOrderChangesByCategory({});
   }, [categories]);
 
   const handleCreateCategory = () => {
@@ -100,23 +114,90 @@ export default function Products() {
   };
 
   const handleAddProduct = (categoryId: string) => {
-    console.log('Adicionar produto à categoria:', categoryId);
-    // Implementar lógica para adicionar produto
+    console.log('handleAddProduct chamado com categoryId:', categoryId);
+    // Navegar para página de criação com categoryId como query param
+    const url = `/seller/products/new?categoryId=${categoryId}`;
+    console.log('Navegando para:', url);
+    router.push(url);
   };
 
   const handleEditProduct = (productId: string) => {
     console.log('Editar produto:', productId);
-    // Implementar lógica para editar produto
+    // Redirecionar para página de edição do produto
+    router.push(`/seller/products/${productId}`);
   };
 
   const handleDeleteProduct = (productId: string) => {
-    console.log('Excluir produto:', productId);
-    // TODO: Implementar exclusão de produto via API
+    // Buscar informações do produto para exibir no modal
+    const product = localCategories
+      .flatMap(cat => cat.products)
+      .find(prod => prod.id === productId);
+    
+    if (product) {
+      setDeletingProductId(productId);
+      setDeletingProductName(product.title);
+      setIsDeleteProductModalOpen(true);
+    }
+  };
+
+  const handleConfirmDeleteProduct = async () => {
+    if (!deletingProductId) return;
+
+    try {
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) {
+        toast.error('Token de acesso não encontrado');
+        return;
+      }
+
+      const response = await fetch('/api/seller/products/soft-delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({
+          id: deletingProductId
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Erro ao excluir produto');
+      }
+
+      toast.success('Produto excluído com sucesso!');
+      
+      // Recarregar categorias para atualizar a lista
+      window.location.reload();
+    } catch (error) {
+      console.error('Erro ao excluir produto:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao excluir produto');
+    } finally {
+      setIsDeleteProductModalOpen(false);
+      setDeletingProductId(null);
+      setDeletingProductName('');
+    }
   };
 
   const handleReorderProducts = (categoryId: string, reorderedProducts: ProductDisplay[]) => {
     console.log('Reordenar produtos na categoria:', categoryId, reorderedProducts);
-    // TODO: Implementar lógica de reordenação quando necessário
+    
+    // Atualizar a categoria com os produtos reordenados
+    setLocalCategories(prevCategories => 
+      prevCategories.map(cat => 
+        cat.id === categoryId 
+          ? { ...cat, products: reorderedProducts }
+          : cat
+      )
+    );
+    
+    // Marcar que há mudanças de ordem para esta categoria
+    setProductOrderChangesByCategory(prev => ({
+      ...prev,
+      [categoryId]: true
+    }));
+    setHasProductOrderChanges(true);
   };
 
   const handleMoveCategoryUp = (categoryId: string) => {
@@ -162,23 +243,86 @@ export default function Products() {
   const handleSaveOrder = async () => {
     try {
       console.log('Iniciando salvamento da ordem...');
-      await saveCategoriesOrder(localCategories);
-      console.log('Ordem salva com sucesso!');
+      
+      // Salvar ordem das categorias se houver mudanças
+      if (hasOrderChanges) {
+        await saveCategoriesOrder(localCategories);
+        console.log('Ordem das categorias salva com sucesso!');
+      }
+      
+      // Salvar ordem dos produtos se houver mudanças
+      if (hasProductOrderChanges) {
+        await saveProductsOrder();
+        console.log('Ordem dos produtos salva com sucesso!');
+      }
+      
       setHasOrderChanges(false);
+      setHasProductOrderChanges(false);
+      setProductOrderChangesByCategory({});
       
       // Garantir que o toast apareça
       setTimeout(() => {
-        toast.success('Ordem das categorias salva com sucesso!');
+        if (hasOrderChanges && hasProductOrderChanges) {
+          toast.success('Ordem salva com sucesso!');
+        } else if (hasOrderChanges) {
+          toast.success('Ordem das categorias salva com sucesso!');
+        } else if (hasProductOrderChanges) {
+          toast.success('Ordem dos produtos salva com sucesso!');
+        }
       }, 100);
     } catch (error) {
       console.error('Erro ao salvar ordem:', error);
-      toast.error('Erro ao salvar ordem das categorias');
+      toast.error('Erro ao salvar ordem');
+    }
+  };
+  
+  const saveProductsOrder = async () => {
+    const accessToken = localStorage.getItem('access_token');
+    if (!accessToken) {
+      throw new Error('Token de acesso não encontrado');
+    }
+    
+    // Coletar todos os produtos com mudanças de ordem
+    const productsToUpdate: { id: string; order: number }[] = [];
+    
+    Object.keys(productOrderChangesByCategory).forEach(categoryId => {
+      if (productOrderChangesByCategory[categoryId]) {
+        const category = localCategories.find(cat => cat.id === categoryId);
+        if (category) {
+          category.products.forEach(product => {
+            productsToUpdate.push({
+              id: product.id,
+              order: product.order
+            });
+          });
+        }
+      }
+    });
+    
+    if (productsToUpdate.length === 0) {
+      return;
+    }
+    
+    const response = await fetch('/api/seller/products/batch-reorder', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      },
+      body: JSON.stringify({ products: productsToUpdate })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Erro ao salvar ordem dos produtos');
     }
   };
 
   const handleCancelOrder = () => {
     setLocalCategories(categories);
     setHasOrderChanges(false);
+    setHasProductOrderChanges(false);
+    setProductOrderChangesByCategory({});
     toast.info('Alterações canceladas');
   };
 
@@ -203,7 +347,7 @@ export default function Products() {
         </h1>
         
         <div className="flex items-center gap-3 flex-wrap">
-          {hasOrderChanges && (
+          {(hasOrderChanges || hasProductOrderChanges) && (
             <>
               <Button 
                 onClick={handleCancelOrder}
@@ -287,6 +431,14 @@ export default function Products() {
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleConfirmDelete}
         categoryName={deletingCategoryName}
+      />
+
+      {/* Modal de exclusão de produto */}
+      <DeleteProductModal
+        isOpen={isDeleteProductModalOpen}
+        onClose={() => setIsDeleteProductModalOpen(false)}
+        onConfirm={handleConfirmDeleteProduct}
+        productName={deletingProductName}
       />
     </div>
   );

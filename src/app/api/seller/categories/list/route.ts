@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
         id: product.id,
         title: product.name,
         price: product.price,
-        imageUrl: product.imageUrl || '',
+        imageUrl: product.imageUrl || '/product1.gif', // Usar imagem padrão se não houver imagem
         order: product.order,
         stock: 0 // Placeholder - será implementado quando necessário
       }))

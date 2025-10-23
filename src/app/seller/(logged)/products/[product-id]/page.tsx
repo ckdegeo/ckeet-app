@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Save, Box, Hash, Key, Edit, Trash2, Upload, Download, Plus } from 'lucide-react';
+import { toast } from 'react-toastify';
 import IconOnlyButton from '@/app/components/buttons/iconOnlyButton';
 import Button from '@/app/components/buttons/button';
 import Input from '@/app/components/inputs/input';
@@ -18,8 +19,10 @@ import { ProductFormData, StockType, StockLineFormData, DeliverableFormData } fr
 export default function ProductPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const productId = params['product-id'];
   const isNewProduct = productId === 'new';
+  const categoryId = searchParams.get('categoryId');
 
   const [productData, setProductData] = useState<ProductFormData>({
     name: '',
@@ -36,6 +39,134 @@ export default function ProductPage() {
     keyAuthSellerKey: ''
   });
 
+  // Carregar dados do produto se estiver editando
+  useEffect(() => {
+    if (!isNewProduct && productId) {
+      const loadProductData = async () => {
+        try {
+          const accessToken = localStorage.getItem('access_token');
+          if (!accessToken) {
+            toast.error('Token de acesso não encontrado');
+            return;
+          }
+
+          const response = await fetch(`/api/seller/products/list?productId=${productId}`, {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error('Erro ao carregar produto');
+          }
+
+          const data = await response.json();
+          const product = data.products[0];
+
+          if (product) {
+            setProductData({
+              name: product.name,
+              description: product.description || '',
+              price: product.price,
+              videoUrl: product.videoUrl || '',
+              image1: product.imageUrl && product.imageUrl !== 'uploaded-image-url' ? { url: product.imageUrl } : null,
+              image2: product.image2Url && product.image2Url !== 'uploaded-image-url' ? { url: product.image2Url } : null,
+              image3: product.image3Url && product.image3Url !== 'uploaded-image-url' ? { url: product.image3Url } : null,
+              image1Url: product.imageUrl && product.imageUrl !== 'uploaded-image-url' ? product.imageUrl : undefined,
+              image2Url: product.image2Url && product.image2Url !== 'uploaded-image-url' ? product.image2Url : undefined,
+              image3Url: product.image3Url && product.image3Url !== 'uploaded-image-url' ? product.image3Url : undefined,
+              stockType: product.stockType,
+              fixedContent: product.fixedContent || '',
+              keyAuthDays: product.keyAuthDays || 0,
+              keyAuthPublicKey: product.keyAuthPublicKey || '',
+              keyAuthSellerKey: product.keyAuthSellerKey || ''
+            });
+            
+            // Definir a tab ativa baseada no stockType do produto em edição
+            setActiveStockTab(stockTypeToTabId(product.stockType));
+
+            // Carregar linhas de estoque
+            if (product.stockLines && product.stockLines.length > 0) {
+              setStockLines(product.stockLines.map((line: { id: string; content: string }, index: number) => ({
+                id: line.id,
+                line: index + 1,
+                content: line.content
+              })));
+            }
+
+            // Carregar entregáveis
+            if (product.deliverables && product.deliverables.length > 0) {
+              setDeliverableLinks(product.deliverables.map((deliverable: { id: string; name: string; url: string }) => ({
+                id: deliverable.id,
+                name: deliverable.name,
+                url: deliverable.url
+              })));
+            }
+
+            // Buscar nome da categoria e salvar categoryId
+            if (product.categoryId) {
+              setLoadedCategoryId(product.categoryId);
+              // Salvar no sessionStorage para persistir entre recarregamentos
+              sessionStorage.setItem(`product_${productId}_categoryId`, product.categoryId);
+              
+              const categoriesResponse = await fetch('/api/seller/categories/list', {
+                headers: {
+                  'Authorization': `Bearer ${accessToken}`
+                }
+              });
+
+              if (categoriesResponse.ok) {
+                const categoriesData = await categoriesResponse.json();
+                const category = categoriesData.categories.find((cat: { id: string; name: string }) => cat.id === product.categoryId);
+                if (category) {
+                  setCategoryName(category.name);
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao carregar produto:', error);
+          toast.error('Erro ao carregar dados do produto');
+        }
+      };
+
+      loadProductData();
+    }
+  }, [isNewProduct, productId]);
+
+  // Buscar nome da categoria (apenas para novos produtos)
+  useEffect(() => {
+    if (categoryId && isNewProduct) {
+      const fetchCategoryName = async () => {
+        try {
+          const accessToken = localStorage.getItem('access_token');
+
+          if (!accessToken) {
+            return;
+          }
+
+          const response = await fetch('/api/seller/categories/list', {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`
+            }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const category = data.categories.find((cat: { id: string; name: string }) => cat.id === categoryId);
+            if (category) {
+              setCategoryName(category.name);
+            }
+          }
+        } catch (error) {
+          console.error('Erro ao buscar categoria:', error);
+        }
+      };
+
+      fetchCategoryName();
+    }
+  }, [categoryId, isNewProduct]);
+
   const [imagePreviews, setImagePreviews] = useState({
     image1: '',
     image2: '',
@@ -45,6 +176,29 @@ export default function ProductPage() {
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [activeStockTab, setActiveStockTab] = useState('por_linha');
+  const [categoryName, setCategoryName] = useState<string>('');
+  const [loadedCategoryId, setLoadedCategoryId] = useState<string>(() => {
+    // Tentar carregar do sessionStorage primeiro
+    if (typeof window !== 'undefined' && !isNewProduct && productId) {
+      const cached = sessionStorage.getItem(`product_${productId}_categoryId`);
+      if (cached) return cached;
+    }
+    return '';
+  });
+  
+  // Mapear stockType para ID da tab
+  const stockTypeToTabId = (stockType: StockType): string => {
+    switch (stockType) {
+      case StockType.LINE:
+        return 'por_linha';
+      case StockType.FIXED:
+        return 'fixo';
+      case StockType.KEYAUTH:
+        return 'keyauth';
+      default:
+        return 'por_linha';
+    }
+  };
   
   // Estados para estoque por linha
   const [stockLines, setStockLines] = useState<Array<{id: string; line: number; content: string}>>([]);
@@ -90,12 +244,24 @@ export default function ProductPage() {
     }
   };
 
-  const handleImageChange = (imageKey: 'image1' | 'image2' | 'image3') => (file: File | null) => {
-    setProductData(prev => ({
-      ...prev,
-      [imageKey]: file
-    }));
+  const handleImageChange = (imageKey: 'image1' | 'image2' | 'image3') => (file: File | null, url?: string) => {
+    const urlKey = `${imageKey}Url` as 'image1Url' | 'image2Url' | 'image3Url';
     
+    // Se houver URL (imagem foi upada), armazenar
+    if (url) {
+      setProductData(prev => ({
+        ...prev,
+        [imageKey]: { url }, // Definir como objeto com URL para exibição
+        [urlKey]: url // Armazenar URL para backend
+      }));
+    } else {
+      // Se não há URL, definir como null e remover a URL também
+      setProductData(prev => ({
+        ...prev,
+        [imageKey]: null,
+        [urlKey]: undefined
+      }));
+    }
     
     // Limpar erro do campo quando o usuário fizer upload
     if (errors[imageKey]) {
@@ -108,40 +274,216 @@ export default function ProductPage() {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
+    const errorMessages: string[] = [];
 
+    // Validação de campos obrigatórios básicos
     if (!productData.name.trim()) {
       newErrors.name = 'Nome do produto é obrigatório';
+      errorMessages.push('❌ Nome do produto');
     }
 
     if (!productData.description.trim()) {
       newErrors.description = 'Descrição é obrigatória';
+      errorMessages.push('❌ Descrição do produto');
     }
 
     if (productData.price <= 0) {
       newErrors.price = 'Preço deve ser maior que zero';
+      errorMessages.push('❌ Preço válido (maior que R$ 0,00)');
     }
 
-    if (!productData.image1) {
+    // Verificar se há pelo menos uma imagem (URL ou objeto com URL)
+    const hasImage = productData.image1Url || 
+                     (productData.image1 && typeof productData.image1 === 'object' && 'url' in productData.image1);
+    
+    if (!hasImage) {
       newErrors.image1 = 'Pelo menos uma imagem é obrigatória';
+      errorMessages.push('❌ Pelo menos 1 imagem do produto');
+    }
+
+    // Validações específicas por tipo de estoque
+    if (productData.stockType === StockType.FIXED) {
+      if (!productData.fixedContent?.trim()) {
+        newErrors.fixedContent = 'Conteúdo fixo é obrigatório';
+        errorMessages.push('❌ Conteúdo fixo (aba Estoque)');
+      }
+    }
+
+    if (productData.stockType === StockType.KEYAUTH) {
+      if (!productData.keyAuthDays || productData.keyAuthDays <= 0) {
+        newErrors.keyAuthDays = 'Número de dias é obrigatório';
+        errorMessages.push('❌ Número de dias (aba Estoque)');
+      }
+      if (!productData.keyAuthPublicKey?.trim()) {
+        newErrors.keyAuthPublicKey = 'Chave pública é obrigatória';
+        errorMessages.push('❌ Chave pública (aba Estoque)');
+      }
+      if (!productData.keyAuthSellerKey?.trim()) {
+        newErrors.keyAuthSellerKey = 'Seller key é obrigatória';
+        errorMessages.push('❌ Seller key (aba Estoque)');
+      }
+    }
+
+    if (productData.stockType === StockType.LINE) {
+      if (stockLines.length === 0) {
+        if (newStockContent.trim()) {
+          newErrors.stockLines = 'Você digitou o conteúdo mas não clicou em "Adicionar"';
+          errorMessages.push('❌ Clique no botão "+ Adicionar" para adicionar a linha de estoque');
+        } else {
+          newErrors.stockLines = 'Adicione pelo menos uma linha de estoque';
+          errorMessages.push('❌ Pelo menos 1 linha de estoque (aba Estoque > Por Linha)');
+        }
+      }
     }
 
     setErrors(newErrors);
+    
+    // Se houver erros, mostrar lista completa de forma clara
+    if (errorMessages.length > 0) {
+      // Toast principal com contagem
+      toast.error(
+        `Preencha os campos obrigatórios (${errorMessages.length} ${errorMessages.length === 1 ? 'pendente' : 'pendentes'})`,
+        {
+          autoClose: 5000,
+          position: 'top-center'
+        }
+      );
+      
+      // Toast detalhado com lista
+      setTimeout(() => {
+        toast.warning(
+          <div>
+            <strong>Campos pendentes:</strong>
+            <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
+              {errorMessages.map((msg, index) => (
+                <li key={index} style={{ marginBottom: '4px' }}>{msg}</li>
+              ))}
+            </ul>
+          </div>,
+          {
+            autoClose: 8000,
+            position: 'top-right'
+          }
+        );
+      }, 300);
+      
+      // Scroll suave para o topo para ver o alerta de erros
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+    
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSave = async () => {
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      return;
+    }
+
+    // SOLUÇÃO SIMPLES: Sempre buscar categoryId do banco para produtos em edição
+    let currentCategoryId = categoryId; // Para novos produtos
+    
+    // Se for edição, buscar categoryId do banco SEMPRE
+    if (!isNewProduct) {
+      try {
+        const accessToken = localStorage.getItem('access_token');
+        const response = await fetch(`/api/seller/products/list?productId=${productId}`, {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          const product = data.products[0];
+          
+          if (product?.categoryId) {
+            currentCategoryId = product.categoryId;
+          } else {
+            toast.error('Produto não tem categoria associada');
+            return;
+          }
+        } else {
+          toast.error('Erro ao carregar dados do produto');
+          return;
+        }
+      } catch (error) {
+        console.error('Erro ao buscar produto:', error);
+        toast.error('Erro ao carregar dados do produto');
+        return;
+      }
+    }
+    
+    // Verificar se temos categoryId
+    if (!currentCategoryId) {
+      toast.error('Categoria não selecionada');
+      return;
+    }
 
     setIsSaving(true);
     try {
-      // Simular salvamento
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log('Produto salvo:', productData);
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) {
+        toast.error('Token de acesso não encontrado. Por favor, faça login novamente.');
+        throw new Error('Token de acesso não encontrado');
+      }
+
+      // Determinar a URL da API (criar ou editar)
+      const apiUrl = isNewProduct ? '/api/seller/products/create' : '/api/seller/products/edit';
+      const method = isNewProduct ? 'POST' : 'PUT';
+
+      const requestBody: { [key: string]: unknown } = {
+        name: productData.name,
+        description: productData.description,
+        price: productData.price,
+        imageUrl: productData.image1Url || null,
+        image2Url: productData.image2Url || null,
+        image3Url: productData.image3Url || null,
+        videoUrl: productData.videoUrl,
+        stockType: productData.stockType,
+        fixedContent: productData.fixedContent,
+        keyAuthDays: productData.keyAuthDays,
+        keyAuthPublicKey: productData.keyAuthPublicKey,
+        keyAuthSellerKey: productData.keyAuthSellerKey,
+        stockLines: stockLines.map(line => ({ content: line.content })),
+        deliverables: deliverableLinks.map(link => ({ name: link.name, url: link.url }))
+      };
+
+      // Adicionar categoryId para ambos os casos
+      requestBody.categoryId = currentCategoryId;
       
-      // Redirecionar para lista de produtos
-      router.push('/products');
+      if (!isNewProduct) {
+        requestBody.id = productId;
+      }
+
+      const response = await fetch(apiUrl, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Erro ao salvar produto');
+      }
+
+      await response.json();
+      
+      // Mostrar toast de sucesso
+      toast.success(isNewProduct ? 'Produto criado com sucesso!' : 'Produto atualizado com sucesso!');
+      
+      // Redirecionar para lista de produtos no ambiente logado após um pequeno delay
+      setTimeout(() => {
+        router.push('/seller/products');
+      }, 500);
     } catch (error) {
       console.error('Erro ao salvar produto:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao salvar produto');
     } finally {
       setIsSaving(false);
     }
@@ -159,6 +501,14 @@ export default function ProductPage() {
     
     setStockLines(prev => [...prev, newLine]);
     setNewStockContent('');
+    
+    // Limpar erro de stockLines quando adicionar uma linha
+    if (errors.stockLines) {
+      setErrors(prev => ({
+        ...prev,
+        stockLines: undefined
+      }));
+    }
   };
 
   const handleEditStockLine = (line: {id: string; line: number; content: string}) => {
@@ -182,13 +532,11 @@ export default function ProductPage() {
 
   const handleImportExcel = () => {
     // Implementar importação de Excel
-    console.log('Importar Excel');
     alert('Funcionalidade de importação será implementada');
   };
 
   const handleExportExcel = () => {
     // Implementar exportação de Excel
-    console.log('Exportar Excel:', stockLines);
     alert('Funcionalidade de exportação será implementada');
   };
 
@@ -213,6 +561,14 @@ export default function ProductPage() {
     
     setDeliverableLinks(prev => [...prev, newLink]);
     setNewDeliverable({ name: '', url: '' });
+    
+    // Limpar erro de deliverables quando adicionar um
+    if (errors.deliverables) {
+      setErrors(prev => ({
+        ...prev,
+        deliverables: undefined
+      }));
+    }
   };
 
   const handleEditDeliverable = (link: {id: string; name: string; url: string}) => {
@@ -303,91 +659,136 @@ export default function ProductPage() {
             onClick={handleBack}
             variant="surface"
           />
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">
-            {isNewProduct ? 'Criar Produto' : `Editar Produto ${productId}`}
-          </h1>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-[var(--foreground)]">
+                {isNewProduct ? 'Criar produto' : 'Editar produto'}
+              </h1>
+              {categoryName && (
+                <span className="text-sm font-light text-[var(--on-background)]">
+                  / {categoryName}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
         
         <Button
           onClick={handleSave}
           disabled={isSaving}
           className="flex items-center gap-2"
+          title={isSaving ? 'Salvando produto...' : 'Clique para salvar (validação será feita)'}
         >
           <Save size={18} />
           {isSaving ? 'Salvando...' : 'Salvar Produto'}
         </Button>
       </div>
 
+      {/* Alerta de erros de validação */}
+      {Object.keys(errors).length > 0 && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 dark:bg-red-800 flex items-center justify-center">
+              <span className="text-red-600 dark:text-red-200 font-bold text-sm">!</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-red-800 dark:text-red-200 mb-2">
+                {Object.keys(errors).length} {Object.keys(errors).length === 1 ? 'campo precisa' : 'campos precisam'} ser preenchido{Object.keys(errors).length === 1 ? '' : 's'}:
+              </h3>
+              <ul className="text-sm text-red-700 dark:text-red-300 space-y-1">
+                {Object.entries(errors).map(([field, error]) => (
+                  <li key={field}>• {error}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Formulário */}
       <div className="space-y-8">
-        {/* Nome do Produto */}
-        <Input
-          label="Nome do produto"
-          placeholder="Digite o nome do produto"
-          value={productData.name}
-          onChange={handleInputChange('name')}
-          error={errors.name}
-          maxLength={100}
-        />
+        {/* Grid Principal - Informações do Produto */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Coluna 1: Nome, Preço, URL do Vídeo */}
+          <div className="space-y-6">
+            <Input
+              label="Nome do produto"
+              placeholder="Digite o nome do produto"
+              value={productData.name}
+              onChange={handleInputChange('name')}
+              error={errors.name}
+              maxLength={100}
+            />
 
-        {/* Descrição */}
-        <Description
-          label="Descrição do produto"
-          placeholder="Descreva detalhadamente o produto, suas características e benefícios..."
-          value={productData.description}
-          onChange={handleInputChange('description')}
-          error={errors.description}
-          maxLength={500}
-          showCharCount={true}
-        />
+            <ValueInput
+              label="Preço do produto"
+              value={productData.price}
+              onChange={handlePriceChange}
+              error={errors.price}
+              placeholder="0,00"
+            />
 
-        {/* Grid de Preço e Vídeo */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <ValueInput
-            label="Preço do produto"
-            value={productData.price}
-            onChange={handlePriceChange}
-            error={errors.price}
-            placeholder="0,00"
-          />
+            <Input
+              label="URL do vídeo (opcional)"
+              placeholder="https://www.youtube.com/embed/..."
+              value={productData.videoUrl}
+              onChange={handleInputChange('videoUrl')}
+              error={errors.videoUrl}
+            />
+          </div>
 
-          <Input
-            label="URL do vídeo (opcional)"
-            placeholder="https://www.youtube.com/embed/..."
-            value={productData.videoUrl}
-            onChange={handleInputChange('videoUrl')}
-            error={errors.videoUrl}
-          />
+          {/* Coluna 2: Descrição */}
+          <div className="flex flex-col h-full">
+            <Description
+              label="Descrição do produto"
+              placeholder="Descreva detalhadamente o produto, suas características e benefícios..."
+              value={productData.description}
+              onChange={handleInputChange('description')}
+              error={errors.description}
+              maxLength={500}
+              showCharCount={true}
+              className="flex-1 min-h-[250px]"
+            />
+          </div>
         </div>
 
         {/* Grid de Imagens */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <ImageUpload
-            label="Imagem principal"
-            value={productData.image1}
-            onChange={handleImageChange('image1')}
-            error={errors.image1}
-            placeholder="Clique para fazer upload da imagem principal"
-            maxSize={5}
-          />
+           <ImageUpload
+             label="Imagem principal"
+             value={productData.image1}
+             onChange={handleImageChange('image1')}
+             error={errors.image1}
+             placeholder="Clique para fazer upload da imagem principal"
+             maxSize={5}
+             uploadType="product"
+             productId={typeof productId === 'string' ? productId : productId?.[0]}
+             imageType="image1"
+           />
 
-          <ImageUpload
-            label="Segunda imagem"
-            value={productData.image2}
-            onChange={handleImageChange('image2')}
-            error={errors.image2}
-            placeholder="Clique para fazer upload da segunda imagem"
-            maxSize={5}
-          />
+           <ImageUpload
+             label="Segunda imagem"
+             value={productData.image2}
+             onChange={handleImageChange('image2')}
+             error={errors.image2}
+             placeholder="Clique para fazer upload da segunda imagem"
+             maxSize={5}
+             uploadType="product"
+             productId={typeof productId === 'string' ? productId : productId?.[0]}
+             imageType="image2"
+           />
 
-          <ImageUpload
-            label="Terceira imagem"
-            value={productData.image3}
-            onChange={handleImageChange('image3')}
-            error={errors.image3}
-            placeholder="Clique para fazer upload da terceira imagem"
-            maxSize={5}
-          />
+           <ImageUpload
+             label="Terceira imagem"
+             value={productData.image3}
+             onChange={handleImageChange('image3')}
+             error={errors.image3}
+             placeholder="Clique para fazer upload da terceira imagem"
+             maxSize={5}
+             uploadType="product"
+             productId={typeof productId === 'string' ? productId : productId?.[0]}
+             imageType="image3"
+           />
         </div>
 
         {/* Divider */}
@@ -399,12 +800,20 @@ export default function ProductPage() {
             Estoque
           </h2>
           
+          {/* Aviso sobre bloqueio de tipo de estoque em edição */}
+          {!isNewProduct && (
+            <div className="text-sm font-light text-[var(--on-background)]/70 bg-[var(--surface)] border border-[var(--on-background)]/10 p-4 rounded-lg">
+              <p>O tipo de estoque não pode ser alterado após a criação do produto. Para usar outro tipo, exclua este produto e crie um novo.</p>
+            </div>
+          )}
+          
           <Tabs
             items={[
               {
                 id: 'por_linha',
                 label: 'Por Linha',
                 icon: Hash,
+                disabled: !isNewProduct && productData.stockType !== StockType.LINE,
                 content: (
                   <div className="space-y-6">
                     {/* Controles de Importação/Exportação */}
@@ -430,6 +839,15 @@ export default function ProductPage() {
                       </div>
                     </div>
 
+                    {/* Aviso quando não há linhas de estoque */}
+                    {stockLines.length === 0 && errors.stockLines && (
+                      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+                        <p className="text-sm text-red-700 dark:text-red-300">
+                          <strong>⚠️ Atenção:</strong> Digite o conteúdo no campo abaixo e clique em &quot;<strong>+ Adicionar</strong>&quot; para criar a linha de estoque.
+                        </p>
+                      </div>
+                    )}
+
                     {/* Input para adicionar nova linha */}
                     <div className="flex gap-2">
                       <Input
@@ -438,11 +856,12 @@ export default function ProductPage() {
                         onChange={(e) => setNewStockContent(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleAddStockLine()}
                         className="flex-1"
+                        error={stockLines.length === 0 && errors.stockLines ? 'Campo preenchido mas não adicionado' : undefined}
                       />
                       <Button
                         onClick={handleAddStockLine}
                         disabled={!newStockContent.trim()}
-                        className="flex items-center gap-2 px-4"
+                        className={`flex items-center gap-2 px-4 ${newStockContent.trim() ? 'animate-pulse' : ''}`}
                       >
                         <Plus size={16} />
                         Adicionar
@@ -460,6 +879,13 @@ export default function ProductPage() {
                       />
                     </div>
 
+                    {/* Erro de linhas de estoque */}
+                    {errors.stockLines && (
+                      <div className="text-sm text-red-500 mt-2">
+                        {errors.stockLines}
+                      </div>
+                    )}
+
                     {/* Informações */}
                     {stockLines.length > 0 && (
                       <div className="text-sm text-[var(--on-background)] bg-[var(--surface)] p-3 rounded-lg">
@@ -474,6 +900,7 @@ export default function ProductPage() {
                 id: 'fixo',
                 label: 'Fixo',
                 icon: Box,
+                disabled: !isNewProduct && productData.stockType !== StockType.FIXED,
                 content: (
                   <div className="py-6">
                     <Description
@@ -481,6 +908,7 @@ export default function ProductPage() {
                       placeholder="Digite o conteúdo que será entregue..."
                       value={productData.fixedContent || ''}
                       onChange={(e) => setProductData(prev => ({ ...prev, fixedContent: e.target.value }))}
+                      error={errors.fixedContent}
                       maxLength={2000}
                       showCharCount={true}
                       className="min-h-[200px]"
@@ -492,6 +920,7 @@ export default function ProductPage() {
                 id: 'keyauth',
                 label: 'KeyAuth',
                 icon: Key,
+                disabled: !isNewProduct && productData.stockType !== StockType.KEYAUTH,
                 content: (
                   <div className="space-y-6">
                     {/* Número de dias */}
@@ -501,6 +930,7 @@ export default function ProductPage() {
                       placeholder="30"
                       value={productData.keyAuthDays?.toString() || ''}
                       onChange={handleKeyAuthChange('keyAuthDays')}
+                      error={errors.keyAuthDays}
                       min="1"
                       max="3650"
                     />
@@ -511,6 +941,7 @@ export default function ProductPage() {
                       placeholder="Digite sua chave pública KeyAuth"
                       value={productData.keyAuthPublicKey || ''}
                       onChange={handleKeyAuthChange('keyAuthPublicKey')}
+                      error={errors.keyAuthPublicKey}
                     />
 
                     {/* Seller Key */}
@@ -519,13 +950,31 @@ export default function ProductPage() {
                       placeholder="Digite sua chave de vendedor KeyAuth"
                       value={productData.keyAuthSellerKey || ''}
                       onChange={handleKeyAuthChange('keyAuthSellerKey')}
+                      error={errors.keyAuthSellerKey}
                     />
                   </div>
                 )
               }
             ]}
             activeTab={activeStockTab}
-            onChange={(tabId) => setActiveStockTab(tabId)}
+            onChange={(tabId) => {
+              // Permitir troca de tab apenas em modo de criação
+              if (isNewProduct) {
+                setActiveStockTab(tabId);
+                // Atualizar o stockType quando trocar de tab
+                switch (tabId) {
+                  case 'por_linha':
+                    setProductData(prev => ({ ...prev, stockType: StockType.LINE }));
+                    break;
+                  case 'fixo':
+                    setProductData(prev => ({ ...prev, stockType: StockType.FIXED }));
+                    break;
+                  case 'keyauth':
+                    setProductData(prev => ({ ...prev, stockType: StockType.KEYAUTH }));
+                    break;
+                }
+              }
+            }}
           />
         </div>
 
@@ -591,6 +1040,7 @@ export default function ProductPage() {
             onClick={handleSave}
             disabled={isSaving}
             className="w-full h-12 flex items-center justify-center gap-2"
+            title={isSaving ? 'Salvando produto...' : 'Clique para salvar (validação será feita)'}
           >
             <Save size={18} />
             {isSaving ? 'Salvando...' : 'Salvar Produto'}

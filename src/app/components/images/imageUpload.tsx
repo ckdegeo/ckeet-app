@@ -17,6 +17,9 @@ interface ImageUploadProps {
   placeholder?: string;
   disabled?: boolean;
   folder?: string; // Pasta no bucket para organizar as imagens
+  uploadType?: 'store' | 'product'; // Tipo de upload
+  productId?: string; // ID do produto (para produtos)
+  imageType?: 'image1' | 'image2' | 'image3'; // Tipo da imagem do produto
 }
 
 export default function ImageUpload({
@@ -29,7 +32,10 @@ export default function ImageUpload({
   className = "",
   placeholder = "Clique para fazer upload ou arraste uma imagem",
   disabled = false,
-  folder = "store"
+  folder = "store",
+  uploadType = "store",
+  productId,
+  imageType = "image1"
 }: ImageUploadProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
@@ -69,7 +75,15 @@ export default function ImageUpload({
       reader.readAsDataURL(file);
 
       // Fazer upload para o Supabase
-      const uploadResult = await ImageService.uploadImage(file, folder);
+      let uploadResult;
+      
+      if (uploadType === 'product') {
+        // Upload de imagem de produto
+        uploadResult = await ImageService.uploadProductImage(file, productId, imageType);
+      } else {
+        // Upload de imagem de loja
+        uploadResult = await ImageService.uploadImage(file, folder);
+      }
       
       if (uploadResult.success && uploadResult.url) {
         setUploadedUrl(uploadResult.url);
@@ -126,7 +140,7 @@ export default function ImageUpload({
 
     setPreview(null);
     setUploadedUrl(null);
-    onChange?.(null);
+    onChange?.(null, undefined); // Passar undefined para limpar a URL também
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }

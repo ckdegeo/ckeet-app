@@ -262,9 +262,12 @@ export interface ProductFormData {
   description: string;
   price: number;
   videoUrl: string;
-  image1: File | null;
-  image2: File | null;
-  image3: File | null;
+  image1: File | { url: string } | null;
+  image2: File | { url: string } | null;
+  image3: File | { url: string } | null;
+  image1Url?: string;
+  image2Url?: string;
+  image3Url?: string;
   stockType: StockType;
   fixedContent?: string;
   keyAuthDays?: number;
