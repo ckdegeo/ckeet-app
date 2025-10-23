@@ -74,6 +74,40 @@ export default function ShopPage() {
     window.location.href = '/customer/profile';
   };
 
+  const handleLogoutClick = async () => {
+    try {
+      // Fazer logout na API
+      const response = await fetch('/api/customer/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        // Limpar dados do localStorage
+        localStorage.removeItem('customer_access_token');
+        localStorage.removeItem('customer_refresh_token');
+        localStorage.removeItem('customer_user_data');
+        
+        // Limpar cookies (se necessário)
+        document.cookie = 'customer_access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        document.cookie = 'customer_refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        
+        // Atualizar estado
+        setIsAuthenticated(false);
+        setUserName(undefined);
+        
+        // Recarregar a página para garantir que tudo seja limpo
+        window.location.reload();
+      } else {
+        console.error('Erro ao fazer logout');
+      }
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -103,6 +137,7 @@ export default function ShopPage() {
         onLoginClick={handleLoginClick}
         onRegisterClick={handleRegisterClick}
         onProfileClick={handleProfileClick}
+        onLogoutClick={handleLogoutClick}
       />
 
       {/* Banner da Loja (se existir) */}

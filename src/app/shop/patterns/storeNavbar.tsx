@@ -18,6 +18,7 @@ interface StoreNavbarProps {
   onLoginClick?: () => void;
   onRegisterClick?: () => void;
   onProfileClick?: () => void;
+  onLogoutClick?: () => void;
 }
 
 export default function StoreNavbar({
@@ -27,6 +28,7 @@ export default function StoreNavbar({
   onLoginClick,
   onRegisterClick,
   onProfileClick,
+  onLogoutClick,
 }: StoreNavbarProps) {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -100,7 +102,7 @@ export default function StoreNavbar({
                     <button
                       onClick={() => {
                         setShowUserMenu(false);
-                        // Lógica de logout
+                        onLogoutClick?.();
                       }}
                       className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600 transition-colors"
                     >
