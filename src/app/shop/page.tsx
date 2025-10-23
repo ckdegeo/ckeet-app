@@ -91,19 +91,28 @@ export default function ShopPage() {
 
   const handleLogoutClick = async () => {
     try {
+      // Obter o token de acesso do localStorage
+      const accessToken = localStorage.getItem('customer_access_token');
+      
       // Fazer logout na API
       const response = await fetch('/api/customer/auth/logout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          access_token: accessToken
+        }),
       });
 
       if (response.ok) {
+        console.log('✅ Logout realizado com sucesso');
+        
         // Limpar dados do localStorage
         localStorage.removeItem('customer_access_token');
         localStorage.removeItem('customer_refresh_token');
         localStorage.removeItem('customer_user_data');
+        localStorage.removeItem('customer_expires_at');
         
         // Limpar cookies (se necessário)
         document.cookie = 'customer_access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
@@ -116,7 +125,9 @@ export default function ShopPage() {
         // Recarregar a página para garantir que tudo seja limpo
         window.location.reload();
       } else {
-        console.error('Erro ao fazer logout');
+        const errorData = await response.json();
+        console.error('❌ Erro ao fazer logout:', errorData);
+        alert('Erro ao fazer logout. Tente novamente.');
       }
     } catch (error) {
       console.error('Erro ao fazer logout:', error);

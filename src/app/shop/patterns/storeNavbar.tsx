@@ -122,6 +122,7 @@ export default function StoreNavbar({
                 <IconOnlyButton
                   icon={Backpack}
                   onClick={() => {
+                    window.location.href = '/shop/orders';
                   }}
                   variant="surface"
                   title="Pedidos"
