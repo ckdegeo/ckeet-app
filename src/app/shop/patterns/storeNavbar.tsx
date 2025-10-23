@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { User, Menu, Backpack } from "lucide-react";
+import { User, Menu, Backpack, LogOut } from "lucide-react";
 import Button from "@/app/components/buttons/button";
 import IconOnlyButton from "@/app/components/buttons/iconOnlyButton";
 import { useState } from "react";
@@ -31,7 +31,6 @@ export default function StoreNavbar({
   onLogoutClick,
 }: StoreNavbarProps) {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const primaryColor = store.primaryColor || '#6200EE';
   const secondaryColor = store.secondaryColor || '#03DAC6';
@@ -65,51 +64,34 @@ export default function StoreNavbar({
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
-              /* Usuário Autenticado - Menu Dropdown */
-              <div className="relative">
-                <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
+              /* Usuário Autenticado - Avatar e Botão de Logout */
+              <div className="flex items-center gap-3">
+                {/* Avatar do Usuário */}
+                <div 
+                  className="flex items-center gap-2 px-4 py-2 rounded-full text-white"
+                  style={{ backgroundColor: `${secondaryColor}20` }}
                 >
-                  <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                    <User size={18} className="text-gray-700" />
+                  <div 
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: secondaryColor }}
+                  >
+                    <User size={18} className="text-white" />
                   </div>
                   <span className="font-medium text-sm">{userName || 'Usuário'}</span>
-                </button>
+                </div>
 
-                {/* Dropdown Menu */}
-                {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 border border-gray-200">
-                    <button
-                      onClick={() => {
-                        setShowUserMenu(false);
-                        onProfileClick?.();
-                      }}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700 transition-colors"
-                    >
-                      Meu Perfil
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowUserMenu(false);
-                        // Lógica de logout
-                      }}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700 transition-colors"
-                    >
-                      Meus Pedidos
-                    </button>
-                    <hr className="my-2" />
-                    <button
-                      onClick={() => {
-                        setShowUserMenu(false);
-                        onLogoutClick?.();
-                      }}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600 transition-colors"
-                    >
-                      Sair
-                    </button>
-                  </div>
-                )}
+                {/* Botão de Logout */}
+                <IconOnlyButton
+                  icon={LogOut}
+                  onClick={onLogoutClick}
+                  variant="surface"
+                  title="Sair"
+                  className="text-white hover:bg-white/20 border-white/30 hover:border-white/50"
+                  style={{ 
+                    backgroundColor: `${secondaryColor}20`,
+                    borderColor: `${secondaryColor}40`
+                  }}
+                />
               </div>
             ) : (
               /* Usuário NÃO Autenticado - Botões de Login e Registro */
@@ -140,11 +122,9 @@ export default function StoreNavbar({
                 <IconOnlyButton
                   icon={Backpack}
                   onClick={() => {
-                    // Lógica do inventário
-                    console.log('🎒 Inventário clicado');
                   }}
                   variant="surface"
-                  title="Meu Inventário"
+                  title="Pedidos"
                   className="text-white hover:bg-white/20 border-white/30 hover:border-white/50"
                 />
                 {/* Badge de quantidade */}
@@ -163,11 +143,10 @@ export default function StoreNavbar({
                 <IconOnlyButton
                   icon={Backpack}
                   onClick={() => {
-                    // Lógica do inventário
-                    console.log('🎒 Inventário clicado');
+    
                   }}
                   variant="surface"
-                  title="Meu Inventário"
+                  title="Pedidos"
                   className="text-white hover:bg-white/20 border-white/30 hover:border-white/50 w-10 h-10"
                 />
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold text-[10px]">
@@ -189,31 +168,30 @@ export default function StoreNavbar({
         {showMobileMenu && (
           <div className="md:hidden py-4 border-t border-white/10">
             {isAuthenticated ? (
-              <div className="space-y-2">
+              <div className="space-y-2 px-4">
+                {/* Avatar do Usuário Mobile */}
+                <div 
+                  className="flex items-center gap-2 px-4 py-3 rounded-lg text-white"
+                  style={{ backgroundColor: `${secondaryColor}20` }}
+                >
+                  <div 
+                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: secondaryColor }}
+                  >
+                    <User size={18} className="text-white" />
+                  </div>
+                  <span className="font-medium text-sm">{userName || 'Usuário'}</span>
+                </div>
+                
+                {/* Botão de Logout Mobile */}
                 <button
                   onClick={() => {
                     setShowMobileMenu(false);
-                    onProfileClick?.();
+                    onLogoutClick?.();
                   }}
-                  className="w-full text-left px-4 py-3 rounded-lg hover:bg-white/10 text-white transition-colors"
+                  className="w-full flex items-center gap-2 px-4 py-3 rounded-lg hover:bg-white/10 text-red-300 transition-colors"
                 >
-                  Meu Perfil
-                </button>
-                <button
-                  onClick={() => {
-                    setShowMobileMenu(false);
-                  }}
-                  className="w-full text-left px-4 py-3 rounded-lg hover:bg-white/10 text-white transition-colors"
-                >
-                  Meus Pedidos
-                </button>
-                <hr className="my-2 border-white/10" />
-                <button
-                  onClick={() => {
-                    setShowMobileMenu(false);
-                  }}
-                  className="w-full text-left px-4 py-3 rounded-lg hover:bg-white/10 text-red-300 transition-colors"
-                >
+                  <LogOut size={18} />
                   Sair
                 </button>
               </div>
