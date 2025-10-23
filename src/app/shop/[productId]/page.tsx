@@ -8,7 +8,6 @@ import { Store, Product } from '@/lib/types';
 import StoreNavbar from '../patterns/storeNavbar';
 import Footer from '../patterns/footer';
 import VideoPlayer from '../patterns/videoPlayer';
-import Button from '@/app/components/buttons/button';
 
 export default function ProductPage() {
   const params = useParams();
@@ -106,12 +105,12 @@ export default function ProductPage() {
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Produto não encontrado</h1>
             <p className="text-gray-600 mb-6">O produto solicitado não está disponível.</p>
-            <Button
+            <button
               onClick={() => router.push('/shop')}
-              className="px-6 py-3"
+              className="px-6 py-3 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-colors"
             >
               Voltar para a loja
-            </Button>
+            </button>
           </div>
         </div>
       </div>
@@ -136,14 +135,13 @@ export default function ProductPage() {
       <main className="container mx-auto px-8 py-8">
         {/* Botão de Voltar */}
         <div className="mb-6">
-          <Button
+          <button
             onClick={() => router.push('/shop')}
-            variant="secondary"
-            className="flex items-center gap-2 px-5 py-2 text-sm bg-white/10 hover:bg-white/20 text-white border-2 border-white/20"
+            className="flex items-center gap-2 px-5 py-2 text-sm bg-white/10 hover:bg-white/20 text-white border-2 border-white/20 rounded-full transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
             Voltar
-          </Button>
+          </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -228,71 +226,69 @@ export default function ProductPage() {
             <div className="pb-6 border-b border-gray-200">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-4">
                     {product.name}
                   </h1>
-                  <div className="flex items-center gap-2">
-                    {(() => {
-                      // Se for estoque por linha, mostrar quantidade de linhas disponíveis
-                      if (product.stockType === 'LINE') {
-                        const linesCount = product.stockLines?.filter(line => !line.isUsed).length || 0;
-                        return (
-                          <span className={`
-                            px-2.5 py-1 rounded-full text-xs font-semibold
-                            ${linesCount > 10 
-                              ? 'bg-green-100 text-green-800' 
-                              : linesCount > 0 
-                              ? 'bg-yellow-100 text-yellow-800' 
-                              : 'bg-red-100 text-red-800'
-                            }
-                          `}>
-                            {linesCount} em estoque
-                          </span>
-                        );
-                      }
-                      
-                      // Se for estoque fixo, mostrar badge "FIXO"
-                      if (product.stockType === 'FIXED') {
-                        return (
-                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
-                            FIXO
-                          </span>
-                        );
-                      }
-                      
-                      // Se for KeyAuth, mostrar badge "KEYAUTH"
-                      if (product.stockType === 'KEYAUTH') {
-                        return (
-                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
-                            KEYAUTH
-                          </span>
-                        );
-                      }
-                      
-                      // Fallback para compatibilidade com dados antigos - mostrar estoque real
-                      const stock = (product as Product & { stock?: number }).stock || 0;
-                      return (
-                        <span className={`
-                          px-2.5 py-1 rounded-full text-xs font-semibold
-                          ${stock > 10 
-                            ? 'bg-green-100 text-green-800' 
-                            : stock > 0 
-                            ? 'bg-yellow-100 text-yellow-800' 
-                            : 'bg-red-100 text-red-800'
-                          }
-                        `}>
-                          {stock} em estoque
-                        </span>
-                      );
-                    })()}
-                  </div>
                 </div>
               </div>
               
-              <div className="flex items-baseline gap-2">
+              <div className="flex items-center gap-3">
                 <span className="text-3xl font-bold" style={{ color: store.primaryColor || '#6200EE' }}>
                   R$ {product.price.toFixed(2)}
                 </span>
+                {(() => {
+                  // Se for estoque por linha, mostrar quantidade de linhas disponíveis
+                  if (product.stockType === 'LINE') {
+                    const linesCount = product.stockLines?.filter(line => !line.isUsed).length || 0;
+                    return (
+                      <span className={`
+                        px-2.5 py-1 rounded-full text-xs font-semibold
+                        ${linesCount > 10 
+                          ? 'bg-green-100 text-green-800' 
+                          : linesCount > 0 
+                          ? 'bg-yellow-100 text-yellow-800' 
+                          : 'bg-red-100 text-red-800'
+                        }
+                      `}>
+                        {linesCount} em estoque
+                      </span>
+                    );
+                  }
+                  
+                  // Se for estoque fixo, mostrar badge "FIXO"
+                  if (product.stockType === 'FIXED') {
+                    return (
+                      <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                        FIXO
+                      </span>
+                    );
+                  }
+                  
+                  // Se for KeyAuth, mostrar badge "KEYAUTH"
+                  if (product.stockType === 'KEYAUTH') {
+                    return (
+                      <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                        KEYAUTH
+                      </span>
+                    );
+                  }
+                  
+                  // Fallback para compatibilidade com dados antigos - mostrar estoque real
+                  const stock = (product as Product & { stock?: number }).stock || 0;
+                  return (
+                    <span className={`
+                      px-2.5 py-1 rounded-full text-xs font-semibold
+                      ${stock > 10 
+                        ? 'bg-green-100 text-green-800' 
+                        : stock > 0 
+                        ? 'bg-yellow-100 text-yellow-800' 
+                        : 'bg-red-100 text-red-800'
+                      }
+                    `}>
+                      {stock} em estoque
+                    </span>
+                  );
+                })()}
               </div>
             </div>
 
@@ -351,16 +347,16 @@ export default function ProductPage() {
 
             {/* Botão de Compra */}
             <div className="pt-6">
-              <Button
+              <button
                 onClick={() => {
                   // TODO: Implementar lógica de carrinho/checkout
                   alert('Funcionalidade de compra em desenvolvimento!');
                 }}
-                className="w-full py-4 text-base font-semibold shadow-lg hover:shadow-xl"
+                className="w-full py-4 text-base font-semibold shadow-lg hover:shadow-xl rounded-full transition-all hover:opacity-90"
                 style={{ backgroundColor: store.secondaryColor || '#03DAC6' }}
               >
                 Comprar Agora
-              </Button>
+              </button>
             </div>
           </div>
         </div>
