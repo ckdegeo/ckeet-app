@@ -7,7 +7,6 @@ import { ArrowLeft, Zap, Headphones, Shield } from 'lucide-react';
 import { Store, Product } from '@/lib/types';
 import StoreNavbar from '../patterns/storeNavbar';
 import Footer from '../patterns/footer';
-import VideoPlayer from '../patterns/videoPlayer';
 
 export default function ProductPage() {
   const params = useParams();
@@ -155,12 +154,13 @@ export default function ProductPage() {
             {/* Imagem/Vídeo Principal */}
             <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden relative group">
               {selectedImage === 'video' && product.videoUrl ? (
-                <VideoPlayer
-                  videoUrl={product.videoUrl}
+                <iframe
+                  src={product.videoUrl}
                   title={product.name}
                   className="w-full h-full"
-                  primaryColor={store.primaryColor}
-                  secondaryColor={store.secondaryColor}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
                 />
               ) : selectedImage ? (
                 <>
