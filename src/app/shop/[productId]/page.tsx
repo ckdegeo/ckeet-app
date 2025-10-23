@@ -109,7 +109,7 @@ export default function ProductPage() {
               onClick={() => router.push('/shop')}
               className="px-6 py-3 bg-gray-900 text-white rounded-full hover:bg-gray-800 transition-colors"
             >
-              Voltar para a loja
+              Voltar
             </button>
           </div>
         </div>
@@ -137,7 +137,7 @@ export default function ProductPage() {
         <div className="mb-6">
           <button
             onClick={() => router.push('/shop')}
-            className="flex items-center gap-2 px-5 py-2 text-sm bg-white/10 hover:bg-white/20 text-white border-2 border-white/20 rounded-full transition-all"
+            className="flex items-center gap-2 px-5 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 border-2 border-gray-200 rounded-full transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
             Voltar
@@ -352,7 +352,7 @@ export default function ProductPage() {
                   // TODO: Implementar lógica de carrinho/checkout
                   alert('Funcionalidade de compra em desenvolvimento!');
                 }}
-                className="w-full py-4 text-base font-semibold shadow-lg hover:shadow-xl rounded-full transition-all hover:opacity-90"
+                className="w-full py-4 text-base font-semibold text-white shadow-lg hover:shadow-xl rounded-full transition-all hover:opacity-90"
                 style={{ backgroundColor: store.secondaryColor || '#03DAC6' }}
               >
                 Comprar Agora
