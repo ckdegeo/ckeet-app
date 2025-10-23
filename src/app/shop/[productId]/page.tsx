@@ -207,7 +207,7 @@ export default function ProductPage() {
               {product.videoUrl && (
                 <button
                   onClick={() => setSelectedImage('video')}
-                  className={`aspect-square bg-black/50 rounded-lg overflow-hidden border-2 transition-all flex items-center justify-center relative ${
+                  className={`aspect-square bg-black/5 rounded-lg overflow-hidden border-2 transition-all flex items-center justify-center relative ${
                     selectedImage === 'video'
                       ? 'border-current'
                       : 'border-transparent hover:border-gray-300'
