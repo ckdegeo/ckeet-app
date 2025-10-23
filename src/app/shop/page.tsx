@@ -251,7 +251,7 @@ export default function ShopPage() {
                           </div>
                         </div>
                         
-                        <hr className="my-2 rounded-full border-gray-100" />
+                        <hr className="my-6 rounded-full border-gray-100 mt-2 mb-2" />
                         
                         {/* Ações */}
                         <div className="flex items-center justify-end gap-2 p-3 pt-0">
