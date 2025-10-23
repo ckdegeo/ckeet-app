@@ -26,7 +26,24 @@ export async function GET(request: NextRequest) {
     // Buscar loja do seller
     const seller = await prisma.seller.findUnique({
       where: { id: user.id },
-      include: { store: true }
+      include: { 
+        store: {
+          select: {
+            id: true,
+            name: true,
+            contactEmail: true,
+            logoUrl: true,
+            homeBannerUrl: true,
+            storeBannerUrl: true,
+            primaryColor: true,
+            secondaryColor: true,
+            subdomain: true,
+            isActive: true,
+            createdAt: true,
+            updatedAt: true,
+          }
+        }
+      }
     });
 
     if (!seller || !seller.store) {
@@ -113,7 +130,24 @@ export async function POST(request: NextRequest) {
     // Buscar seller
     const seller = await prisma.seller.findUnique({
       where: { id: user.id },
-      include: { store: true }
+      include: { 
+        store: {
+          select: {
+            id: true,
+            name: true,
+            contactEmail: true,
+            logoUrl: true,
+            homeBannerUrl: true,
+            storeBannerUrl: true,
+            primaryColor: true,
+            secondaryColor: true,
+            subdomain: true,
+            isActive: true,
+            createdAt: true,
+            updatedAt: true,
+          }
+        }
+      }
     });
 
     if (!seller) {
