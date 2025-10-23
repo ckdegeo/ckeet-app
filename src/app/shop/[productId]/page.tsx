@@ -357,7 +357,7 @@ export default function ProductPage() {
                   // TODO: Implementar lógica de carrinho/checkout
                   alert('Funcionalidade de compra em desenvolvimento!');
                 }}
-                className="w-full py-4 text-base font-semibold text-white shadow-lg hover:shadow-xl rounded-full transition-all hover:opacity-90"
+                className="cursor-pointer w-full py-4 text-base font-semibold text-white shadow-lg hover:shadow-xl rounded-full transition-all hover:opacity-90"
                 style={{ backgroundColor: store.secondaryColor || '#03DAC6' }}
               >
                 Comprar agora
