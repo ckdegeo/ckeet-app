@@ -77,7 +77,7 @@ export default function StoreNavbar({
                   >
                     <User size={18} className="text-white" />
                   </div>
-                  <span className="font-medium text-sm">{userName || 'Usuário'}</span>
+                  <span className="font-light text-xs">{userName || 'Usuário'}</span>
                 </div>
 
                 {/* Botão de Logout */}
