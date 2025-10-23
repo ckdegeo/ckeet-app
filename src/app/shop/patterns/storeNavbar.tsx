@@ -47,11 +47,11 @@ export default function StoreNavbar({
           {/* Logo e Nome da Loja */}
           <Link href="/shop" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
             {store.logoUrl && (
-              <div className="h-10 w-10 bg-white rounded-lg p-1.5 flex items-center justify-center">
+              <div className="h-10 w-10 bg-white rounded-lg p-0.5 flex items-center justify-center">
                 <img
                   src={store.logoUrl}
                   alt={store.name}
-                  className="h-full w-full object-contain"
+                  className="h-full w-full object-cover rounded"
                 />
               </div>
             )}
