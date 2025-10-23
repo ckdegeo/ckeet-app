@@ -58,7 +58,13 @@ export async function GET(request: NextRequest) {
             price: true,
             imageUrl: true,
             order: true,
-            isActive: true
+            isActive: true,
+            stockType: true,
+            stockLines: {
+              select: {
+                id: true
+              }
+            }
           },
           orderBy: { order: 'asc' }
         }
@@ -77,7 +83,9 @@ export async function GET(request: NextRequest) {
         price: product.price,
         imageUrl: product.imageUrl || '/product1.gif', // Usar imagem padrão se não houver imagem
         order: product.order,
-        stock: 0 // Placeholder - será implementado quando necessário
+        stock: 0, // Placeholder - será implementado quando necessário
+        stockType: product.stockType,
+        stockLinesCount: product.stockLines?.length || 0
       }))
     }));
 

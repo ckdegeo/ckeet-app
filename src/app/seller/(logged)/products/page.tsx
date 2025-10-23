@@ -18,6 +18,8 @@ interface ProductDisplay {
   price: number;
   imageUrl: string;
   stock?: number;
+  stockType?: string;
+  stockLinesCount?: number;
   order: number;
 }
 

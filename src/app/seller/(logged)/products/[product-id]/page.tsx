@@ -841,10 +841,8 @@ export default function ProductPage() {
 
                     {/* Aviso quando não há linhas de estoque */}
                     {stockLines.length === 0 && errors.stockLines && (
-                      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-                        <p className="text-sm text-red-700 dark:text-red-300">
-                          <strong>⚠️ Atenção:</strong> Digite o conteúdo no campo abaixo e clique em &quot;<strong>+ Adicionar</strong>&quot; para criar a linha de estoque.
-                        </p>
+                      <div className="text-sm font-light text-[var(--on-background)]/70 bg-[var(--surface)] border border-[var(--on-background)]/10 p-4 rounded-lg">
+                        <p>Digite o conteúdo no campo abaixo e clique em &quot;Adicionar&quot; para criar a linha de estoque.</p>
                       </div>
                     )}
 
@@ -888,8 +886,8 @@ export default function ProductPage() {
 
                     {/* Informações */}
                     {stockLines.length > 0 && (
-                      <div className="text-sm text-[var(--on-background)] bg-[var(--surface)] p-3 rounded-lg">
-                        <p><strong>Total de linhas:</strong> {stockLines.length}</p>
+                      <div className="text-sm font-light text-[var(--on-background)]/70 bg-[var(--surface)] border border-[var(--on-background)]/10 p-4 rounded-lg">
+                        <p>Total de linhas: {stockLines.length}</p>
                         <p className="mt-1">Cada linha representa uma unidade de estoque que será entregue ao cliente após a compra.</p>
                       </div>
                     )}
@@ -1027,8 +1025,8 @@ export default function ProductPage() {
 
           {/* Informações */}
           {deliverableLinks.length > 0 && (
-            <div className="text-sm text-[var(--on-background)] bg-[var(--surface)] p-3 rounded-lg">
-              <p><strong>Total de entregáveis:</strong> {deliverableLinks.length}</p>
+            <div className="text-sm font-light text-[var(--on-background)]/70 bg-[var(--surface)] border border-[var(--on-background)]/10 p-4 rounded-lg">
+              <p>Total de entregáveis: {deliverableLinks.length}</p>
               <p className="mt-1">Links que serão disponibilizados para download após a compra do produto.</p>
             </div>
           )}

@@ -5,7 +5,7 @@ import { Edit2, Trash2, Plus, ChevronUp, ChevronDown, GripVertical } from 'lucid
 import ProductCard from '@/app/components/products/productCard';
 import IconOnlyButton from '@/app/components/buttons/iconOnlyButton';
 import Button from '@/app/components/buttons/button';
-import { Product } from '@/lib/types';
+import { Product, StockType } from '@/lib/types';
 
 // Interface local para compatibilidade com dados existentes
 interface ProductDisplay {
@@ -14,6 +14,8 @@ interface ProductDisplay {
   price: number;
   imageUrl: string;
   stock?: number;
+  stockType?: StockType;
+  stockLinesCount?: number;
   order: number;
 }
 import {
@@ -82,22 +84,15 @@ function SortableProductCard({ product, onEdit, onDelete }: {
         title={product.title}
         price={product.price}
         imageUrl={product.imageUrl || ''}
+        stock={product.stock}
+        stockType={product.stockType}
+        stockLinesCount={product.stockLinesCount}
         onEdit={onEdit}
         onDelete={onDelete}
         className="ml-2" // Adiciona margem para não sobrepor o handle
       />
     </div>
   );
-}
-
-// Interface local para compatibilidade com dados existentes
-interface ProductDisplay {
-  id: string;
-  title: string;
-  price: number;
-  imageUrl: string;
-  stock?: number;
-  order: number;
 }
 
 // Interface para a categoria
@@ -275,6 +270,9 @@ export default function CategorySection({
                     title={product.title}
                     price={product.price}
                     imageUrl={product.imageUrl || ''}
+                    stock={product.stock}
+                    stockType={product.stockType}
+                    stockLinesCount={product.stockLinesCount}
                     onEdit={onEditProduct}
                     onDelete={onDeleteProduct}
                   />

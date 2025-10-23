@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Edit2, Trash2 } from 'lucide-react';
 import IconOnlyButton from '@/app/components/buttons/iconOnlyButton';
+import { StockType } from '@/lib/types';
 
 // Interface para as props do componente
 interface ProductCardProps {
@@ -12,6 +13,8 @@ interface ProductCardProps {
   price: number;
   imageUrl: string;
   stock?: number;
+  stockType?: StockType;
+  stockLinesCount?: number;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
   className?: string;
@@ -23,6 +26,8 @@ export default function ProductCard({
   price,
   imageUrl,
   stock = 0,
+  stockType,
+  stockLinesCount,
   onEdit,
   onDelete,
   className = "",
@@ -111,17 +116,58 @@ export default function ProductCard({
             {formatCurrency(price)}
           </p>
           <div className="flex items-center gap-1">
-            <span className={`
-              px-2 py-1 rounded-full text-xs font-medium
-              ${stock > 10 
-                ? 'bg-[var(--secondary)] text-[var(--on-secondary)]' 
-                : stock > 0 
-                ? 'bg-[var(--primary)] text-[var(--on-primary)]' 
-                : 'bg-[var(--error)] text-[var(--on-error)]'
+            {(() => {
+              // Se for estoque por linha, mostrar quantidade de linhas
+              if (stockType === StockType.LINE) {
+                const linesCount = stockLinesCount || 0;
+                return (
+                  <span className={`
+                    px-2 py-1 rounded-full text-xs font-medium
+                    ${linesCount > 10 
+                      ? 'bg-[var(--secondary)] text-[var(--on-secondary)]' 
+                      : linesCount > 0 
+                      ? 'bg-[var(--primary)] text-[var(--on-primary)]' 
+                      : 'bg-[var(--error)] text-[var(--on-error)]'
+                    }
+                  `}>
+                    {linesCount} em estoque
+                  </span>
+                );
               }
-            `}>
-              {stock} em estoque
-            </span>
+              
+              // Se for estoque fixo, mostrar badge "FIXO" (mesmo vermelho do design system)
+              if (stockType === StockType.FIXED) {
+                return (
+                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-[var(--error)] text-[var(--on-error)]">
+                    FIXO
+                  </span>
+                );
+              }
+              
+              // Se for KeyAuth, mostrar badge "KEYAUTH" (mesmo vermelho do design system)
+              if (stockType === StockType.KEYAUTH) {
+                return (
+                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-[var(--error)] text-[var(--on-error)]">
+                    KEYAUTH
+                  </span>
+                );
+              }
+              
+              // Fallback para compatibilidade com dados antigos
+              return (
+                <span className={`
+                  px-2 py-1 rounded-full text-xs font-medium
+                  ${stock > 10 
+                    ? 'bg-[var(--secondary)] text-[var(--on-secondary)]' 
+                    : stock > 0 
+                    ? 'bg-[var(--primary)] text-[var(--on-primary)]' 
+                    : 'bg-[var(--error)] text-[var(--on-error)]'
+                  }
+                `}>
+                  {stock} em estoque
+                </span>
+              );
+            })()}
           </div>
         </div>
       </div>
