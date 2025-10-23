@@ -96,28 +96,8 @@ export default function LoginPage() {
               alt="Banner da loja"
               className="w-full h-full object-cover rounded-lg"
             />
-            <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center text-white">
-                <h1 className="text-4xl font-bold mb-4">
-                  {store.name}
-                </h1>
-                <p className="text-lg opacity-90">
-                  Acesse sua conta e continue suas compras
-                </p>
-              </div>
-            </div>
           </div>
-        ) : (
-          <div className="max-w-md text-white">
-            <h1 className="text-4xl font-bold mb-4">
-              {store?.name || 'Ckeet'}
-            </h1>
-            <p className="text-lg opacity-90">
-              Acesse sua conta e continue suas compras
-            </p>
-          </div>
-        )}
+        ) : null }
       </div>
 
       {/* Lado Direito - Formulário */}
