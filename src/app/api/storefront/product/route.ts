@@ -63,6 +63,15 @@ export async function GET(request: NextRequest) {
         storeId: true,
         createdAt: true,
         updatedAt: true,
+        stockLines: {
+          select: {
+            id: true,
+            content: true,
+            isUsed: true,
+            usedAt: true,
+            orderId: true,
+          },
+        },
         category: {
           select: {
             id: true,
