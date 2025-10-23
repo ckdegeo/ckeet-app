@@ -81,7 +81,8 @@ model Seller {
   updatedAt DateTime @updatedAt
 
   // Relacionamentos
-  store Store? // 1 seller = 1 store
+  store     Store?     // 1 seller = 1 store
+  customers Customer[] // customers que se registraram na loja deste seller
 
   @@map("sellers")
 }
@@ -92,20 +93,24 @@ model Seller {
 
 model Customer {
   id        String   @id @default(cuid())
-  email     String   @unique
+  email     String   // Removido @unique - pode repetir em lojas diferentes
   name      String?
   phone     String?
-  cpf       String?  @unique
+  cpf       String?  // Removido @unique - pode repetir em lojas diferentes
   password  String?
   status    CustomerStatus @default(ACTIVE) // ACTIVE, BANNED
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relacionamentos
-  orders       Order[]       // customer orders
-  purchases    Purchase[]    // digital products purchased
+  sellerId     String?      // Seller que "possui" este customer
+  seller       Seller?      @relation(fields: [sellerId], references: [id])
+  orders       Order[]      // customer orders
+  purchases    Purchase[]   // digital products purchased
   transactions Transaction[] // detailed transaction history
 
+  // Constraint composta: email + sellerId deve ser único
+  @@unique([email, sellerId], name: "unique_customer_per_seller")
   @@map("customers")
 }
 
