@@ -20,6 +20,7 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false);
   const [store, setStore] = useState<Store | null>(null);
   const [loadingStore, setLoadingStore] = useState(true);
+  const [subdomain, setSubdomain] = useState<string>('');
   const router = useRouter();
   
   const { isLoading, errors, register } = useCustomerRegister();
@@ -32,16 +33,19 @@ export default function RegisterPage() {
     try {
       setLoadingStore(true);
       const hostname = window.location.hostname;
-      const subdomain = hostname.split('.')[0];
+      const subdomainFromUrl = hostname.split('.')[0];
       
       // Se for localhost, usar subdomain de teste
-      const testSubdomain = hostname === 'localhost' ? 'loja-teste' : subdomain;
+      const currentSubdomain = hostname === 'localhost' ? 'loja-teste' : subdomainFromUrl;
+      setSubdomain(currentSubdomain);
       
-      const response = await fetch(`/api/storefront/store?subdomain=${testSubdomain}`);
+      const response = await fetch(`/api/storefront/store?subdomain=${currentSubdomain}`);
       
       if (response.ok) {
         const data = await response.json();
         setStore(data.store);
+      } else {
+        console.error('Loja não encontrada para subdomain:', currentSubdomain);
       }
     } catch (error) {
       console.error('Erro ao carregar dados da loja:', error);
@@ -53,13 +57,18 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!subdomain) {
+      console.error('Subdomain não definido');
+      return;
+    }
+
     const formData: CustomerRegisterData & { subdomain: string } = {
       name,
       email,
       phone,
       password,
       confirmPassword,
-      subdomain: 'loja-teste', // Temporário para teste
+      subdomain: subdomain,
     };
 
     const success = await register(formData);
