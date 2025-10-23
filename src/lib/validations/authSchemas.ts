@@ -37,17 +37,6 @@ export const sellerRegisterSchema = z.object({
   path: ['confirmPassword'],
 });
 
-// Schema para login
-export const loginSchema = z.object({
-  email: z
-    .string()
-    .email('Email inválido'),
-  
-  password: z
-    .string()
-    .min(1, 'Senha é obrigatória'),
-});
-
 // Schema para registro de customer
 export const customerRegisterSchema = z.object({
   name: z
@@ -77,6 +66,17 @@ export const customerRegisterSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Senhas não coincidem',
   path: ['confirmPassword'],
+});
+
+// Schema para login
+export const loginSchema = z.object({
+  email: z
+    .string()
+    .email('Email inválido'),
+  
+  password: z
+    .string()
+    .min(1, 'Senha é obrigatória'),
 });
 
 // Tipos TypeScript derivados dos schemas

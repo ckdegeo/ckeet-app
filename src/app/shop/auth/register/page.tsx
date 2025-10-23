@@ -7,21 +7,22 @@ import PhoneInput from "@/app/components/inputs/phoneInput";
 import Button from "@/app/components/buttons/button";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useCustomerRegister } from "@/lib/hooks/useCustomerRegister";
+import { customerRegisterSchema, type CustomerRegisterData } from "@/lib/validations/authSchemas";
 import { Store } from '@/lib/types';
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [cpf, setCpf] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [success, setSuccess] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [store, setStore] = useState<Store | null>(null);
   const [loadingStore, setLoadingStore] = useState(true);
   const router = useRouter();
+  
+  const { isLoading, errors, register } = useCustomerRegister();
 
   useEffect(() => {
     fetchStoreData();
@@ -29,10 +30,14 @@ export default function RegisterPage() {
 
   async function fetchStoreData() {
     try {
+      setLoadingStore(true);
       const hostname = window.location.hostname;
       const subdomain = hostname.split('.')[0];
       
-      const response = await fetch(`/api/storefront/store?subdomain=${subdomain}`);
+      // Se for localhost, usar subdomain de teste
+      const testSubdomain = hostname === 'localhost' ? 'loja-teste' : subdomain;
+      
+      const response = await fetch(`/api/storefront/store?subdomain=${testSubdomain}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -47,40 +52,58 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setErrors({});
 
-    try {
-      // TODO: Implementar lógica de registro do customer
-      console.log('Registro do customer:', { name, email, cpf, phone, password, confirmPassword });
-      
-      // Simular delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+    const formData: CustomerRegisterData & { subdomain: string } = {
+      name,
+      email,
+      phone,
+      password,
+      confirmPassword,
+      subdomain: 'loja-teste', // Temporário para teste
+    };
+
+    const success = await register(formData);
+    
+    if (success) {
       setSuccess(true);
       // Redirecionar para login após 2 segundos
       setTimeout(() => {
-        router.push('/auth/login');
+        router.push('/shop/auth/login');
       }, 2000);
-    } catch (error) {
-      setErrors({ general: 'Erro ao criar conta' });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   if (loadingStore) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="min-h-screen w-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)] mx-auto mb-4"></div>
+          <p className="text-[var(--foreground)]">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-[var(--foreground)] mb-2">Conta criada com sucesso!</h2>
+          <p className="text-[var(--foreground)] opacity-70">Redirecionando para o login...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row">
-      {/* Lado Esquerdo - Banner da Loja */}
-      <div 
+      {/* Lado Esquerdo - Imagem/Banner */}
+      <div
         className="hidden md:flex md:w-1/2 items-center justify-center p-8 relative"
         style={{ backgroundColor: store?.primaryColor || '#6200EE' }}
       >
@@ -103,11 +126,21 @@ export default function RegisterPage() {
               </div>
             </div>
           </div>
-        ) : null }</div>
+        ) : (
+          <div className="max-w-md text-white">
+            <h1 className="text-4xl font-bold mb-4">
+              {store?.name || 'Ckeet'}
+            </h1>
+            <p className="text-lg opacity-90">
+              Crie sua conta e comece a comprar
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Lado Direito - Formulário */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-4 md:p-8">
-        <div className="w-full max-w-md space-y-8">
+      <div className="w-full md:w-1/2 flex items-center justify-center p-8">
+        <div className="w-full max-w-md">
           {/* Logo */}
           <div className="flex flex-col items-center gap-4 mb-8">
             {store?.logoUrl ? (
@@ -129,98 +162,107 @@ export default function RegisterPage() {
               />
             )}
             <h2 className="text-2xl font-semibold text-[var(--foreground)]">
-              Cadastro de cliente
+              Cadastro de Cliente
             </h2>
           </div>
 
           {/* Formulário */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            <Input
-              label="Nome completo"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Digite seu nome completo"
-              required
-              error={errors?.name}
-              disabled={isLoading || success}
-            />
+            {/* Nome */}
+            <div>
+              <Input
+                label="Nome completo"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Digite seu nome completo"
+                error={errors.name}
+                required
+              />
+            </div>
 
-            <Input
-              label="Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Digite seu email"
-              required
-              error={errors?.email}
-              disabled={isLoading || success}
-            />
+            {/* Email */}
+            <div>
+              <Input
+                label="Email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Digite seu email"
+                error={errors.email}
+                required
+              />
+            </div>
 
-            <Input
-              label="CPF"
-              type="text"
-              value={cpf}
-              onChange={(e) => setCpf(e.target.value.replace(/\D/g, ''))}
-              placeholder="Digite seu CPF"
-              maxLength={11}
-              required
-              error={errors?.cpf}
-              disabled={isLoading || success}
-            />
+            {/* Telefone */}
+            <div>
+              <PhoneInput
+                label="Telefone"
+                value={phone}
+                onChange={setPhone}
+                placeholder="Digite seu telefone"
+                error={errors.phone}
+              />
+            </div>
 
-            <PhoneInput
-              label="Telefone"
-              value={phone}
-              onChange={setPhone}
-              className="bg-transparent"
-              error={errors?.phone}
-              disabled={isLoading || success}
-            />
+            {/* Senha */}
+            <div>
+              <Input
+                label="Senha"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Digite sua senha"
+                error={errors.password}
+                required
+              />
+            </div>
 
-            <Input
-              label="Senha"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Digite sua senha (mín. 6 caracteres)"
-              required
-              error={errors?.password}
-              disabled={isLoading || success}
-            />
+            {/* Confirmar Senha */}
+            <div>
+              <Input
+                label="Confirmar senha"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirme sua senha"
+                error={errors.confirmPassword}
+                required
+              />
+            </div>
 
-            <Input
-              label="Confirmar Senha"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirme sua senha"
-              required
-              error={errors?.confirmPassword}
-              disabled={isLoading || success}
-            />
+            {/* Erro geral */}
+            {errors.general && (
+              <div className="text-red-500 text-sm text-center">
+                {errors.general}
+              </div>
+            )}
 
-            <Button 
-              className="w-full" 
-              disabled={isLoading || success}
+            {/* Botão de Cadastro */}
+            <Button
               type="submit"
-              style={{ 
+              variant="primary"
+              className="w-full"
+              disabled={isLoading}
+              style={{
                 backgroundColor: store?.secondaryColor || '#03DAC6',
-                color: 'white'
               }}
             >
-              {isLoading ? 'Criando conta...' : success ? '✅ Conta criada!' : 'Cadastrar'}
+              {isLoading ? 'Criando conta...' : 'Cadastrar'}
             </Button>
 
-            <p className="text-center text-sm text-[var(--on-background)]">
-              Já tem uma conta?{" "}
-              <Link
-                href="/shop/auth/login"
-                className="text-[var(--primary)] hover:opacity-90"
-              >
-                Faça login
-              </Link>
-            </p>
+            {/* Link para Login */}
+            <div className="text-center">
+              <p className="text-[var(--foreground)] opacity-70">
+                Já tem uma conta?{' '}
+                <Link
+                  href="/shop/auth/login"
+                  className="text-[var(--primary)] hover:underline font-medium"
+                >
+                  Faça login
+                </Link>
+              </p>
+            </div>
           </form>
         </div>
       </div>

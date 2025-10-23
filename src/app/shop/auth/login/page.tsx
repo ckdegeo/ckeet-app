@@ -6,16 +6,18 @@ import Input from "@/app/components/inputs/input";
 import Button from "@/app/components/buttons/button";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useCustomerLogin } from "@/lib/hooks/useCustomerLogin";
+import { loginSchema, type LoginData } from "@/lib/validations/authSchemas";
 import { Store } from '@/lib/types';
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
   const [store, setStore] = useState<Store | null>(null);
   const [loadingStore, setLoadingStore] = useState(true);
   const router = useRouter();
+  
+  const { isLoading, errors, login } = useCustomerLogin();
 
   useEffect(() => {
     fetchStoreData();
@@ -23,10 +25,14 @@ export default function LoginPage() {
 
   async function fetchStoreData() {
     try {
+      setLoadingStore(true);
       const hostname = window.location.hostname;
       const subdomain = hostname.split('.')[0];
       
-      const response = await fetch(`/api/storefront/store?subdomain=${subdomain}`);
+      // Se for localhost, usar subdomain de teste
+      const testSubdomain = hostname === 'localhost' ? 'loja-teste' : subdomain;
+      
+      const response = await fetch(`/api/storefront/store?subdomain=${testSubdomain}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -41,37 +47,36 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setErrors({});
 
-    try {
-      // TODO: Implementar lógica de login do customer
-      console.log('Login do customer:', { email, password });
-      
-      // Simular delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Redirecionar para a loja
+    const formData: LoginData & { subdomain: string } = {
+      email,
+      password,
+      subdomain: 'loja-teste', // Temporário para teste
+    };
+
+    const success = await login(formData);
+    
+    if (success) {
+      // Redirecionar para a loja após login bem-sucedido
       router.push('/shop');
-    } catch (error) {
-      setErrors({ general: 'Erro ao fazer login' });
-    } finally {
-      setIsLoading(false);
     }
   };
 
   if (loadingStore) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="min-h-screen w-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)] mx-auto mb-4"></div>
+          <p className="text-[var(--foreground)]">Carregando...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row">
-      {/* Lado Esquerdo - Banner da Loja */}
-      <div 
+      {/* Lado Esquerdo - Imagem/Banner */}
+      <div
         className="hidden md:flex md:w-1/2 items-center justify-center p-8 relative"
         style={{ backgroundColor: store?.primaryColor || '#6200EE' }}
       >
@@ -84,14 +89,31 @@ export default function LoginPage() {
             />
             <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
             <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center text-white">
+                <h1 className="text-4xl font-bold mb-4">
+                  {store.name}
+                </h1>
+                <p className="text-lg opacity-90">
+                  Acesse sua conta e continue suas compras
+                </p>
+              </div>
             </div>
           </div>
-        ) : null
-      }</div>
+        ) : (
+          <div className="max-w-md text-white">
+            <h1 className="text-4xl font-bold mb-4">
+              {store?.name || 'Ckeet'}
+            </h1>
+            <p className="text-lg opacity-90">
+              Acesse sua conta e continue suas compras
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Lado Direito - Formulário */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-4 md:p-8">
-        <div className="w-full max-w-md space-y-8">
+      <div className="w-full md:w-1/2 flex items-center justify-center p-8">
+        <div className="w-full max-w-md">
           {/* Logo */}
           <div className="flex flex-col items-center gap-4 mb-8">
             {store?.logoUrl ? (
@@ -119,68 +141,64 @@ export default function LoginPage() {
 
           {/* Formulário */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            <Input
-              label="Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Digite seu email"
-              required
-              error={errors?.email}
-              disabled={isLoading}
-            />
-
-            <Input
-              label="Senha"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Digite sua senha"
-              required
-              error={errors?.password}
-              disabled={isLoading}
-            />
-
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 rounded border-[var(--on-background)] text-[var(--primary)]"
-                />
-                <span className="text-sm text-[var(--foreground)]">
-                  Lembrar-me
-                </span>
-              </label>
-
-              <a
-                href="#"
-                className="text-sm text-[var(--primary)] hover:opacity-90"
-              >
-                Esqueceu a senha?
-              </a>
+            {/* Email */}
+            <div>
+              <Input
+                label="Email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Digite seu email"
+                error={errors.email}
+                required
+              />
             </div>
 
-            <Button 
-              className="w-full" 
-              disabled={isLoading} 
+            {/* Senha */}
+            <div>
+              <Input
+                label="Senha"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Digite sua senha"
+                error={errors.password}
+                required
+              />
+            </div>
+
+            {/* Erro geral */}
+            {errors.general && (
+              <div className="text-red-500 text-sm text-center">
+                {errors.general}
+              </div>
+            )}
+
+            {/* Botão de Login */}
+            <Button
               type="submit"
-              style={{ 
+              variant="primary"
+              className="w-full"
+              disabled={isLoading}
+              style={{
                 backgroundColor: store?.secondaryColor || '#03DAC6',
-                color: 'white'
               }}
             >
               {isLoading ? 'Entrando...' : 'Entrar'}
             </Button>
 
-            <p className="text-center text-sm text-[var(--on-background)]">
-              Não tem uma conta?{" "}
-              <Link
-                href="/shop/auth/register"
-                className="text-[var(--primary)] hover:opacity-90"
-              >
-                Cadastre-se
-              </Link>
-            </p>
+            {/* Link para Registro */}
+            <div className="text-center">
+              <p className="text-[var(--foreground)] opacity-70">
+                Não tem uma conta?{' '}
+                <Link
+                  href="/shop/auth/register"
+                  className="text-[var(--primary)] hover:underline font-medium"
+                >
+                  Cadastre-se
+                </Link>
+              </p>
+            </div>
           </form>
         </div>
       </div>
