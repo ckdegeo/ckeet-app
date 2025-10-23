@@ -151,7 +151,7 @@ export default function ShopPage() {
                 </div>
 
                 {/* Grid de Produtos Moderno */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {category.products
                     .filter(product => product.isActive)
                     .sort((a, b) => a.order - b.order)
@@ -159,7 +159,7 @@ export default function ShopPage() {
                       <a
                         key={product.id}
                         href={`/shop/${product.id}`}
-                        className="group bg-white rounded-2xl shadow-sm hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-transparent transform hover:-translate-y-1"
+                        className="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 hover:border-transparent transform hover:-translate-y-1"
                       >
                         {/* Imagem do Produto */}
                         {product.imageUrl ? (
@@ -167,47 +167,96 @@ export default function ShopPage() {
                             <img
                               src={product.imageUrl}
                               alt={product.name}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                           </div>
                         ) : (
                           <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                            <svg className="w-16 h-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                           </div>
                         )}
 
-                        {/* Informações do Produto */}
-                        <div className="p-5">
-                          <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-2 group-hover:text-gray-700 transition-colors min-h-[3.5rem]">
+                        {/* Conteúdo */}
+                        <div className="p-4">
+                          <h3 className="text-lg font-medium text-gray-900 mb-2 line-clamp-2 group-hover:text-gray-700 transition-colors">
                             {product.name}
                           </h3>
                           
-                          {product.description && (
-                            <p className="text-sm text-gray-500 mb-4 line-clamp-2 min-h-[2.5rem]">
-                              {product.description}
-                            </p>
-                          )}
-
-                          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                            <div>
-                              <p className="text-xs text-gray-500 mb-1">Preço</p>
-                              <span 
-                                className="text-2xl font-bold"
-                                style={{ color: store.primaryColor || '#6200EE' }}
-                              >
-                                R$ {product.price.toFixed(2)}
-                              </span>
-                            </div>
-                            <button
-                              className="px-5 py-2.5 rounded-xl text-white font-semibold hover:opacity-90 transition-all transform group-hover:scale-105 shadow-md"
-                              style={{ backgroundColor: store.secondaryColor || '#03DAC6' }}
+                          <div className="flex items-center justify-between mb-3">
+                            <span 
+                              className="text-xl font-bold"
+                              style={{ color: store.primaryColor || '#6200EE' }}
                             >
-                              Comprar
-                            </button>
+                              R$ {product.price.toFixed(2)}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              {(() => {
+                                // Se for estoque por linha, mostrar quantidade de linhas
+                                if (product.stockType === 'LINE') {
+                                  const linesCount = product.stockLinesCount || 0;
+                                  return (
+                                    <span className={`
+                                      px-2 py-1 rounded-full text-xs font-medium
+                                      ${linesCount > 10 
+                                        ? 'bg-green-100 text-green-800' 
+                                        : linesCount > 0 
+                                        ? 'bg-yellow-100 text-yellow-800' 
+                                        : 'bg-red-100 text-red-800'
+                                      }
+                                    `}>
+                                      {linesCount} em estoque
+                                    </span>
+                                  );
+                                }
+                                
+                                // Se for estoque fixo, mostrar badge "FIXO"
+                                if (product.stockType === 'FIXED') {
+                                  return (
+                                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                      FIXO
+                                    </span>
+                                  );
+                                }
+                                
+                                // Se for KeyAuth, mostrar badge "KEYAUTH"
+                                if (product.stockType === 'KEYAUTH') {
+                                  return (
+                                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                      KEYAUTH
+                                    </span>
+                                  );
+                                }
+                                
+                                // Fallback para compatibilidade com dados antigos
+                                return (
+                                  <span className={`
+                                    px-2 py-1 rounded-full text-xs font-medium
+                                    ${product.stock > 10 
+                                      ? 'bg-green-100 text-green-800' 
+                                      : product.stock > 0 
+                                      ? 'bg-yellow-100 text-yellow-800' 
+                                      : 'bg-red-100 text-red-800'
+                                    }
+                                  `}>
+                                    {product.stock} em estoque
+                                  </span>
+                                );
+                              })()}
+                            </div>
                           </div>
+                        </div>
+                        
+                        {/* Ações */}
+                        <div className="flex items-center justify-end gap-2 p-4 pt-0">
+                          <button
+                            className="cursor-pointer flex items-center justify-center gap-2 px-6 py-3 rounded-full font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed text-white hover:opacity-90"
+                            style={{ backgroundColor: store.secondaryColor || '#03DAC6' }}
+                          >
+                            Comprar
+                          </button>
                         </div>
                       </a>
                     ))}
