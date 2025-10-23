@@ -60,12 +60,12 @@ export default function ShopPage() {
 
   const handleLoginClick = () => {
     // Redirecionar para página de login do customer
-    window.location.href = '/customer/auth/login';
+    window.location.href = '/auth/login';
   };
 
   const handleRegisterClick = () => {
     // Redirecionar para página de registro do customer
-    window.location.href = '/customer/auth/register';
+    window.location.href = '/auth/register';
   };
 
   const handleProfileClick = () => {
@@ -196,7 +196,7 @@ export default function ShopPage() {
                               {(() => {
                                 // Se for estoque por linha, mostrar quantidade de linhas
                                 if (product.stockType === 'LINE') {
-                                  const linesCount = product.stockLinesCount || 0;
+                                  const linesCount = product.stockLines?.length || 0;
                                   return (
                                     <span className={`
                                       px-2 py-1 rounded-full text-xs font-medium
@@ -230,20 +230,8 @@ export default function ShopPage() {
                                   );
                                 }
                                 
-                                // Fallback para compatibilidade com dados antigos
-                                return (
-                                  <span className={`
-                                    px-2 py-1 rounded-full text-xs font-medium
-                                    ${product.stock > 10 
-                                      ? 'bg-green-100 text-green-800' 
-                                      : product.stock > 0 
-                                      ? 'bg-yellow-100 text-yellow-800' 
-                                      : 'bg-red-100 text-red-800'
-                                    }
-                                  `}>
-                                    {product.stock} em estoque
-                                  </span>
-                                );
+                                // Fallback - se não tem stockType definido, não mostrar badge
+                                return null;
                               })()}
                             </div>
                           </div>
