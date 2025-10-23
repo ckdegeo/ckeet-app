@@ -75,7 +75,7 @@ export default function LandingPage() {
                 onClick={handleGetStarted}
                 className="px-4 py-2 text-sm"
               >
-                Começar Agora
+                Começar agora
               </Button>
             </div>
           </div>
@@ -87,8 +87,8 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[var(--foreground)] mb-6">
-              Venda Online de Forma
-              <span className="text-[var(--primary)]"> Simples e Poderosa</span>
+              Venda produtos digitais
+              <span className="text-[var(--primary)]"> com sua lojinha virtual dinamica</span>
             </h1>
             <p className="text-xl text-[var(--on-background)] mb-8 max-w-3xl mx-auto">
               Crie sua loja virtual, gerencie produtos, processe pagamentos e acompanhe suas vendas 
@@ -99,7 +99,7 @@ export default function LandingPage() {
                 onClick={handleGetStarted}
                 className="px-8 py-4 text-lg"
               >
-                Começar Gratuitamente
+                Começar gratuitamente
                 <ArrowRight size={20} />
               </Button>
               <button 
@@ -109,7 +109,7 @@ export default function LandingPage() {
                 <div className="w-10 h-10 bg-[var(--primary)]/10 rounded-full flex items-center justify-center">
                   <Play size={16} className="text-[var(--primary)] ml-0.5" />
                 </div>
-                Assistir Demo
+                Assistir demo
               </button>
             </div>
           </div>
@@ -127,14 +127,14 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <NumberCard
-              title="Lojas Ativas"
+              title="Lojas ativas"
               value={1250}
               icon={Users}
               change={12}
               changeType="increase"
             />
             <ValueCard
-              title="Volume Processado"
+              title="Volume processado"
               value={2500000}
               currency="BRL"
               icon={DollarSign}
@@ -142,7 +142,7 @@ export default function LandingPage() {
               changeType="increase"
             />
             <NumberCard
-              title="Vendas Mensais"
+              title="Vendas mensais"
               value={15680}
               icon={TrendingUp}
               change={25}
@@ -243,7 +243,7 @@ export default function LandingPage() {
                 onClick={handleGetStarted}
                 className="px-8 py-4 text-lg bg-[var(--on-primary)] text-[var(--primary)] hover:opacity-90"
               >
-                Criar Conta Gratuita
+                Criar conta gratuita
                 <ArrowRight size={20} />
               </Button>
               <form onSubmit={handleSubscribe} className="flex gap-2 max-w-sm w-full">
@@ -258,7 +258,7 @@ export default function LandingPage() {
                   type="submit"
                   className="px-6 bg-[var(--on-primary)] text-[var(--primary)] hover:opacity-90 whitespace-nowrap"
                 >
-                  Receber Novidades
+                  Receber novidades
                 </Button>
               </form>
             </div>
@@ -322,7 +322,7 @@ export default function LandingPage() {
           
           <div className="border-t border-[var(--on-background)]/10 mt-8 pt-8 text-center">
             <p className="text-[var(--on-background)]">
-              © 2024 Ckeet. Todos os direitos reservados.
+              © 2025 Ckeet. Todos os direitos reservados.
             </p>
           </div>
         </div>

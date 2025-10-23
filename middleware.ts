@@ -1,8 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { storeSetupGuard } from '@/lib/middleware/storeSetupGuard';
+import { RESERVED_SUBDOMAINS } from '@/lib/config/domains';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const hostname = request.headers.get('host') || '';
+
+  // Extrair subdomínio
+  const subdomain = hostname.split('.')[0];
+  
+  // Verificar se é um subdomínio de loja (não é um subdomínio reservado)
+  const isStorefrontDomain = 
+    !RESERVED_SUBDOMAINS.includes(subdomain.toLowerCase()) &&
+    !pathname.startsWith('/seller/') &&
+    !pathname.startsWith('/master/') &&
+    !pathname.startsWith('/customer/') &&
+    !pathname.startsWith('/api/') &&
+    subdomain !== 'localhost' &&
+    subdomain !== 'localhost:3000';
+
+  // Se for um subdomínio de loja, permitir acesso às rotas da storefront
+  if (isStorefrontDomain) {
+    // Permitir acesso direto às rotas da storefront
+    if (pathname === '/' || pathname.startsWith('/shop')) {
+      return NextResponse.next();
+    }
+    
+    // Qualquer outra rota em subdomínio de loja redireciona para /shop
+    return NextResponse.redirect(new URL('/shop', request.url));
+  }
 
   // Rotas que NÃO precisam de autenticação
   const publicRoutes = [
