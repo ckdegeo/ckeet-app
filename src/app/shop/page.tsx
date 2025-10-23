@@ -230,8 +230,21 @@ export default function ShopPage() {
                                   );
                                 }
                                 
-                                // Fallback - se não tem stockType definido, não mostrar badge
-                                return null;
+                                // Fallback para compatibilidade com dados antigos - mostrar estoque real
+                                const stock = (product as any).stock || 0;
+                                return (
+                                  <span className={`
+                                    px-2 py-1 rounded-full text-xs font-medium
+                                    ${stock > 10 
+                                      ? 'bg-green-100 text-green-800' 
+                                      : stock > 0 
+                                      ? 'bg-yellow-100 text-yellow-800' 
+                                      : 'bg-red-100 text-red-800'
+                                    }
+                                  `}>
+                                    {stock} em estoque
+                                  </span>
+                                );
                               })()}
                             </div>
                           </div>
