@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Store, Category, Product } from '@/lib/types';
 import StoreNavbar from './patterns/storeNavbar';
 
@@ -250,19 +251,19 @@ export default function ShopPage() {
               <h4 className="font-semibold mb-4">Links Rápidos</h4>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <a href="/shop" className="text-white/80 hover:text-white transition-colors">
+                  <Link href="/shop" className="text-white/80 hover:text-white transition-colors">
                     Início
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="/shop#products" className="text-white/80 hover:text-white transition-colors">
+                  <Link href="/shop#products" className="text-white/80 hover:text-white transition-colors">
                     Produtos
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="/customer/orders" className="text-white/80 hover:text-white transition-colors">
+                  <Link href="/customer/orders" className="text-white/80 hover:text-white transition-colors">
                     Meus Pedidos
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>

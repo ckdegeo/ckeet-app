@@ -1,5 +1,6 @@
 'use client';
 
+import Link from "next/link";
 import { ShoppingCart, User, Menu } from "lucide-react";
 import Button from "@/app/components/buttons/button";
 import { useState } from "react";
@@ -43,7 +44,7 @@ export default function StoreNavbar({
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo e Nome da Loja */}
-          <a href="/shop" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+          <Link href="/shop" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
             {store.logoUrl && (
               <div className="h-10 w-10 bg-white rounded-lg p-1.5 flex items-center justify-center">
                 <img
@@ -56,7 +57,7 @@ export default function StoreNavbar({
             <span className="text-xl font-bold text-white hidden sm:block">
               {store.name}
             </span>
-          </a>
+          </Link>
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
