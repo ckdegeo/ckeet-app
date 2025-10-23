@@ -137,9 +137,9 @@ export default function ProductPage() {
         <div className="mb-6">
           <button
             onClick={() => router.push('/shop')}
-            className="px-5 py-2 text-sm rounded-full transition-all flex items-center gap-2 cursor-pointer"
+            className="text-sm rounded-full transition-all flex items-center gap-2 cursor-pointer"
             style={{
-              backgroundColor: store.primaryColor || '#6200EE',
+              backgroundColor: store.secondaryColor || '#6200EE',
               color: 'white',
               border: `2px solid ${store.secondaryColor || '#03DAC6'}`
             }}
