@@ -96,13 +96,33 @@ export default function LoginPage() {
               alt="Banner da loja"
               className="w-full h-full object-cover rounded-lg"
             />
+            <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center text-white">
+                <h1 className="text-4xl font-bold mb-4">
+                  {store.name}
+                </h1>
+                <p className="text-lg opacity-90">
+                  Acesse sua conta e continue suas compras
+                </p>
+              </div>
+            </div>
           </div>
-        ) : null }
+        ) : (
+          <div className="max-w-md text-white">
+            <h1 className="text-4xl font-bold mb-4">
+              {store?.name || 'Ckeet'}
+            </h1>
+            <p className="text-lg opacity-90">
+              Acesse sua conta e continue suas compras
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Lado Direito - Formulário */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
+      <div className="w-full md:w-1/2 flex items-center justify-center p-4 md:p-8">
+        <div className="w-full max-w-md space-y-8">
           {/* Logo */}
           <div className="flex flex-col items-center gap-4 mb-8">
             {store?.logoUrl ? (
@@ -124,70 +144,74 @@ export default function LoginPage() {
               />
             )}
             <h2 className="text-2xl font-semibold text-[var(--foreground)]">
-              Login do cliente
+              Login do Cliente
             </h2>
           </div>
 
           {/* Formulário */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email */}
-            <div>
-              <Input
-                label="Email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Digite seu email"
-                error={errors.email}
-                required
-              />
-            </div>
-
-            {/* Senha */}
-            <div>
-              <Input
-                label="Senha"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Digite sua senha"
-                error={errors.password}
-                required
-              />
-            </div>
-
-            {/* Erro geral */}
-            {errors.general && (
-              <div className="text-red-500 text-sm text-center">
-                {errors.general}
-              </div>
-            )}
-
-            {/* Botão de Login */}
-            <Button
-              type="submit"
-              variant="primary"
-              className="w-full"
+            <Input
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Digite seu email"
+              required
+              error={errors?.email}
               disabled={isLoading}
+            />
+
+            <Input
+              label="Senha"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Digite sua senha"
+              required
+              error={errors?.password}
+              disabled={isLoading}
+            />
+
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 rounded border-[var(--on-background)] text-[var(--primary)]"
+                />
+                <span className="text-sm text-[var(--foreground)]">
+                  Lembrar-me
+                </span>
+              </label>
+
+              <a
+                href="#"
+                className="text-sm text-[var(--primary)] hover:opacity-90"
+              >
+                Esqueceu a senha?
+              </a>
+            </div>
+
+            <Button 
+              className="w-full" 
+              disabled={isLoading} 
+              type="submit"
               style={{
                 backgroundColor: store?.secondaryColor || '#03DAC6',
+                color: 'white'
               }}
             >
               {isLoading ? 'Entrando...' : 'Entrar'}
             </Button>
 
-            {/* Link para Registro */}
-            <div className="text-center">
-              <p className="text-[var(--foreground)] opacity-70">
-                Não tem uma conta?{' '}
-                <Link
-                  href="/shop/auth/register"
-                  className="text-[var(--primary)] hover:underline font-medium"
-                >
-                  Cadastre-se
-                </Link>
-              </p>
-            </div>
+            <p className="text-center text-sm text-[var(--on-background)]">
+              Não tem uma conta?{" "}
+              <Link
+                href="/shop/auth/register"
+                className="text-[var(--primary)] hover:opacity-90"
+              >
+                Cadastre-se
+              </Link>
+            </p>
           </form>
         </div>
       </div>
