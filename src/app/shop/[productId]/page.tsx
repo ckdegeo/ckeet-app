@@ -140,7 +140,7 @@ export default function ProductPage() {
             style={{
               backgroundColor: store.secondaryColor || '#6200EE',
               color: 'white',
-              border: `2px solid ${store.secondaryColor || '#03DAC6'}`
+              border: `2px solid ${store.primaryColor || '#6200EE'}`
             }}
           >
             <ArrowLeft className="w-4 h-4" />
