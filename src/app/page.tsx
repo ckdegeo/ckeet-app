@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { 
   ArrowRight, 
   CheckCircle, 
@@ -21,8 +22,77 @@ import ValueCard from '@/app/components/cards/valueCard';
 import PricingSection from '@/app/components/sections/pricingSection';
 import TestimonialsSection from '@/app/components/sections/testimonialsSection';
 
+const RESERVED_SUBDOMAINS = [
+  'www', 'api', 'app', 'admin', 'dashboard', 'seller', 'customer', 
+  'master', 'auth', 'login', 'register', 'shop', 'store', 'payment',
+  'checkout', 'support', 'help', 'docs', 'blog', 'mail', 'email',
+  'ftp', 'static', 'cdn', 'assets', 'files', 'upload', 'download', 'ckeet'
+];
+
 export default function LandingPage() {
   const [email, setEmail] = useState('');
+  const [isCheckingDomain, setIsCheckingDomain] = useState(true);
+  const router = useRouter();
+
+  // Verificar se é um domínio de loja e redirecionar
+  useEffect(() => {
+    const checkStoreDomain = () => {
+      try {
+        const hostname = window.location.hostname;
+        console.log('🔍 Verificando hostname:', hostname);
+        
+        // Extrair subdomínio (primeira parte antes do primeiro ponto)
+        const parts = hostname.split('.');
+        const subdomain = parts[0];
+        
+        console.log('📍 Subdomínio detectado:', subdomain);
+        console.log('📍 Partes do hostname:', parts);
+        
+        // Condições para NÃO ser uma loja:
+        const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1');
+        const isReserved = RESERVED_SUBDOMAINS.includes(subdomain.toLowerCase());
+        const isMainDomain = parts.length < 2 || subdomain === 'ckeet' || hostname === 'ckeet.store';
+        
+        console.log('🔎 Verificações:', {
+          isLocalhost,
+          isReserved,
+          isMainDomain,
+          hasSubdomain: parts.length >= 2
+        });
+        
+        // Se NÃO for localhost, NÃO for reservado e TEM subdomínio válido = É LOJA
+        const isStoreDomain = !isLocalhost && !isReserved && !isMainDomain && parts.length >= 2;
+        
+        console.log('🏪 É domínio de loja?', isStoreDomain);
+        
+        if (isStoreDomain) {
+          console.log('🔀 Redirecionando para /shop...');
+          router.push('/shop');
+          return;
+        }
+        
+        console.log('✅ É domínio principal, mostrando landing page');
+        setIsCheckingDomain(false);
+      } catch (error) {
+        console.error('❌ Erro ao verificar domínio:', error);
+        setIsCheckingDomain(false);
+      }
+    };
+
+    checkStoreDomain();
+  }, [router]);
+
+  // Mostrar loading enquanto verifica
+  if (isCheckingDomain) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[var(--background)]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)] mx-auto mb-4"></div>
+          <p className="text-[var(--on-background)]">Verificando domínio...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleGetStarted = () => {
     // Redirecionar para registro
