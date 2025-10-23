@@ -71,7 +71,7 @@ export default function StoreNavbar({
                   <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
                     <User size={18} className="text-gray-700" />
                   </div>
-                  <span className="font-medium">{userName || 'Usuário'}</span>
+                  <span className="font-medium text-sm">{userName || 'Usuário'}</span>
                 </button>
 
                 {/* Dropdown Menu */}
