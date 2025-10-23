@@ -28,11 +28,11 @@ export default function Footer({ store }: FooterProps) {
           {/* Logo e Nome */}
           <div className="text-center md:text-left">
             {store.logoUrl && (
-              <div className="inline-flex h-12 w-12 bg-white rounded-lg p-1 mb-4">
+              <div className="inline-flex h-12 w-12 bg-white rounded-lg p-2 mb-4">
                 <img
                   src={store.logoUrl}
                   alt={store.name}
-                  className="w-full h-full object-cover rounded"
+                  className="w-full h-full object-contain"
                 />
               </div>
             )}
