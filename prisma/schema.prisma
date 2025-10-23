@@ -96,7 +96,6 @@ model Customer {
   email     String   // Removido @unique - pode repetir em lojas diferentes
   name      String?
   phone     String?
-  cpf       String?  // Removido @unique - pode repetir em lojas diferentes
   password  String?
   status    CustomerStatus @default(ACTIVE) // ACTIVE, BANNED
   createdAt DateTime @default(now())

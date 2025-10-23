@@ -8,7 +8,6 @@ export async function POST(request: NextRequest) {
       email, 
       password, 
       name, 
-      cpf,
       phone,
       subdomain // Novo: subdomain da loja
     } = await request.json();
@@ -67,7 +66,6 @@ export async function POST(request: NextRequest) {
           user_type: 'customer',
           name,
           sellerId: seller.id, // Incluir sellerId nos metadados
-          ...(cpf && { cpf }),
           ...(phone && { phone }),
         },
       },
@@ -85,7 +83,6 @@ export async function POST(request: NextRequest) {
       id: authData.user!.id,
       email,
       name,
-      cpf: cpf || '',
       phone: phone || '',
       sellerId: seller.id, // Incluir sellerId
       password: '', // Senha gerenciada pelo Supabase
