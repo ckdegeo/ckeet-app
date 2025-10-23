@@ -67,11 +67,11 @@ export default function ProductPage() {
   }
 
   const handleLoginClick = () => {
-    window.location.href = '/auth/login';
+    window.location.href = '/shop/auth/login';
   };
 
   const handleRegisterClick = () => {
-    window.location.href = '/auth/register';
+    window.location.href = '/shop/auth/register';
   };
 
   const handleProfileClick = () => {

@@ -61,12 +61,12 @@ export default function ShopPage() {
 
   const handleLoginClick = () => {
     // Redirecionar para página de login do customer
-    window.location.href = '/auth/login';
+    window.location.href = '/shop/auth/login';
   };
 
   const handleRegisterClick = () => {
     // Redirecionar para página de registro do customer
-    window.location.href = '/auth/register';
+    window.location.href = '/shop/auth/register';
   };
 
   const handleProfileClick = () => {

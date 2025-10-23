@@ -47,21 +47,35 @@ export class AuthService {
   }
 
   // Sincronizar Customer
-  static async syncCustomer(supabaseUser: { id: string; email?: string; user_metadata?: { user_type?: string; name?: string; phone?: string } }) {
-    return await prisma.customer.upsert({
-      where: { email: supabaseUser.email || '' },
-      update: {
-        name: supabaseUser.user_metadata?.name,
-        phone: supabaseUser.user_metadata?.phone,
-      },
-      create: {
-        id: supabaseUser.id,
+  static async syncCustomer(supabaseUser: { id: string; email?: string; user_metadata?: { user_type?: string; name?: string; phone?: string; sellerId?: string } }) {
+    // Como email não é mais único, vamos usar findFirst e create/update manualmente
+    const existingCustomer = await prisma.customer.findFirst({
+      where: { 
         email: supabaseUser.email || '',
-        name: supabaseUser.user_metadata?.name,
-        phone: supabaseUser.user_metadata?.phone,
-        password: '', // Senha gerenciada pelo Supabase
-      },
+        sellerId: supabaseUser.user_metadata?.sellerId 
+      }
     });
+
+    if (existingCustomer) {
+      return await prisma.customer.update({
+        where: { id: existingCustomer.id },
+        data: {
+          name: supabaseUser.user_metadata?.name,
+          phone: supabaseUser.user_metadata?.phone,
+        }
+      });
+    } else {
+      return await prisma.customer.create({
+        data: {
+          id: supabaseUser.id,
+          email: supabaseUser.email || '',
+          name: supabaseUser.user_metadata?.name,
+          phone: supabaseUser.user_metadata?.phone,
+          sellerId: supabaseUser.user_metadata?.sellerId,
+          password: '', // Senha gerenciada pelo Supabase
+        }
+      });
+    }
   }
 
   // ===========================================
@@ -141,7 +155,7 @@ export class AuthService {
 
   // Buscar customer por email
   static async getCustomerByEmail(email: string) {
-    return await prisma.customer.findUnique({
+    return await prisma.customer.findFirst({
       where: { email },
     });
   }
@@ -162,7 +176,7 @@ export class AuthService {
     // Tentar buscar em todas as tabelas
     const [seller, customer] = await Promise.all([
       prisma.seller.findUnique({ where: { email } }),
-      prisma.customer.findUnique({ where: { email } }),
+      prisma.customer.findFirst({ where: { email } }),
     ]);
 
     if (seller) return { ...seller, user_type: 'seller' };
