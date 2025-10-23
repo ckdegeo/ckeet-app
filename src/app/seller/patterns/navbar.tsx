@@ -22,22 +22,31 @@ export default function Navbar({ className = "", title = "Seller" }: NavbarProps
       if (!user?.id) return;
       
       try {
+        const accessToken = localStorage.getItem('access_token');
+        console.log('🔑 Token:', accessToken ? 'Encontrado' : 'Não encontrado');
+        
         // Buscar dados do seller e loja
         const response = await fetch(`/api/seller/store/config`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json'
           }
         });
         
+        console.log('📡 Response status:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
-          setSellerName(data.name || user.name || "Usuário");
-          setStoreSubdomain(data.subdomain || "");
+          console.log('📊 Store data:', data);
+          setSellerName(data.store?.name || user.name || "Usuário");
+          setStoreSubdomain(data.store?.subdomain || "");
+          console.log('🏪 Subdomain:', data.store?.subdomain);
         } else {
+          console.log('❌ API Error:', response.status);
           setSellerName(user.name || "Usuário");
         }
       } catch (error) {
+        console.log('💥 Fetch error:', error);
         setSellerName(user.name || "Usuário");
       }
     };
@@ -72,12 +81,17 @@ export default function Navbar({ className = "", title = "Seller" }: NavbarProps
           <IconOnlyButton
             icon={Store}
             onClick={() => {
+              console.log('🖱️ Store button clicked');
+              console.log('🏪 Store subdomain:', storeSubdomain);
+              
               if (storeSubdomain) {
                 // Navegar para a loja dinâmica do seller
                 const storeUrl = `https://${storeSubdomain}.ckeet.store`;
+                console.log('🌐 Opening store URL:', storeUrl);
                 window.open(storeUrl, '_blank');
               } else {
                 // Se não tem subdomínio, redirecionar para configuração da loja
+                console.log('⚙️ No subdomain, redirecting to store config');
                 window.location.href = '/seller/store';
               }
             }}
