@@ -137,7 +137,7 @@ export default function ProductPage() {
         <div className="mb-6">
           <button
             onClick={() => router.push('/shop')}
-            className="px-5 py-2 text-sm rounded-full transition-all flex items-center gap-2"
+            className="px-5 py-2 text-sm rounded-full transition-all flex items-center gap-2 cursor-pointer"
             style={{
               backgroundColor: store.primaryColor || '#6200EE',
               color: 'white',
@@ -207,7 +207,7 @@ export default function ProductPage() {
               {product.videoUrl && (
                 <button
                   onClick={() => setSelectedImage('video')}
-                  className={`aspect-square bg-gray-900 rounded-lg overflow-hidden border-2 transition-all flex items-center justify-center relative ${
+                  className={`aspect-square bg-black/50 rounded-lg overflow-hidden border-2 transition-all flex items-center justify-center relative ${
                     selectedImage === 'video'
                       ? 'border-current'
                       : 'border-transparent hover:border-gray-300'
