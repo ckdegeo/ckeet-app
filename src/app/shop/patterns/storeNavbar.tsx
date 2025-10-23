@@ -73,7 +73,7 @@ export default function StoreNavbar({
                 >
                   <div 
                     className="w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: primaryColor }}
+                    style={{ backgroundColor: secondaryColor }}
                   >
                     <User size={18} className="text-white" />
                   </div>
@@ -134,7 +134,7 @@ export default function StoreNavbar({
                 {/* Badge de quantidade */}
                 <span 
                   className="absolute -top-1 -right-1 w-5 h-5 text-white text-xs rounded-full flex items-center justify-center font-bold"
-                  style={{ backgroundColor: primaryColor }}
+                  style={{ backgroundColor: secondaryColor }}
                 >
                   0
                 </span>
@@ -162,7 +162,7 @@ export default function StoreNavbar({
                 />
                <span 
                   className="absolute -top-1 -right-1 w-5 h-5 text-white text-xs rounded-full flex items-center justify-center font-bold"
-                  style={{ backgroundColor: primaryColor }}
+                  style={{ backgroundColor: secondaryColor }}
                 >
                   0
                 </span>
