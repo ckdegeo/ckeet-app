@@ -223,6 +223,7 @@ export interface Store {
   homeBannerUrl?: string;
   storeBannerUrl?: string;
   primaryColor: string;
+  secondaryColor: string;
   
   // Domain Configuration
   subdomain: string;
