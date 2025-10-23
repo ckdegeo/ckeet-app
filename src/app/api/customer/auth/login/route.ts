@@ -44,6 +44,15 @@ export async function POST(request: NextRequest) {
 
     if (authError) {
       console.log('❌ Supabase auth error:', authError.message);
+      
+      // Verificar se é erro de email não confirmado
+      if (authError.message.includes('Email not confirmed')) {
+        return NextResponse.json(
+          { error: 'Email not confirmed' },
+          { status: 401 }
+        );
+      }
+      
       return NextResponse.json(
         { error: 'Credenciais inválidas' },
         { status: 401 }

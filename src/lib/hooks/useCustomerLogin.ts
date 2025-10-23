@@ -43,8 +43,15 @@ export function useCustomerLogin(): UseCustomerLoginReturn {
           return false;
         }
 
-        // Erro geral
-        showToastWithAutoClose('error', result.error || 'Erro ao fazer login', 4000);
+        // Erro geral - verificar se é erro de email não confirmado
+        let errorMessage = result.error || 'Erro ao fazer login';
+        
+        // Verificar se é erro de email não confirmado
+        if (errorMessage.includes('Email not confirmed') || errorMessage.includes('email não confirmado')) {
+          errorMessage = 'Seu email ainda não foi confirmado. Verifique sua caixa de entrada e clique no link de confirmação.';
+        }
+        
+        showToastWithAutoClose('error', errorMessage, 4000);
         return false;
       }
 
