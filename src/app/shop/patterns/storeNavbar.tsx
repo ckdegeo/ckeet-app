@@ -39,7 +39,7 @@ export default function StoreNavbar({
       className="sticky top-0 z-50 border-b backdrop-blur-sm bg-opacity-95"
       style={{ 
         backgroundColor: primaryColor,
-        borderBottomColor: secondaryColor
+        borderBottomColor: primaryColor
       }}
     >
       <div className="container mx-auto px-4">
