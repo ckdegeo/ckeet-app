@@ -1,6 +1,7 @@
 'use client';
 
 import Image from "next/image";
+import Link from "next/link";
 import Input from "@/app/components/inputs/input";
 import PhoneInput from "@/app/components/inputs/phoneInput";
 import Button from "@/app/components/buttons/button";
@@ -154,12 +155,12 @@ export default function Register() {
 
             <p className="text-center text-sm text-[var(--on-background)]">
               Já tem uma conta?{" "}
-              <a
+              <Link
                 href="/seller/auth/login"
                 className="text-[var(--primary)] hover:opacity-90"
               >
                 Faça login
-              </a>
+              </Link>
             </p>
           </form>
         </div>

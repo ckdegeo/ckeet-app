@@ -6,28 +6,42 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hostname = request.headers.get('host') || '';
 
+  // Debug logs
+  console.log('🔍 Middleware Debug:', {
+    hostname,
+    pathname,
+    subdomain: hostname.split('.')[0]
+  });
+
   // Extrair subdomínio
   const subdomain = hostname.split('.')[0];
   
+  // Ignorar em localhost/desenvolvimento
+  const isLocalhost = hostname.includes('localhost') || hostname.includes('127.0.0.1');
+  
   // Verificar se é um subdomínio de loja (não é um subdomínio reservado)
   const isStorefrontDomain = 
+    !isLocalhost &&
     !RESERVED_SUBDOMAINS.includes(subdomain.toLowerCase()) &&
     !pathname.startsWith('/seller/') &&
     !pathname.startsWith('/master/') &&
     !pathname.startsWith('/customer/') &&
     !pathname.startsWith('/api/') &&
-    subdomain !== 'localhost' &&
-    subdomain !== 'localhost:3000' &&
     subdomain !== 'www' &&
-    subdomain !== 'ckeet';
+    subdomain !== 'ckeet' &&
+    hostname.split('.').length > 1; // Garantir que tem pelo menos um ponto (tem subdomínio)
+
+  console.log('🏪 É domínio de loja?', isStorefrontDomain);
 
   // Se for um subdomínio de loja, redirecionar para /shop
   if (isStorefrontDomain) {
     // Se já está em /shop, permitir acesso
     if (pathname.startsWith('/shop')) {
+      console.log('✅ Já está em /shop, permitindo acesso');
       return NextResponse.next();
     }
     
+    console.log('🔀 Redirecionando para /shop');
     // Qualquer outra rota em subdomínio de loja redireciona para /shop
     return NextResponse.redirect(new URL('/shop', request.url));
   }

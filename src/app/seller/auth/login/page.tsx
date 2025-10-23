@@ -1,6 +1,7 @@
 'use client';
 
 import Image from "next/image";
+import Link from "next/link";
 import Input from "@/app/components/inputs/input";
 import Button from "@/app/components/buttons/button";
 import { useState } from "react";
@@ -148,12 +149,12 @@ export default function Login() {
 
             <p className="text-center text-sm text-[var(--on-background)]">
               Não tem uma conta?{" "}
-              <a
+              <Link
                 href="/seller/auth/register"
                 className="text-[var(--primary)] hover:opacity-90"
               >
                 Cadastre-se
-              </a>
+              </Link>
             </p>
           </form>
         </div>
