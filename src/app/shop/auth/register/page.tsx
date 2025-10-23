@@ -117,25 +117,10 @@ export default function RegisterPage() {
             <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center text-white">
-                <h1 className="text-4xl font-bold mb-4">
-                  {store.name}
-                </h1>
-                <p className="text-lg opacity-90">
-                  Crie sua conta e comece a comprar
-                </p>
               </div>
             </div>
           </div>
-        ) : (
-          <div className="max-w-md text-white">
-            <h1 className="text-4xl font-bold mb-4">
-              {store?.name || 'Ckeet'}
-            </h1>
-            <p className="text-lg opacity-90">
-              Crie sua conta e comece a comprar
-            </p>
-          </div>
-        )}
+        ) : null }
       </div>
 
       {/* Lado Direito - Formulário */}
@@ -162,7 +147,7 @@ export default function RegisterPage() {
               />
             )}
             <h2 className="text-2xl font-semibold text-[var(--foreground)]">
-              Cadastro de Cliente
+              Cadastro de cliente
             </h2>
           </div>
 
