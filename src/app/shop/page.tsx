@@ -106,18 +106,20 @@ export default function ShopPage() {
 
       {/* Banner da Loja (se existir) */}
       {store.storeBannerUrl && (
-        <div className="w-full h-72 overflow-hidden relative">
-          <img
-            src={store.storeBannerUrl}
-            alt="Banner da loja"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+        <div className="container mx-auto px-8 py-6">
+          <div className="w-full h-72 overflow-hidden relative rounded-2xl shadow-lg">
+            <img
+              src={store.storeBannerUrl}
+              alt="Banner da loja"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"></div>
+          </div>
         </div>
       )}
 
       {/* Conteúdo Principal */}
-      <main className="container mx-auto px-4 py-12">
+      <main className="container mx-auto px-8 py-12">
         {categories.length === 0 ? (
           <div className="text-center py-20">
             <div className="max-w-md mx-auto">
@@ -227,7 +229,7 @@ export default function ShopPage() {
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full translate-y-1/2 -translate-x-1/2"></div>
         </div>
 
-        <div className="container mx-auto px-4 relative z-10">
+        <div className="container mx-auto px-8 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             {/* Logo e Nome */}
             <div className="text-center md:text-left">
