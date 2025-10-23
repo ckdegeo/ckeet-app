@@ -145,6 +145,7 @@ export class AuthService {
     id: string;
     email: string;
     name: string;
+    cpf?: string;
     phone: string;
     password?: string; // Opcional, pois Supabase gerencia
     sellerId?: string; // Seller que "possui" este customer
@@ -154,6 +155,7 @@ export class AuthService {
         id: data.id,
         email: data.email,
         name: data.name,
+        cpf: data.cpf || null,
         phone: data.phone,
         sellerId: data.sellerId || null,
         password: data.password || '', // Senha gerenciada pelo Supabase

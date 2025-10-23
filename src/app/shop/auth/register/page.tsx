@@ -14,6 +14,7 @@ import { Store } from '@/lib/types';
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [cpf, setCpf] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -65,6 +66,7 @@ export default function RegisterPage() {
     const formData: CustomerRegisterData & { subdomain: string } = {
       name,
       email,
+      cpf,
       phone,
       password,
       confirmPassword,
@@ -185,6 +187,18 @@ export default function RegisterPage() {
                 placeholder="Digite seu email"
                 error={errors.email}
                 required
+              />
+            </div>
+
+            {/* CPF */}
+            <div>
+              <Input
+                label="CPF"
+                type="text"
+                value={cpf}
+                onChange={(e) => setCpf(e.target.value)}
+                placeholder="Digite seu CPF"
+                error={errors.cpf}
               />
             </div>
 

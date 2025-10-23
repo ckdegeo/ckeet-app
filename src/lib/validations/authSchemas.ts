@@ -50,6 +50,13 @@ export const customerRegisterSchema = z.object({
     .email('Email inválido')
     .max(255, 'Email deve ter no máximo 255 caracteres'),
   
+  cpf: z
+    .string()
+    .min(11, 'CPF deve ter 11 dígitos')
+    .max(14, 'CPF inválido')
+    .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$|^\d{11}$/, 'CPF inválido')
+    .optional(),
+  
   phone: z
     .string()
     .min(10, 'Telefone deve ter pelo menos 10 dígitos')
