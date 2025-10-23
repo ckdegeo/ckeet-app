@@ -251,6 +251,8 @@ export default function ShopPage() {
                           </div>
                         </div>
                         
+                        <hr className="my-2 rounded-full border-gray-100" />
+                        
                         {/* Ações */}
                         <div className="flex items-center justify-end gap-2 p-3 pt-0">
                           <button
