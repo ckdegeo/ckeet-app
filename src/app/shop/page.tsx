@@ -194,9 +194,9 @@ export default function ShopPage() {
                             </span>
                             <div className="flex items-center gap-1">
                               {(() => {
-                                // Se for estoque por linha, mostrar quantidade de linhas
+                                // Se for estoque por linha, mostrar quantidade de linhas disponíveis
                                 if (product.stockType === 'LINE') {
-                                  const linesCount = product.stockLines?.length || 0;
+                                  const linesCount = product.stockLines?.filter(line => !line.isUsed).length || 0;
                                   return (
                                     <span className={`
                                       px-2 py-1 rounded-full text-xs font-medium
