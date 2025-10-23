@@ -90,11 +90,19 @@ export default function ShopPage() {
   };
 
   const handleLogoutClick = async () => {
+    console.log('🔴 INICIANDO LOGOUT...');
     try {
       // Obter o token de acesso do localStorage
       const accessToken = localStorage.getItem('customer_access_token');
+      console.log('🔍 Token encontrado:', accessToken ? 'SIM' : 'NÃO');
+      console.log('🔍 Dados atuais no localStorage:', {
+        access_token: localStorage.getItem('customer_access_token'),
+        user_data: localStorage.getItem('customer_user_data'),
+        refresh_token: localStorage.getItem('customer_refresh_token')
+      });
       
       // Fazer logout na API
+      console.log('📡 Enviando requisição para API de logout...');
       const response = await fetch('/api/customer/auth/logout', {
         method: 'POST',
         headers: {
@@ -105,32 +113,39 @@ export default function ShopPage() {
         }),
       });
 
+      console.log('📡 Resposta da API:', response.status, response.ok);
+
       if (response.ok) {
-        console.log('✅ Logout realizado com sucesso');
+        console.log('✅ Logout API realizado com sucesso');
         
         // Limpar dados do localStorage
+        console.log('🧹 Limpando localStorage...');
         localStorage.removeItem('customer_access_token');
         localStorage.removeItem('customer_refresh_token');
         localStorage.removeItem('customer_user_data');
         localStorage.removeItem('customer_expires_at');
         
         // Limpar cookies (se necessário)
+        console.log('🧹 Limpando cookies...');
         document.cookie = 'customer_access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         document.cookie = 'customer_refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         
         // Atualizar estado
+        console.log('🔄 Atualizando estado do componente...');
         setIsAuthenticated(false);
         setUserName(undefined);
         
+        console.log('🔄 Estado atualizado. Recarregando página...');
         // Recarregar a página para garantir que tudo seja limpo
         window.location.reload();
       } else {
         const errorData = await response.json();
-        console.error('❌ Erro ao fazer logout:', errorData);
-        alert('Erro ao fazer logout. Tente novamente.');
+        console.error('❌ Erro na API de logout:', response.status, errorData);
+        alert(`Erro ao fazer logout: ${errorData.error || 'Erro desconhecido'}`);
       }
     } catch (error) {
-      console.error('Erro ao fazer logout:', error);
+      console.error('❌ Erro no processo de logout:', error);
+      alert('Erro inesperado ao fazer logout. Tente novamente.');
     }
   };
 
