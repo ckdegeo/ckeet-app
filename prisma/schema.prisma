@@ -60,6 +60,19 @@ enum TransactionStatus {
   CANCELLED // Cancelada
 }
 
+enum PaymentProvider {
+  MERCADO_PAGO  // Mercado Pago (Split Payment)
+  STRIPE        // Stripe (futuro)
+  PAYPAL        // PayPal (futuro)
+}
+
+enum ProviderConnectionStatus {
+  CONNECTED     // Conectado e funcionando
+  EXPIRED       // Token expirado, precisa renovar
+  DISCONNECTED  // Desconectado
+  ERROR         // Erro na conexão
+}
+
 enum CustomerStatus {
   ACTIVE // Ativo
   BANNED // Banido
@@ -81,10 +94,48 @@ model Seller {
   updatedAt DateTime @updatedAt
 
   // Relacionamentos
-  store     Store?     // 1 seller = 1 store
-  customers Customer[] // customers que se registraram na loja deste seller
+  store           Store?                 // 1 seller = 1 store
+  customers       Customer[]             // customers que se registraram na loja deste seller
+  paymentConfigs  SellerPaymentConfig[]  // configurações de pagamento por provider
 
   @@map("sellers")
+}
+
+// ===========================================
+// PAYMENT PROVIDER CONFIGURATION
+// ===========================================
+
+model SellerPaymentConfig {
+  id        String   @id @default(cuid())
+  provider  PaymentProvider // MERCADO_PAGO, STRIPE, etc
+  
+  // OAuth Credentials (Mercado Pago)
+  accessToken  String? // Token de acesso do seller
+  publicKey    String? // Chave pública
+  refreshToken String? // Token para renovar o accessToken
+  userId       String? // user_id ou collector_id do Mercado Pago
+  expiresAt    DateTime? // Expiração do accessToken
+  tokenType    String? @default("Bearer") // Tipo do token
+  
+  // Provider Status
+  status       ProviderConnectionStatus @default(DISCONNECTED) // CONNECTED, EXPIRED, DISCONNECTED, ERROR
+  lastSyncAt   DateTime? // Última sincronização bem-sucedida
+  errorMessage String? // Mensagem de erro (se houver)
+  
+  // Platform Commission Configuration
+  commissionRate      Float @default(0.0599) // 5.99%
+  commissionFixedFee  Float @default(0.50)   // R$ 0,50 por transação
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  sellerId String
+  seller   Seller @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  // Constraint: um seller pode ter apenas uma config por provider
+  @@unique([sellerId, provider], name: "unique_seller_provider")
+  @@map("seller_payment_configs")
 }
 
 // ===========================================
@@ -326,15 +377,24 @@ model Transaction {
   status      TransactionStatus // PENDING, COMPLETED, FAILED, CANCELLED
   description String?
   
-  // Split Payment Info (Mercado Pago)
-  sellerAmount    Float   // valor que o seller recebe (93%)
-  platformAmount  Float   // valor da plataforma (7%)
-  commissionRate  Float   @default(0.07) // taxa de comissão (7%)
+  // Payment Provider
+  paymentProvider PaymentProvider @default(MERCADO_PAGO) // Provider usado nesta transação
+  
+  // Split Payment Info
+  sellerAmount       Float   // valor que o seller recebe (após comissão)
+  platformAmount     Float   // valor da plataforma (comissão)
+  commissionRate     Float   @default(0.0599) // taxa percentual (5.99%)
+  commissionFixedFee Float   @default(0.50)   // taxa fixa (R$ 0,50)
   
   // Payment Gateway Info
-  gatewayTransactionId String?
-  gatewayResponse      String?
-  splitTransactionId   String? // ID da transação de split no Mercado Pago
+  gatewayTransactionId String? // ID da transação no gateway
+  gatewayResponse      String? // Resposta completa do gateway (JSON)
+  gatewayStatus        String? // Status retornado pelo gateway
+  
+  // Mercado Pago Specific
+  mpPaymentId         String? // ID do pagamento no Mercado Pago
+  mpCollectorId       String? // ID do collector (seller) no MP
+  mpApplicationFee    Float?  // Valor da application_fee aplicada
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -342,8 +402,8 @@ model Transaction {
   // Relacionamentos
   orderId    String
   order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  customerId String
-  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
   storeId    String
   store      Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
