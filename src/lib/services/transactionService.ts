@@ -32,7 +32,6 @@ export class TransactionService {
         commissionRate: data.commissionRate,
         gatewayTransactionId: data.gatewayTransactionId,
         gatewayResponse: data.gatewayResponse,
-        splitTransactionId: data.splitTransactionId,
         orderId: data.orderId,
         customerId: data.customerId,
         storeId: data.storeId,

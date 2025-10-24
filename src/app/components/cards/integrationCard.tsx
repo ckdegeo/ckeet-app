@@ -10,6 +10,7 @@ interface IntegrationCardProps {
   icon: LucideIcon;
   lastSync?: string;
   onConfigure: () => void;
+  configuring?: boolean;
   className?: string;
 }
 
@@ -20,6 +21,7 @@ export default function IntegrationCard({
   icon: Icon,
   lastSync,
   onConfigure,
+  configuring = false,
   className = "",
 }: IntegrationCardProps) {
   const statusConfig = {
@@ -96,9 +98,10 @@ export default function IntegrationCard({
       {/* Ações */}
       <div className="flex items-center justify-end">
         <Button 
-          onClick={onConfigure} 
+          onClick={onConfigure}
+          disabled={configuring}
         >
-          Configurar
+          {configuring ? 'Processando...' : status === 'active' ? 'Desconectar' : 'Conectar'}
         </Button>
       </div>
     </div>

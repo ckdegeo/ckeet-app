@@ -1,25 +1,53 @@
 'use client';
 
-import { useState } from 'react';
-import { CreditCard, CheckCircle, Plus } from 'lucide-react';
+import { useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { CreditCard, CheckCircle } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import NumberCard from '@/app/components/cards/numberCard';
 import IntegrationCard from '@/app/components/cards/integrationCard';
-import Button from '@/app/components/buttons/button';
+import { useMercadoPago } from '@/lib/hooks/useMercadoPago';
 
-export default function Integrations() {
-  const [integrations] = useState([
-    {
-      id: '1',
-      name: 'Mercado Pago',
-      description: 'Processamento de pagamentos com PIX, cartão de crédito e débito',
-      status: 'active' as const,
-      icon: CreditCard,
-      lastSync: '15/01/2024 às 10:30'
+function IntegrationsContent() {
+  const searchParams = useSearchParams();
+
+  // Hook do Mercado Pago (agora busca sellerId automaticamente)
+  const { status: mpStatus, connecting, disconnecting, connect, disconnect } = useMercadoPago();
+
+  // Verificar parâmetros da URL para mostrar mensagens
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const error = searchParams.get('error');
+
+    if (success === 'connected') {
+      toast.success('Conectado ao Mercado Pago com sucesso!');
+    } else if (error === 'authorization_denied') {
+      toast.error('Autorização negada pelo Mercado Pago');
+    } else if (error === 'missing_parameters') {
+      toast.error('Parâmetros inválidos na conexão');
+    } else if (error === 'connection_failed') {
+      toast.error('Falha na conexão com o Mercado Pago');
     }
-  ]);
+  }, [searchParams]);
 
   const handleConfigureIntegration = () => {
-    console.log('Configurar integração');
+    if (mpStatus?.connected) {
+      disconnect();
+    } else {
+      connect();
+    }
+  };
+
+  const getIntegrationStatus = () => {
+    if (!mpStatus) return 'inactive';
+    if (mpStatus.connected) return 'active';
+    if (mpStatus.status === 'EXPIRED') return 'error';
+    return 'inactive';
+  };
+
+  const getLastSync = () => {
+    if (!mpStatus?.lastSync) return undefined;
+    return new Date(mpStatus.lastSync).toLocaleString('pt-BR');
   };
 
   return (
@@ -37,12 +65,12 @@ export default function Integrations() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <NumberCard
           title="Integrações Ativas"
-          value={1}
+          value={mpStatus?.connected ? 1 : 0}
           icon={CheckCircle}
         />
       </div>
 
-        <hr className="border-t border-black/10" />
+      <hr className="border-t border-black/10" />
 
       {/* Lista Simples */}
       <div className="space-y-4">
@@ -51,19 +79,25 @@ export default function Integrations() {
         </h2>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {integrations.map((integration) => (
-            <IntegrationCard
-              key={integration.id}
-              name={integration.name}
-              description={integration.description}
-              status={integration.status}
-              icon={integration.icon}
-              lastSync={integration.lastSync}
-              onConfigure={handleConfigureIntegration}
-            />
-          ))}
+          <IntegrationCard
+            name="Mercado Pago"
+            description="Processamento de pagamentos com PIX, cartão de crédito e débito"
+            status={getIntegrationStatus()}
+            icon={CreditCard}
+            lastSync={getLastSync()}
+            onConfigure={handleConfigureIntegration}
+            configuring={connecting || disconnecting}
+          />
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Integrations() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <IntegrationsContent />
+    </Suspense>
   );
 }
