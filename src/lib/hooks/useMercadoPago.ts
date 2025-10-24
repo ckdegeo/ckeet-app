@@ -102,15 +102,21 @@ export function useMercadoPago(): UseMercadoPagoReturn {
 
   // Conecta ao Mercado Pago (abre OAuth)
   const connect = () => {
+    console.log('🔗 [MercadoPago] Iniciando conexão...');
+    console.log('👤 [MercadoPago] Seller ID:', sellerId);
+    
     if (!sellerId) {
-      console.error('Seller ID não disponível');
+      console.error('❌ [MercadoPago] Seller ID não disponível');
       return;
     }
 
     setConnecting(true);
     
+    const connectUrl = `/api/seller/mercadopago/connect?sellerId=${sellerId}`;
+    console.log('🌐 [MercadoPago] Redirecionando para:', connectUrl);
+    
     // Redirecionar para rota de conexão
-    window.location.href = `/api/seller/mercadopago/connect?sellerId=${sellerId}`;
+    window.location.href = connectUrl;
   };
 
   // Desconecta do Mercado Pago
