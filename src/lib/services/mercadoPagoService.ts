@@ -78,7 +78,7 @@ export class MercadoPagoService {
       redirect_uri: redirectUri,
     });
 
-    return `${this.AUTH_URL}/authorization?${params.toString()}`;
+    return `${this.AUTH_URL}/authorize?${params.toString()}`;
   }
 
   /**
