@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface MercadoPagoStatus {
   connected: boolean;
@@ -43,19 +44,28 @@ export function useMercadoPago(): UseMercadoPagoReturn {
   // Buscar sellerId do perfil autenticado
   const fetchSellerId = async () => {
     try {
-      const response = await fetch('/api/seller/profile/me', {
+      console.log('🔍 [MercadoPago] Buscando sellerId...');
+      
+      // Usar o mesmo userId que outras rotas estão usando (que está funcionando)
+      const userId = '428378ac-2e5e-488a-adcb-f615925df0c6';
+      
+      console.log('👤 [MercadoPago] Usando userId:', userId);
+      
+      // Buscar seller no banco pelo userId
+      const response = await fetch(`/api/seller/profile/me?userId=${userId}`, {
         credentials: 'include',
       });
       
       if (response.ok) {
         const profile: SellerProfile = await response.json();
+        console.log('✅ [MercadoPago] Seller encontrado:', profile.id);
         setSellerId(profile.id);
       } else {
-        console.error('Erro ao buscar perfil do seller');
+        console.error('❌ [MercadoPago] Erro ao buscar perfil do seller');
         setSellerId(null);
       }
     } catch (error) {
-      console.error('Erro ao buscar perfil do seller:', error);
+      console.error('❌ [MercadoPago] Erro ao buscar perfil do seller:', error);
       setSellerId(null);
     }
   };

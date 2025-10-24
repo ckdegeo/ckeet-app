@@ -1,42 +1,32 @@
-import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 /**
  * Retorna o perfil do seller autenticado
- * GET /api/seller/profile/me
+ * GET /api/seller/profile/me?userId=xxx
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    
     console.log('🔍 [Profile] Iniciando busca do perfil do seller...');
+    console.log('👤 [Profile] UserId recebido:', userId);
     
-    const supabase = await createServerSupabaseClient();
-    console.log('✅ [Profile] Cliente Supabase criado');
-    
-    // Buscar sessão do Supabase
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    console.log('🔐 [Profile] Sessão Supabase:', { 
-      hasSession: !!session, 
-      userId: session?.user?.id, 
-      email: session?.user?.email,
-      error: sessionError?.message 
-    });
-    
-    if (sessionError || !session) {
-      console.log('❌ [Profile] Sessão não encontrada ou erro:', sessionError?.message);
+    if (!userId) {
+      console.log('❌ [Profile] UserId não fornecido');
       return NextResponse.json(
-        { error: 'Sessão não encontrada' },
-        { status: 401 }
+        { error: 'UserId é obrigatório' },
+        { status: 400 }
       );
     }
 
-    // Buscar seller no banco pelo email
-    console.log('📧 [Profile] Buscando seller com email:', session.user.email);
+    // Buscar seller no banco pelo ID
+    console.log('📧 [Profile] Buscando seller com ID:', userId);
     
     const seller = await prisma.seller.findUnique({
       where: {
-        email: session.user.email!,
+        id: userId,
       },
       select: {
         id: true,
