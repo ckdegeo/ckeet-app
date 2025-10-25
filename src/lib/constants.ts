@@ -12,7 +12,7 @@ export const DEFAULT_STOCK_TYPE = StockType.LINE;
 
 export const DEFAULT_COMMISSION_RATE = 0.07; // 7%
 
-export const DEFAULT_PRIMARY_COLOR = '#6200EE';
+export const DEFAULT_PRIMARY_COLOR = '#bd253c';
 
 export const MAX_IMAGE_SIZE_MB = 5;
 

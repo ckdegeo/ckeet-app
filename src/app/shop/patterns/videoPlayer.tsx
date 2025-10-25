@@ -10,7 +10,7 @@ interface VideoPlayerProps {
   secondaryColor?: string;
 }
 
-export default function VideoPlayer({ videoUrl, title, className = '', primaryColor = '#6200EE', secondaryColor = '#03DAC6' }: VideoPlayerProps) {
+export default function VideoPlayer({ videoUrl, title, className = '', primaryColor = '#bd253c', secondaryColor = '#970b27' }: VideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);

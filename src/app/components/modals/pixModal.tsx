@@ -30,8 +30,8 @@ export default function PixModal({
   productName,
   productPrice,
   orderNumber,
-  primaryColor = '#6200EE',
-  secondaryColor = '#03DAC6',
+  primaryColor = '#bd253c',
+  secondaryColor = '#970b27',
   onPaymentSuccess
 }: PixModalProps) {
   const [paymentData, setPaymentData] = useState<PixPaymentData | null>(null);

@@ -48,8 +48,8 @@ export default function PhoneInput({
   value,
   onChange,
   placeholder = "Digite seu telefone",
-  primaryColor = '#6200EE',
-  secondaryColor = '#03DAC6',
+  primaryColor = '#bd253c',
+  secondaryColor = '#970b27',
   ...props
 }: PhoneInputProps) {
   // Função para lidar com mudanças e formatar o telefone

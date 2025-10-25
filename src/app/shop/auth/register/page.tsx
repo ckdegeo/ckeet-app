@@ -114,7 +114,7 @@ export default function RegisterPage() {
       {/* Lado Esquerdo - Imagem/Banner */}
       <div
         className="hidden md:flex md:w-1/2 items-center justify-center p-8 relative"
-        style={{ backgroundColor: store?.primaryColor || '#6200EE' }}
+        style={{ backgroundColor: store?.primaryColor || '#bd253c' }}
       >
         {store?.homeBannerUrl ? (
           <div className="w-full h-full relative">
@@ -244,7 +244,7 @@ export default function RegisterPage() {
               className="w-full"
               disabled={isLoading}
               style={{
-                backgroundColor: store?.secondaryColor || '#03DAC6',
+                backgroundColor: store?.secondaryColor || '#970b27',
               }}
             >
               {isLoading ? 'Criando conta...' : 'Cadastrar'}
@@ -255,8 +255,8 @@ export default function RegisterPage() {
               <p 
                 className="text-[var(--foreground)] opacity-70"
                 style={{
-                  '--primary': store?.primaryColor || '#6200EE',
-                  '--secondary': store?.secondaryColor || '#03DAC6',
+                  '--primary': store?.primaryColor || '#bd253c',
+                  '--secondary': store?.secondaryColor || '#970b27',
                   '--background': '#ffffff',
                   '--foreground': '#111827',
                   '--on-background': '#6b7280'
@@ -267,8 +267,8 @@ export default function RegisterPage() {
                   href="/shop/auth/login"
                   className="text-[var(--primary)] hover:underline font-medium"
                   style={{
-                    '--primary': store?.primaryColor || '#6200EE',
-                    '--secondary': store?.secondaryColor || '#03DAC6',
+                    '--primary': store?.primaryColor || '#bd253c',
+                    '--secondary': store?.secondaryColor || '#970b27',
                     '--background': '#ffffff',
                     '--foreground': '#111827',
                     '--on-background': '#6b7280'

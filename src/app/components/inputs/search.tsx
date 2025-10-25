@@ -15,8 +15,8 @@ export default function Search({
   label,
   error,
   className = "",
-  primaryColor = '#6200EE',
-  secondaryColor = '#03DAC6',
+  primaryColor = '#bd253c',
+  secondaryColor = '#970b27',
   ...props
 }: SearchProps) {
   return (

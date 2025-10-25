@@ -172,7 +172,7 @@ export default function OrdersPage() {
             <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
               <pre style="white-space: pre-wrap; word-wrap: break-word;">${content}</pre>
             </div>
-            <button onclick="window.close()" style="margin-top: 20px; padding: 10px 20px; background: #6200EE; color: white; border: none; border-radius: 4px; cursor: pointer;">Fechar</button>
+            <button onclick="window.close()" style="margin-top: 20px; padding: 10px 20px; background: #bd253c; color: white; border: none; border-radius: 4px; cursor: pointer;">Fechar</button>
           </body>
         </html>
       `);
@@ -320,7 +320,7 @@ export default function OrdersPage() {
             <button
               onClick={() => window.location.href = '/shop/auth/login'}
               className="px-6 py-3 rounded-lg text-white font-medium transition-colors"
-              style={{ backgroundColor: store.primaryColor || '#6200EE' }}
+              style={{ backgroundColor: store.primaryColor || '#bd253c' }}
             >
               Fazer login
             </button>
@@ -350,7 +350,7 @@ export default function OrdersPage() {
         <div className="flex items-center justify-between mb-8">
           <h1 
             className="text-3xl font-bold"
-            style={{ color: store.primaryColor || '#6200EE' }}
+            style={{ color: store.primaryColor || '#bd253c' }}
           >
             Pedidos
           </h1>
@@ -359,9 +359,9 @@ export default function OrdersPage() {
             onClick={() => window.location.href = '/shop'}
             className="px-8 py-3 text-md rounded-full transition-all flex items-center gap-2 cursor-pointer hover:opacity-90"
             style={{
-              backgroundColor: store.secondaryColor || '#03DAC6',
+              backgroundColor: store.secondaryColor || '#970b27',
               color: 'white',
-              border: `2px solid ${store.secondaryColor || '#03DAC6'}`
+              border: `2px solid ${store.secondaryColor || '#970b27'}`
             }}
           >
             <ArrowLeft className="w-4 h-4" />
@@ -378,8 +378,8 @@ export default function OrdersPage() {
             background="transparent"
             className="shadow-sm border border-gray-100"
             style={{
-              '--primary': store.primaryColor || '#6200EE',
-              '--secondary': store.secondaryColor || '#03DAC6',
+              '--primary': store.primaryColor || '#bd253c',
+              '--secondary': store.secondaryColor || '#970b27',
               '--background': '#ffffff',
               '--foreground': '#111827',
               '--on-background': '#6b7280',
@@ -394,8 +394,8 @@ export default function OrdersPage() {
             background="transparent"
             className="shadow-sm border border-gray-100"
             style={{
-              '--primary': store.secondaryColor || '#03DAC6',
-              '--secondary': store.primaryColor || '#6200EE',
+              '--primary': store.secondaryColor || '#970b27',
+              '--secondary': store.primaryColor || '#bd253c',
               '--background': '#ffffff',
               '--foreground': '#111827',
               '--on-background': '#6b7280',
@@ -410,8 +410,8 @@ export default function OrdersPage() {
             background="transparent"
             className="shadow-sm border border-gray-100"
             style={{
-              '--primary': store.primaryColor || '#6200EE',
-              '--secondary': store.secondaryColor || '#03DAC6',
+              '--primary': store.primaryColor || '#bd253c',
+              '--secondary': store.secondaryColor || '#970b27',
               '--background': '#ffffff',
               '--foreground': '#111827',
               '--on-background': '#6b7280',

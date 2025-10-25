@@ -152,8 +152,8 @@ export function useStoreConfigCache() {
               logoUrl: null,
               homeBannerUrl: null,
               storeBannerUrl: null,
-              primaryColor: '#6200EE',
-              secondaryColor: '#03DAC6',
+              primaryColor: '#bd253c',
+              secondaryColor: '#970b27',
               subdomain: null,
             }
           };

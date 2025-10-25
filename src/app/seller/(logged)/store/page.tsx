@@ -51,8 +51,8 @@ function StorePageContent() {
         logoUrl: storeData.store.logoUrl || '',
         homeBannerUrl: storeData.store.homeBannerUrl || '',
         storeBannerUrl: storeData.store.storeBannerUrl || '',
-        primaryColor: storeData.store.primaryColor || '#6200EE',
-        secondaryColor: storeData.store.secondaryColor || '#03DAC6'
+        primaryColor: storeData.store.primaryColor || '#bd253c',
+        secondaryColor: storeData.store.secondaryColor || '#970b27'
       });
     }
   }, [storeData]);
@@ -63,8 +63,8 @@ function StorePageContent() {
     logoUrl: '',
     homeBannerUrl: '',
     storeBannerUrl: '',
-    primaryColor: '#6200EE',
-    secondaryColor: '#03DAC6'
+    primaryColor: '#bd253c',
+    secondaryColor: '#970b27'
   });
 
   const [domainConfig, setDomainConfig] = useState<DomainConfig>({

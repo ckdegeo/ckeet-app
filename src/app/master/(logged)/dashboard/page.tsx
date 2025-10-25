@@ -47,13 +47,13 @@ export default function Dashboard() {
     {
       key: 'faturamento',
       name: 'Faturamento Total',
-      color: '#6200EE',
+      color: '#bd253c',
       type: 'area' as const
     },
     {
       key: 'usuarios',
       name: 'Usuários Ativos',
-      color: '#03DAC6',
+      color: '#970b27',
       type: 'line' as const
     }
   ];

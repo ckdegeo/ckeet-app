@@ -20,9 +20,9 @@ export default function ColorPicker({
   value,
   onChange,
   presetColors = [
-    '#6200EE', // primary
+    '#bd253c', // primary
     '#3700B3', // primary-variant
-    '#03DAC6', // secondary
+    '#970b27', // secondary
     '#018786', // secondary-variant
     '#B00020', // error
     '#FFFFFF', // background

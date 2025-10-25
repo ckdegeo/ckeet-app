@@ -176,8 +176,8 @@ model Store {
   logoUrl       String?
   homeBannerUrl String?
   storeBannerUrl String?
-  primaryColor  String   @default("#6200EE")
-  secondaryColor String  @default("#03DAC6")
+  primaryColor  String   @default("#bd253c")
+  secondaryColor String  @default("#970b27")
   
   // Domain Configuration
   subdomain     String   @unique // {subdomain}.ckeet.com

@@ -95,7 +95,7 @@ export default function ProductPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <StoreNavbar
-          store={store || { name: 'Loja', primaryColor: '#6200EE', secondaryColor: '#03DAC6' }}
+          store={store || { name: 'Loja', primaryColor: '#bd253c', secondaryColor: '#970b27' }}
           isAuthenticated={isAuthenticated}
           userName={userName}
           onLoginClick={handleLoginClick}
@@ -140,9 +140,9 @@ export default function ProductPage() {
             onClick={() => router.push('/shop')}
             className="px-8 py-3 text-md rounded-full transition-all flex items-center gap-2 cursor-pointer hover:opacity-90"
             style={{
-              backgroundColor: store.secondaryColor || '#6200EE',
+              backgroundColor: store.secondaryColor || '#bd253c',
               color: 'white',
-              border: `2px solid ${store.secondaryColor || '#6200EE'}`
+              border: `2px solid ${store.secondaryColor || '#bd253c'}`
             }}
           >
             <ArrowLeft className="w-4 h-4" />
@@ -240,7 +240,7 @@ export default function ProductPage() {
               </div>
               
               <div className="flex items-center gap-3">
-                <span className="text-3xl font-bold" style={{ color: store.primaryColor || '#6200EE' }}>
+                <span className="text-3xl font-bold" style={{ color: store.primaryColor || '#bd253c' }}>
                   R$ {product.price.toFixed(2)}
                 </span>
                 {(() => {
@@ -357,7 +357,7 @@ export default function ProductPage() {
               <button
                 onClick={() => setIsPixModalOpen(true)}
                 className="cursor-pointer w-full py-4 text-base font-semibold text-white shadow-lg hover:shadow-xl rounded-full transition-all hover:opacity-90"
-                style={{ backgroundColor: store.secondaryColor || '#03DAC6' }}
+                style={{ backgroundColor: store.secondaryColor || '#970b27' }}
               >
                 Comprar agora
               </button>

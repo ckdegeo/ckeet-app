@@ -174,8 +174,8 @@ export async function POST(request: NextRequest) {
           name: 'Minha Loja',
           contactEmail: seller.email || '',
           logoUrl: '',
-          primaryColor: '#6200EE',
-          secondaryColor: '#03DAC6',
+          primaryColor: '#bd253c',
+          secondaryColor: '#970b27',
           subdomain,
           sellerId: user.id,
         }

@@ -15,7 +15,7 @@ export default function Footer({ store }: FooterProps) {
   return (
     <footer 
       className="mt-20 py-12 text-white relative overflow-hidden"
-      style={{ backgroundColor: store.primaryColor || '#6200EE' }}
+      style={{ backgroundColor: store.primaryColor || '#bd253c' }}
     >
       {/* Decoração de fundo */}
       <div className="absolute inset-0 opacity-5">

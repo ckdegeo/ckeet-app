@@ -32,8 +32,8 @@ export default function StoreNavbar({
 }: StoreNavbarProps) {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
-  const primaryColor = store.primaryColor || '#6200EE';
-  const secondaryColor = store.secondaryColor || '#03DAC6';
+  const primaryColor = store.primaryColor || '#bd253c';
+  const secondaryColor = store.secondaryColor || '#970b27';
 
   return (
     <nav 
