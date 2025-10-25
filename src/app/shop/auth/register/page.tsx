@@ -123,11 +123,6 @@ export default function RegisterPage() {
               alt="Banner da loja"
               className="w-full h-full object-cover rounded-lg"
             />
-            <div className="absolute inset-0 bg-black/20 rounded-lg"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center text-white">
-              </div>
-            </div>
           </div>
         ) : null }
       </div>
