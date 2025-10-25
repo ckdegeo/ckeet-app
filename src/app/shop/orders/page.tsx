@@ -351,11 +351,8 @@ export default function OrdersPage() {
             className="text-3xl font-bold mb-2"
             style={{ color: store.primaryColor || '#6200EE' }}
           >
-            Meus pedidos
+            Pedidos
           </h1>
-          <p className="text-gray-600">
-            Gerencie seus produtos comprados e acesse o conteúdo
-          </p>
         </div>
 
         {/* Estatísticas Rápidas */}
@@ -436,6 +433,8 @@ export default function OrdersPage() {
                   placeholder="Buscar por produto, pedido ou status..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  primaryColor={store.primaryColor}
+                  secondaryColor={store.secondaryColor}
                 />
               </div>
             </div>
