@@ -78,7 +78,7 @@ export class MercadoPagoService {
       redirect_uri: redirectUri,
     });
 
-    return `${this.AUTH_URL}/authorize?${params.toString()}`;
+    return `${this.AUTH_URL}/authorization?${params.toString()}`;
   }
 
   /**
@@ -98,28 +98,46 @@ export class MercadoPagoService {
       throw new Error('Variáveis de ambiente do Mercado Pago não configuradas');
     }
 
-    const tokenUrl = `${this.AUTH_URL}/oauth/token`;
-    console.log('🌐 [MP OAuth] Token URL:', tokenUrl);
+    // Tentar diferentes endpoints OAuth
+    const tokenUrls = [
+      `${this.AUTH_URL}/oauth/token`,
+      'https://api.mercadopago.com/oauth/token',
+      'https://api.mercadopago.com/oauth/token'
+    ];
+    
+    console.log('🌐 [MP OAuth] Tentando diferentes endpoints OAuth...');
+    
+    for (const tokenUrl of tokenUrls) {
+      try {
+        console.log('🌐 [MP OAuth] Testando URL:', tokenUrl);
 
-    const response = await fetch(tokenUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'application/json',
-      },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        client_id: clientId,
-        client_secret: clientSecret,
-        code,
-        redirect_uri: redirectUri,
-      }),
-    });
+        const response = await fetch(tokenUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json',
+          },
+          body: new URLSearchParams({
+            grant_type: 'authorization_code',
+            client_id: clientId,
+            client_secret: clientSecret,
+            code,
+            redirect_uri: redirectUri,
+          }),
+        });
 
         console.log('📊 [MP OAuth] Response status:', response.status);
         console.log('📊 [MP OAuth] Response headers:', Object.fromEntries(response.headers.entries()));
 
-        if (!response.ok) {
+        if (response.ok) {
+          const data: MercadoPagoOAuthResponse = await response.json();
+          
+          // Salvar credenciais no banco
+          await this.saveSellerCredentials(sellerId, data);
+          
+          console.log('✅ [MP OAuth] Sucesso com URL:', tokenUrl);
+          return data;
+        } else {
           const error = await response.text();
           console.error('❌ [MP OAuth] Erro na resposta:', error.substring(0, 500));
           
@@ -138,15 +156,28 @@ export class MercadoPagoService {
             redirect_uri: redirectUri,
           });
           
+          // Se não é o último endpoint, continuar tentando
+          if (tokenUrl !== tokenUrls[tokenUrls.length - 1]) {
+            console.log('🔄 [MP OAuth] Tentando próximo endpoint...');
+            continue;
+          }
+          
           throw new Error(`Erro ao trocar código por tokens (${response.status}): ${error.substring(0, 200)}`);
         }
-
-    const data: MercadoPagoOAuthResponse = await response.json();
+      } catch (error) {
+        console.error('❌ [MP OAuth] Erro na requisição:', error);
+        
+        // Se não é o último endpoint, continuar tentando
+        if (tokenUrl !== tokenUrls[tokenUrls.length - 1]) {
+          console.log('🔄 [MP OAuth] Tentando próximo endpoint...');
+          continue;
+        }
+        
+        throw error;
+      }
+    }
     
-    // Salvar credenciais no banco
-    await this.saveSellerCredentials(sellerId, data);
-    
-    return data;
+    throw new Error('Todos os endpoints OAuth falharam');
   }
 
   /**
