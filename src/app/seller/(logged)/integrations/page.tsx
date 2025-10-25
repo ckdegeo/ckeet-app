@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
+import { useEffect, Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CreditCard, CheckCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -17,6 +17,9 @@ function IntegrationsContent() {
   
   // Hook de cache para dados de integração
   const { data: integrationData, loading: integrationLoading, error: integrationError, refresh: refreshIntegrationData } = useIntegrationDataCache();
+  
+  // Estado para controlar se todos os dados estão prontos
+  const [isDataReady, setIsDataReady] = useState(false);
 
   // Verificar parâmetros da URL para mostrar mensagens de erro
   useEffect(() => {
@@ -31,7 +34,22 @@ function IntegrationsContent() {
     }
   }, [searchParams]);
 
+  // Controlar quando todos os dados estão prontos
+  useEffect(() => {
+    // Aguardar tanto o cache quanto o hook do MercadoPago estarem prontos
+    const isCacheReady = !integrationLoading && (integrationData || integrationError);
+    const isMercadoPagoReady = mpStatus !== null;
+    
+    // Só liberar a tela quando ambos estiverem prontos
+    if (isCacheReady && isMercadoPagoReady) {
+      setIsDataReady(true);
+    }
+  }, [integrationLoading, integrationData, integrationError, mpStatus]);
+
   const handleConfigureIntegration = async () => {
+    // Resetar estado de loading durante a operação
+    setIsDataReady(false);
+    
     if (mpStatus?.connected) {
       await disconnect();
       // Limpar cache após desconectar
@@ -71,19 +89,29 @@ function IntegrationsContent() {
     return integrationData?.activeIntegrations || (mpStatus?.connected ? 1 : 0);
   };
 
-  // Mostrar loading se estiver carregando
-  if (integrationLoading) {
+  // Mostrar loading global até todos os dados estarem prontos
+  if (!isDataReady) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[500px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)] mx-auto"></div>
-          <p className="mt-4 text-[var(--on-background)]">Carregando integrações...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[var(--primary)] mx-auto"></div>
+          <h3 className="mt-6 text-lg font-medium text-[var(--foreground)]">
+            Carregando integrações
+          </h3>
+          <p className="mt-2 text-[var(--on-background)]">
+            Aguarde enquanto buscamos seus dados...
+          </p>
+          <div className="mt-4 flex items-center justify-center space-x-1">
+            <div className="w-2 h-2 bg-[var(--primary)] rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-[var(--primary)] rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+            <div className="w-2 h-2 bg-[var(--primary)] rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Mostrar erro se houver
+  // Mostrar erro se houver (só depois que os dados estiverem prontos)
   if (integrationError) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -98,7 +126,10 @@ function IntegrationsContent() {
           </h3>
           <p className="text-[var(--on-background)] mb-4">{integrationError}</p>
           <button 
-            onClick={() => refreshIntegrationData()} 
+            onClick={() => {
+              setIsDataReady(false);
+              refreshIntegrationData();
+            }} 
             className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-variant)] transition-colors"
           >
             Tentar novamente
