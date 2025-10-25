@@ -139,14 +139,25 @@ export default function PixModal({
         {/* Content */}
         <div className="p-6">
           {/* Produto */}
-          <div className="mb-6">
-            <h3 className="font-medium text-[var(--foreground)] mb-1">
-              {productName}
-            </h3>
-            <p className="text-2xl font-bold" style={{ color: primaryColor }}>
-              R$ {productPrice.toFixed(2).replace('.', ',')}
-            </p>
+          <div className="flex items-center gap-4 mb-6 p-4 bg-gray-50 rounded-xl">
+            {/* Imagem do produto */}
+            <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+              <QrCode size={24} className="text-gray-400" />
+            </div>
+            
+            {/* Informações do produto */}
+            <div className="flex-1">
+              <h3 className="font-medium text-[var(--foreground)] mb-1">
+                {productName}
+              </h3>
+              <p className="text-2xl font-bold" style={{ color: primaryColor }}>
+                R$ {productPrice.toFixed(2).replace('.', ',')}
+              </p>
+            </div>
           </div>
+
+          {/* Divider */}
+          <div className="border-t border-gray-100 mb-6"></div>
 
           {/* Status de Loading */}
           {isLoading && (
@@ -180,7 +191,7 @@ export default function PixModal({
                     type="text"
                     value={paymentData.qrCodeText}
                     readOnly
-                    className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono text-xs"
+                    className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-full text-md font-light"
                   />
                   <button
                     onClick={copyPixCode}
