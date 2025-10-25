@@ -195,7 +195,7 @@ export default function PixModal({
                   />
                   <button
                     onClick={copyPixCode}
-                    className="w-10 h-10 rounded-full flex items-center justify-center transition-colors"
+                    className="w-10 h-10 rounded-full flex items-center justify-center transition-colors mt-2"
                     style={{ 
                       backgroundColor: secondaryColor,
                       color: 'white'
