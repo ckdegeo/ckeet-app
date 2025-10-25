@@ -5,8 +5,10 @@ import { Store, Order, Purchase, Product } from '@/lib/types';
 import StoreNavbar from '../patterns/storeNavbar';
 import Footer from '../patterns/footer';
 import Table from '@/app/components/tables/table';
+import Search from '@/app/components/inputs/search';
 import { Download, Eye, Copy, CheckCircle } from 'lucide-react';
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
+import { useCache } from '@/lib/hooks/useCache';
 
 interface OrderWithDetails extends Order {
   products: (OrderItem & { product: Product })[];
@@ -23,20 +25,14 @@ interface OrderItem {
 }
 
 export default function OrdersPage() {
-  const [loading, setLoading] = useState(true);
   const [store, setStore] = useState<Store | null>(null);
-  const [orders, setOrders] = useState<OrderWithDetails[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState<string>();
+  const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    fetchStoreData();
-    checkAuthentication();
-    fetchOrders();
-  }, []);
-
-  async function fetchStoreData() {
-    try {
+  // Cache para dados da loja
+  const { data: storeData, loading: storeLoading, error: storeError } = useCache(
+    async () => {
       const hostname = window.location.hostname;
       const subdomain = hostname.split('.')[0];
       
@@ -46,12 +42,81 @@ export default function OrdersPage() {
         throw new Error('Loja não encontrada');
       }
 
-      const data = await response.json();
-      setStore(data.store);
-    } catch (error) {
-      console.error('Erro ao carregar loja:', error);
+      return await response.json();
+    },
+    {
+      key: 'store_data',
+      duration: 10 * 60 * 1000, // 10 minutos
+      userId: (() => {
+        try {
+          if (typeof window === 'undefined') return null;
+          const token = localStorage.getItem('customer_access_token');
+          if (token) {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload.userId || payload.sub || null;
+          }
+        } catch (error) {
+          console.error('Erro ao obter userId do token:', error);
+        }
+        return null;
+      })(),
     }
-  }
+  );
+
+  // Cache para pedidos
+  const { data: ordersData, loading: ordersLoading, error: ordersError, refresh: refreshOrders } = useCache(
+    async () => {
+      const accessToken = localStorage.getItem('customer_access_token');
+      if (!accessToken) {
+        throw new Error('Token de acesso não encontrado');
+      }
+
+      const response = await fetch('/api/customer/orders', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao buscar pedidos');
+      }
+
+      return await response.json();
+    },
+    {
+      key: 'customer_orders',
+      duration: 5 * 60 * 1000, // 5 minutos
+      userId: (() => {
+        try {
+          if (typeof window === 'undefined') return null;
+          const token = localStorage.getItem('customer_access_token');
+          if (token) {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload.userId || payload.sub || null;
+          }
+        } catch (error) {
+          console.error('Erro ao obter userId do token:', error);
+        }
+        return null;
+      })(),
+    }
+  );
+
+  useEffect(() => {
+    checkAuthentication();
+  }, []);
+
+  useEffect(() => {
+    if (storeData) {
+      setStore(storeData.store);
+    }
+  }, [storeData]);
+
+  useEffect(() => {
+    if (ordersError) {
+      showErrorToast('Erro ao carregar pedidos');
+    }
+  }, [ordersError]);
 
   function checkAuthentication() {
     const accessToken = localStorage.getItem('customer_access_token');
@@ -70,34 +135,6 @@ export default function OrdersPage() {
     } else {
       setIsAuthenticated(false);
       setUserName(undefined);
-    }
-  }
-
-  async function fetchOrders() {
-    try {
-      const accessToken = localStorage.getItem('customer_access_token');
-      if (!accessToken) {
-        showErrorToast('Você precisa estar logado para ver seus pedidos');
-        return;
-      }
-
-      const response = await fetch('/api/customer/orders', {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao buscar pedidos');
-      }
-
-      const data = await response.json();
-      setOrders(data.orders || []);
-    } catch (error) {
-      console.error('Erro ao carregar pedidos:', error);
-      showErrorToast('Erro ao carregar pedidos');
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -142,7 +179,8 @@ export default function OrdersPage() {
   };
 
   // Preparar dados para a tabela
-  const tableData = orders.flatMap(order => 
+  const orders: OrderWithDetails[] = ordersData?.orders || [];
+  const tableData = orders.flatMap((order: OrderWithDetails) => 
     order.purchases.map(purchase => ({
       id: purchase.id,
       orderNumber: order.orderNumber,
@@ -155,6 +193,13 @@ export default function OrdersPage() {
       status: order.status,
       totalAmount: order.totalAmount,
     }))
+  );
+
+  // Filtrar dados baseado na busca
+  const filteredData = tableData.filter(item => 
+    item.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.status.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const columns = [
@@ -238,7 +283,7 @@ export default function OrdersPage() {
     },
   ];
 
-  if (loading) {
+  if (storeLoading || ordersLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
@@ -269,14 +314,14 @@ export default function OrdersPage() {
         
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Acesso Negado</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Acesso negado</h1>
             <p className="text-gray-600 mb-4">Você precisa estar logado para ver seus pedidos.</p>
             <button
               onClick={() => window.location.href = '/shop/auth/login'}
               className="px-6 py-3 rounded-lg text-white font-medium transition-colors"
               style={{ backgroundColor: store.primaryColor || '#6200EE' }}
             >
-              Fazer Login
+              Fazer login
             </button>
           </div>
         </div>
@@ -300,99 +345,110 @@ export default function OrdersPage() {
 
       {/* Conteúdo Principal */}
       <main className="container mx-auto px-8 py-12">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 
-              className="text-3xl font-bold mb-2"
-              style={{ color: store.primaryColor || '#6200EE' }}
-            >
-              Meus Pedidos
-            </h1>
-            <p className="text-gray-600">
-              Gerencie seus produtos comprados e acesse o conteúdo
-            </p>
-          </div>
+        {/* Header */}
+        <div className="mb-8">
+          <h1 
+            className="text-3xl font-bold mb-2"
+            style={{ color: store.primaryColor || '#6200EE' }}
+          >
+            Meus pedidos
+          </h1>
+          <p className="text-gray-600">
+            Gerencie seus produtos comprados e acesse o conteúdo
+          </p>
+        </div>
 
-          {/* Estatísticas Rápidas */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-3">
-                <div 
-                  className="w-12 h-12 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: `${store.primaryColor || '#6200EE'}10` }}
-                >
-                  <CheckCircle 
-                    size={24} 
-                    style={{ color: store.primaryColor || '#6200EE' }}
-                  />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Total de Pedidos</p>
-                  <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
-                </div>
+        {/* Estatísticas Rápidas */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center gap-3">
+              <div 
+                className="w-12 h-12 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: `${store.primaryColor || '#6200EE'}10` }}
+              >
+                <CheckCircle 
+                  size={24} 
+                  style={{ color: store.primaryColor || '#6200EE' }}
+                />
               </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-3">
-                <div 
-                  className="w-12 h-12 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: `${store.secondaryColor || '#03DAC6'}10` }}
-                >
-                  <Download 
-                    size={24} 
-                    style={{ color: store.secondaryColor || '#03DAC6' }}
-                  />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Produtos Entregues</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {tableData.filter(item => item.deliveredContent).length}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-3">
-                <div 
-                  className="w-12 h-12 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: `${store.primaryColor || '#6200EE'}10` }}
-                >
-                  <Eye 
-                    size={24} 
-                    style={{ color: store.primaryColor || '#6200EE' }}
-                  />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Downloads Realizados</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {tableData.reduce((sum, item) => sum + (item.downloadCount || 0), 0)}
-                  </p>
-                </div>
+              <div>
+                <p className="text-sm text-gray-600">Total de pedidos</p>
+                <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
               </div>
             </div>
           </div>
 
-          {/* Tabela de Pedidos */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-6 border-b border-gray-100">
-              <h2 className="text-xl font-semibold text-gray-900">Produtos Comprados</h2>
-              <p className="text-sm text-gray-600 mt-1">
-                Clique nas ações para acessar seu conteúdo
-              </p>
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center gap-3">
+              <div 
+                className="w-12 h-12 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: `${store.secondaryColor || '#03DAC6'}10` }}
+              >
+                <Download 
+                  size={24} 
+                  style={{ color: store.secondaryColor || '#03DAC6' }}
+                />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Produtos entregues</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {tableData.filter(item => item.deliveredContent).length}
+                </p>
+              </div>
             </div>
-            
-            <div className="p-6">
-              <Table
-                data={tableData}
-                columns={columns}
-                actions={actions}
-                itemsPerPage={10}
-                emptyMessage="Nenhum pedido encontrado. Faça sua primeira compra!"
-              />
+          </div>
+
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center gap-3">
+              <div 
+                className="w-12 h-12 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: `${store.primaryColor || '#6200EE'}10` }}
+              >
+                <Eye 
+                  size={24} 
+                  style={{ color: store.primaryColor || '#6200EE' }}
+                />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Downloads realizados</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {tableData.reduce((sum, item) => sum + (item.downloadCount || 0), 0)}
+                </p>
+              </div>
             </div>
+          </div>
+        </div>
+
+        {/* Tabela de Pedidos */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-6 border-b border-gray-100">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">Produtos comprados</h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Clique nas ações para acessar seu conteúdo
+                </p>
+              </div>
+              
+              {/* Componente de Busca */}
+              <div className="w-full sm:w-80">
+                <Search
+                  placeholder="Buscar por produto, pedido ou status..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-6">
+            <Table
+              data={filteredData}
+              columns={columns}
+              actions={actions}
+              itemsPerPage={10}
+              emptyMessage="Nenhum pedido encontrado. Faça sua primeira compra!"
+            />
           </div>
         </div>
       </main>
