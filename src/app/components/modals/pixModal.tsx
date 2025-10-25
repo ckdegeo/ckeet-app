@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Copy, Download, QrCode, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { X, Copy, QrCode, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import Button from '@/app/components/buttons/button';
+import Input from '@/app/components/inputs/input';
 
 interface PixModalProps {
   isOpen: boolean;
@@ -87,17 +88,6 @@ export default function PixModal({
     }
   };
 
-  // Baixar QR Code
-  const downloadQrCode = () => {
-    if (paymentData?.qrCode) {
-      const link = document.createElement('a');
-      link.href = paymentData.qrCode;
-      link.download = `pix-${orderNumber}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
 
   // Verificar status do pagamento (simulado)
   const checkPaymentStatus = async () => {
@@ -147,9 +137,9 @@ export default function PixModal({
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-6">
           {/* Produto */}
-          <div className="bg-gray-50 rounded-xl p-4">
+          <div className="mb-6">
             <h3 className="font-medium text-[var(--foreground)] mb-1">
               {productName}
             </h3>
@@ -162,52 +152,53 @@ export default function PixModal({
           {isLoading && (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: primaryColor }}></div>
-              <p className="text-[var(--on-background)]">Gerando pagamento PIX...</p>
+              <p className="text-[var(--on-background)]">Gerando pagamento...</p>
             </div>
           )}
 
           {/* Dados do PIX */}
           {paymentData && !isLoading && (
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* QR Code */}
               <div className="text-center">
                 <div className="bg-white border-2 border-gray-200 rounded-xl p-4 inline-block">
                   <img
                     src={paymentData.qrCode}
                     alt="QR Code PIX"
-                    className="w-48 h-48 mx-auto"
+                    className="w-40 h-40 mx-auto"
                   />
                 </div>
-                <p className="text-sm text-[var(--on-background)] mt-2">
-                  Escaneie o QR Code com seu app bancário
-                </p>
               </div>
 
               {/* Código PIX */}
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-[var(--foreground)]">
-                  Código PIX (Copiar e colar)
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={paymentData.qrCodeText}
-                    readOnly
-                    className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono text-xs"
-                  />
-                  <Button
-                    onClick={copyPixCode}
-                    className="px-3 py-2"
-                    style={{ backgroundColor: secondaryColor }}
-                  >
-                    {copied ? <CheckCircle size={16} /> : <Copy size={16} />}
-                  </Button>
-                </div>
+              <div className="space-y-4">
+                <Input
+                  label="Código PIX"
+                  value={paymentData.qrCodeText}
+                  readOnly
+                  className="font-mono text-xs"
+                  primaryColor={primaryColor}
+                  secondaryColor={secondaryColor}
+                />
+                
+                <Button
+                  onClick={copyPixCode}
+                  className="w-full"
+                  style={{ backgroundColor: secondaryColor }}
+                >
+                  {copied ? <CheckCircle size={16} className="mr-2" /> : <Copy size={16} className="mr-2" />}
+                  {copied ? 'Copiado!' : 'Copiar Código'}
+                </Button>
               </div>
+            </div>
+          )}
 
+          {/* Timer e Status */}
+          {paymentData && !isLoading && (
+            <div className="mt-6 space-y-4">
               {/* Timer */}
               {timeLeft > 0 && (
-                <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-center justify-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <Clock size={16} className="text-yellow-600" />
                   <span className="text-sm text-yellow-800">
                     Expira em: <strong>{formatTime(timeLeft)}</strong>
@@ -237,29 +228,14 @@ export default function PixModal({
                 )}
               </div>
 
-              {/* Ações */}
-              <div className="flex gap-3">
-                <Button
-                  onClick={downloadQrCode}
-                  className="flex-1"
-                  style={{
-                    backgroundColor: 'transparent',
-                    borderColor: primaryColor,
-                    color: primaryColor,
-                    border: `2px solid ${primaryColor}`
-                  }}
-                >
-                  <Download size={16} className="mr-2" />
-                  Baixar QR Code
-                </Button>
-                <Button
-                  onClick={checkPaymentStatus}
-                  className="flex-1"
-                  style={{ backgroundColor: primaryColor }}
-                >
-                  Verificar Pagamento
-                </Button>
-              </div>
+              {/* Botão Verificar */}
+              <Button
+                onClick={checkPaymentStatus}
+                className="w-full"
+                style={{ backgroundColor: primaryColor }}
+              >
+                Verificar pagamento
+              </Button>
             </div>
           )}
 
@@ -270,19 +246,16 @@ export default function PixModal({
               className="w-full"
               style={{ backgroundColor: primaryColor }}
             >
-              Gerar Pagamento PIX
+              Gerar pagamento PIX
             </Button>
           )}
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
+        <div className="p-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
           <div className="text-center">
-            <p className="text-xs text-[var(--on-background)] mb-2">
-              💡 Dica: Use o app do seu banco para escanear o QR Code
-            </p>
             <p className="text-xs text-[var(--on-background)]">
-              O pagamento é processado instantaneamente via PIX
+              💡 Use o app do seu banco para escanear o QR Code
             </p>
           </div>
         </div>
