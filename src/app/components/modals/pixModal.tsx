@@ -158,37 +158,41 @@ export default function PixModal({
 
           {/* Dados do PIX */}
           {paymentData && !isLoading && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-6">
               {/* QR Code */}
               <div className="text-center">
                 <div className="bg-white border-2 border-gray-200 rounded-xl p-4 inline-block">
                   <img
                     src={paymentData.qrCode}
                     alt="QR Code PIX"
-                    className="w-40 h-40 mx-auto"
+                    className="w-48 h-48 mx-auto"
                   />
                 </div>
               </div>
 
               {/* Código PIX */}
-              <div className="space-y-4">
-                <Input
-                  label="Código PIX"
-                  value={paymentData.qrCodeText}
-                  readOnly
-                  className="font-mono text-xs"
-                  primaryColor={primaryColor}
-                  secondaryColor={secondaryColor}
-                />
-                
-                <Button
-                  onClick={copyPixCode}
-                  className="w-full"
-                  style={{ backgroundColor: secondaryColor }}
-                >
-                  {copied ? <CheckCircle size={16} className="mr-2" /> : <Copy size={16} className="mr-2" />}
-                  {copied ? 'Copiado!' : 'Copiar Código'}
-                </Button>
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-[var(--foreground)]">
+                  Código PIX
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={paymentData.qrCodeText}
+                    readOnly
+                    className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono text-xs"
+                  />
+                  <button
+                    onClick={copyPixCode}
+                    className="w-10 h-10 rounded-full flex items-center justify-center transition-colors"
+                    style={{ 
+                      backgroundColor: secondaryColor,
+                      color: 'white'
+                    }}
+                  >
+                    {copied ? <CheckCircle size={16} /> : <Copy size={16} />}
+                  </button>
+                </div>
               </div>
             </div>
           )}
