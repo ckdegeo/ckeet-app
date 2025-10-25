@@ -316,18 +316,20 @@ export default function OrdersPage() {
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Acesso negado</h1>
-            <p className="text-gray-600 mb-4">Você precisa estar logado para ver seus pedidos.</p>
-            <button
-              onClick={() => window.location.href = '/shop/auth/login'}
-              className="px-8 py-3 text-md rounded-full transition-all flex items-center gap-2 cursor-pointer hover:opacity-90 font-medium"
-              style={{ 
-                backgroundColor: store.primaryColor || '#bd253c',
-                color: 'white',
-                border: `2px solid ${store.primaryColor || '#bd253c'}`
-              }}
-            >
-              Fazer login
-            </button>
+            <p className="text-gray-600 mb-6">Você precisa estar logado para ver seus pedidos.</p>
+            <div className="flex justify-center">
+              <button
+                onClick={() => window.location.href = '/shop/auth/login'}
+                className="px-8 py-3 text-md rounded-full transition-all flex items-center gap-2 cursor-pointer hover:opacity-90 font-medium"
+                style={{ 
+                  backgroundColor: store.primaryColor || '#bd253c',
+                  color: 'white',
+                  border: `2px solid ${store.primaryColor || '#bd253c'}`
+                }}
+              >
+                Fazer login
+              </button>
+            </div>
           </div>
         </div>
 
