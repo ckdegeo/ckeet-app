@@ -191,11 +191,11 @@ export default function PixModal({
                     type="text"
                     value={paymentData.qrCodeText}
                     readOnly
-                    className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-full text-xs font-light"
+                    className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-full text-xs font-light mb-2"
                   />
                   <button
                     onClick={copyPixCode}
-                    className="w-10 h-10 rounded-full flex items-center justify-center transition-colors mt-2"
+                    className="w-10 h-10 rounded-full flex items-center justify-center transition-colors"
                     style={{ 
                       backgroundColor: secondaryColor,
                       color: 'white'
