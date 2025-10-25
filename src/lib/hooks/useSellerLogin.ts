@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { toast } from 'react-toastify';
 import { loginSchema, type LoginData } from '@/lib/validations/authSchemas';
-import { toastConfig, showToastWithAutoClose } from '@/lib/utils/toastUtils';
+import { showToastWithAutoClose } from '@/lib/utils/toastUtils';
 import { saveAuthData } from '@/lib/utils/authUtils';
 import { saveAuthCookies } from '@/lib/utils/cookieUtils';
 

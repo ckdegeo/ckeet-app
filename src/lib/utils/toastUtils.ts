@@ -1,17 +1,4 @@
-import { toast } from 'react-toastify';
-
-// Configurações padrão para toasts
-export const toastConfig = {
-  autoClose: 4000,
-  hideProgressBar: false,
-  closeOnClick: true,
-  pauseOnHover: false,
-  draggable: false,
-  newestOnTop: true,
-  enableMultiContainer: false,
-  closeButton: true,
-  transition: undefined,
-};
+import toast from 'react-hot-toast';
 
 // Função para limpar todos os toasts
 export const clearAllToasts = () => {
@@ -20,42 +7,66 @@ export const clearAllToasts = () => {
 
 // Função para mostrar toast de sucesso
 export const showSuccessToast = (message: string) => {
-  toast.success(message, toastConfig);
+  toast.success(message);
 };
 
 // Função para mostrar toast de erro
 export const showErrorToast = (message: string) => {
-  toast.error(message, toastConfig);
+  toast.error(message);
 };
 
 // Função para mostrar toast de aviso
 export const showWarningToast = (message: string) => {
-  toast.warning(message, toastConfig);
+  toast(message, {
+    icon: '⚠️',
+    style: {
+      background: '#f59e0b',
+      color: '#fff',
+    },
+  });
 };
 
 // Função para mostrar toast de informação
 export const showInfoToast = (message: string) => {
-  toast.info(message, toastConfig);
-};
-
-// Função para forçar fechamento de toasts após tempo específico
-export const forceCloseToasts = (delay: number = 5000) => {
-  setTimeout(() => {
-    toast.dismiss();
-  }, delay);
+  toast(message, {
+    icon: 'ℹ️',
+    style: {
+      background: '#3b82f6',
+      color: '#fff',
+    },
+  });
 };
 
 // Função para mostrar toast com fechamento forçado
 export const showToastWithAutoClose = (type: 'success' | 'error' | 'warning' | 'info', message: string, autoCloseTime: number = 4000) => {
-  const toastId = toast[type](message, {
-    ...toastConfig,
-    autoClose: autoCloseTime,
-  });
+  const toastOptions = {
+    duration: autoCloseTime,
+  };
 
-  // Forçar fechamento após o tempo especificado
-  setTimeout(() => {
-    toast.dismiss(toastId);
-  }, autoCloseTime + 100); // +100ms para garantir que feche
-
-  return toastId;
+  switch (type) {
+    case 'success':
+      return toast.success(message, toastOptions);
+    case 'error':
+      return toast.error(message, toastOptions);
+    case 'warning':
+      return toast(message, {
+        icon: '⚠️',
+        style: {
+          background: '#f59e0b',
+          color: '#fff',
+        },
+        ...toastOptions,
+      });
+    case 'info':
+      return toast(message, {
+        icon: 'ℹ️',
+        style: {
+          background: '#3b82f6',
+          color: '#fff',
+        },
+        ...toastOptions,
+      });
+    default:
+      return toast(message, toastOptions);
+  }
 };

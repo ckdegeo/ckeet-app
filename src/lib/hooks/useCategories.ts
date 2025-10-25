@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 
 interface ProductDisplay {
   id: string;
@@ -54,7 +54,7 @@ export function useCategories() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       setError(errorMessage);
-      toast.error(errorMessage);
+      showErrorToast(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +69,7 @@ export function useCategories() {
       );
 
       if (categoryExists) {
-        toast.error('Categoria já criada');
+        showErrorToast('Categoria já criada');
         throw new Error('Categoria já criada');
       }
 
@@ -92,14 +92,14 @@ export function useCategories() {
       if (!response.ok) {
         // Verificar se é erro de duplicação
         if (data.error?.includes('já existe')) {
-          toast.error('Categoria já criada');
+          showErrorToast('Categoria já criada');
         } else {
-          toast.error(data.error || 'Erro ao criar categoria');
+          showErrorToast(data.error || 'Erro ao criar categoria');
         }
         throw new Error(data.error || 'Erro ao criar categoria');
       }
 
-      toast.success(data.message || 'Categoria criada com sucesso!');
+      showSuccessToast(data.message || 'Categoria criada com sucesso!');
       
       // Recarregar categorias
       await fetchCategories();
@@ -109,7 +109,7 @@ export function useCategories() {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       // Só mostrar toast se não for erro de duplicação (já mostrado acima)
       if (!errorMessage.includes('já criada') && !errorMessage.includes('já existe')) {
-        toast.error(errorMessage);
+        showErrorToast(errorMessage);
       }
       throw err;
     }
@@ -125,7 +125,7 @@ export function useCategories() {
       );
 
       if (categoryExists) {
-        toast.error('Categoria já criada');
+        showErrorToast('Categoria já criada');
         throw new Error('Categoria já criada');
       }
 
@@ -148,14 +148,14 @@ export function useCategories() {
       if (!response.ok) {
         // Verificar se é erro de duplicação
         if (data.error?.includes('já existe')) {
-          toast.error('Categoria já criada');
+          showErrorToast('Categoria já criada');
         } else {
-          toast.error(data.error || 'Erro ao editar categoria');
+          showErrorToast(data.error || 'Erro ao editar categoria');
         }
         throw new Error(data.error || 'Erro ao editar categoria');
       }
 
-      toast.success(data.message || 'Categoria atualizada com sucesso!');
+      showSuccessToast(data.message || 'Categoria atualizada com sucesso!');
       
       // Recarregar categorias
       await fetchCategories();
@@ -165,7 +165,7 @@ export function useCategories() {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       // Só mostrar toast se não for erro de duplicação (já mostrado acima)
       if (!errorMessage.includes('já criada') && !errorMessage.includes('já existe')) {
-        toast.error(errorMessage);
+        showErrorToast(errorMessage);
       }
       throw err;
     }
@@ -194,7 +194,7 @@ export function useCategories() {
         throw new Error(data.error || 'Erro ao excluir categoria');
       }
 
-      toast.success(data.message || 'Categoria removida com sucesso!');
+      showSuccessToast(data.message || 'Categoria removida com sucesso!');
       
       // Recarregar categorias
       await fetchCategories();
@@ -202,7 +202,7 @@ export function useCategories() {
       return data.category;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      toast.error(errorMessage);
+      showErrorToast(errorMessage);
       throw err;
     }
   }, [fetchCategories]);
@@ -238,7 +238,7 @@ export function useCategories() {
       return data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      toast.error(errorMessage);
+      showErrorToast(errorMessage);
       throw err;
     }
   }, [fetchCategories]);

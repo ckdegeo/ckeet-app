@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { toast } from 'react-toastify';
 import { sellerRegisterSchema, type SellerRegisterData } from '@/lib/validations/authSchemas';
-import { toastConfig, showToastWithAutoClose } from '@/lib/utils/toastUtils';
+import { showToastWithAutoClose } from '@/lib/utils/toastUtils';
 import { saveAuthData } from '@/lib/utils/authUtils';
 
 interface UseSellerRegisterReturn {

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Save, Box, Hash, Key, Edit, Trash2, Upload, Download, Plus } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 import IconOnlyButton from '@/app/components/buttons/iconOnlyButton';
 import Button from '@/app/components/buttons/button';
 import Input from '@/app/components/inputs/input';
@@ -46,7 +46,7 @@ export default function ProductPage() {
         try {
           const accessToken = localStorage.getItem('access_token');
           if (!accessToken) {
-            toast.error('Token de acesso não encontrado');
+            showErrorToast('Token de acesso não encontrado');
             return;
           }
 
@@ -126,7 +126,7 @@ export default function ProductPage() {
           }
         } catch (error) {
           console.error('Erro ao carregar produto:', error);
-          toast.error('Erro ao carregar dados do produto');
+          showErrorToast('Erro ao carregar dados do produto');
         }
       };
 
@@ -341,7 +341,7 @@ export default function ProductPage() {
     // Se houver erros, mostrar lista completa de forma clara
     if (errorMessages.length > 0) {
       // Toast principal com contagem
-      toast.error(
+      showErrorToast(
         `Preencha os campos obrigatórios (${errorMessages.length} ${errorMessages.length === 1 ? 'pendente' : 'pendentes'})`,
         {
           autoClose: 5000,
@@ -402,23 +402,23 @@ export default function ProductPage() {
           if (product?.categoryId) {
             currentCategoryId = product.categoryId;
           } else {
-            toast.error('Produto não tem categoria associada');
+            showErrorToast('Produto não tem categoria associada');
             return;
           }
         } else {
-          toast.error('Erro ao carregar dados do produto');
+          showErrorToast('Erro ao carregar dados do produto');
           return;
         }
       } catch (error) {
         console.error('Erro ao buscar produto:', error);
-        toast.error('Erro ao carregar dados do produto');
+        showErrorToast('Erro ao carregar dados do produto');
         return;
       }
     }
     
     // Verificar se temos categoryId
     if (!currentCategoryId) {
-      toast.error('Categoria não selecionada');
+      showErrorToast('Categoria não selecionada');
       return;
     }
 
@@ -426,7 +426,7 @@ export default function ProductPage() {
     try {
       const accessToken = localStorage.getItem('access_token');
       if (!accessToken) {
-        toast.error('Token de acesso não encontrado. Por favor, faça login novamente.');
+        showErrorToast('Token de acesso não encontrado. Por favor, faça login novamente.');
         throw new Error('Token de acesso não encontrado');
       }
 
@@ -475,7 +475,7 @@ export default function ProductPage() {
       await response.json();
       
       // Mostrar toast de sucesso
-      toast.success(isNewProduct ? 'Produto criado com sucesso!' : 'Produto atualizado com sucesso!');
+      showSuccessToast(isNewProduct ? 'Produto criado com sucesso!' : 'Produto atualizado com sucesso!');
       
       // Redirecionar para lista de produtos no ambiente logado após um pequeno delay
       setTimeout(() => {
@@ -483,7 +483,7 @@ export default function ProductPage() {
       }, 500);
     } catch (error) {
       console.error('Erro ao salvar produto:', error);
-      toast.error(error instanceof Error ? error.message : 'Erro ao salvar produto');
+      showErrorToast(error instanceof Error ? error.message : 'Erro ao salvar produto');
     } finally {
       setIsSaving(false);
     }

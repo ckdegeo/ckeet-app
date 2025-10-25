@@ -1,8 +1,7 @@
 import { useRouter } from 'next/navigation';
 import { clearAuthData } from '@/lib/utils/authUtils';
 import { clearAuthCookies } from '@/lib/utils/cookieUtils';
-import { toast } from 'react-toastify';
-import { toastConfig } from '@/lib/utils/toastUtils';
+import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 
 export function useLogout() {
   const router = useRouter();
@@ -16,13 +15,13 @@ export function useLogout() {
       clearAuthCookies();
       
       // Mostrar toast de sucesso
-      toast.success('Logout realizado com sucesso!', toastConfig);
+      showSuccessToast('Logout realizado com sucesso!');
       
       // Redirecionar para login
       router.push('/seller/auth/login');
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
-      toast.error('Erro ao fazer logout', toastConfig);
+      showErrorToast('Erro ao fazer logout');
     }
   };
 

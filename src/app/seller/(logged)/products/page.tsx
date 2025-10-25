@@ -9,7 +9,7 @@ import CategoryModal from '@/app/components/modals/categoryModal';
 import DeleteCategoryModal from '@/app/components/modals/deleteCategoryModal';
 import DeleteProductModal from '@/app/components/modals/deleteProductModal';
 import { useCategories, Category } from '@/lib/hooks/useCategories';
-import { toast } from 'react-toastify';
+import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 
 // Interface local para compatibilidade com dados existentes
 interface ProductDisplay {
@@ -148,7 +148,7 @@ export default function Products() {
     try {
       const accessToken = localStorage.getItem('access_token');
       if (!accessToken) {
-        toast.error('Token de acesso não encontrado');
+        showErrorToast('Token de acesso não encontrado');
         return;
       }
 
@@ -168,13 +168,13 @@ export default function Products() {
         throw new Error(error.error || 'Erro ao excluir produto');
       }
 
-      toast.success('Produto excluído com sucesso!');
+      showSuccessToast('Produto excluído com sucesso!');
       
       // Recarregar categorias para atualizar a lista
       window.location.reload();
     } catch (error) {
       console.error('Erro ao excluir produto:', error);
-      toast.error(error instanceof Error ? error.message : 'Erro ao excluir produto');
+      showErrorToast(error instanceof Error ? error.message : 'Erro ao excluir produto');
     } finally {
       setIsDeleteProductModalOpen(false);
       setDeletingProductId(null);
@@ -265,16 +265,16 @@ export default function Products() {
       // Garantir que o toast apareça
       setTimeout(() => {
         if (hasOrderChanges && hasProductOrderChanges) {
-          toast.success('Ordem salva com sucesso!');
+          showSuccessToast('Ordem salva com sucesso!');
         } else if (hasOrderChanges) {
-          toast.success('Ordem das categorias salva com sucesso!');
+          showSuccessToast('Ordem das categorias salva com sucesso!');
         } else if (hasProductOrderChanges) {
-          toast.success('Ordem dos produtos salva com sucesso!');
+          showSuccessToast('Ordem dos produtos salva com sucesso!');
         }
       }, 100);
     } catch (error) {
       console.error('Erro ao salvar ordem:', error);
-      toast.error('Erro ao salvar ordem');
+      showErrorToast('Erro ao salvar ordem');
     }
   };
   
