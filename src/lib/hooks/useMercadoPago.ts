@@ -288,12 +288,17 @@ export function useMercadoPago(): UseMercadoPagoReturn {
     await fetchStatus(true);
   };
 
-  // Limpar cache
+  // Limpar cache e forçar refresh
   const clearCache = () => {
     const cacheKey = getCacheKey(getUserId());
     localStorage.removeItem(cacheKey);
     hasShownToast.current = false;
     console.log(`🗑️ [Cache] Cache limpo para ${cacheKey}`);
+    
+    // Forçar refresh do status após limpar cache
+    if (sellerId) {
+      fetchStatus(true);
+    }
   };
 
   // Buscar sellerId inicial

@@ -21,9 +21,10 @@ function IntegrationsContent() {
   // Estado para controlar se todos os dados estão prontos
   const [isDataReady, setIsDataReady] = useState(false);
 
-  // Verificar parâmetros da URL para mostrar mensagens de erro
+  // Verificar parâmetros da URL para mostrar mensagens de erro e sucesso
   useEffect(() => {
     const error = searchParams.get('error');
+    const success = searchParams.get('success');
 
     if (error === 'authorization_denied') {
       toast.error('Autorização negada pelo Mercado Pago');
@@ -31,8 +32,17 @@ function IntegrationsContent() {
       toast.error('Parâmetros inválidos na conexão');
     } else if (error === 'connection_failed') {
       toast.error('Falha na conexão com o Mercado Pago');
+    } else if (success === 'connected') {
+      // Quando volta do OAuth com sucesso, limpar cache e recarregar dados
+      toast.success('Conectado ao Mercado Pago com sucesso!');
+      clearCache(); // Limpar cache do MercadoPago
+      refreshIntegrationData(); // Recarregar dados de integração
+      // Forçar refresh do status do MercadoPago
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     }
-  }, [searchParams]);
+  }, [searchParams, clearCache, refreshIntegrationData]);
 
   // Controlar quando todos os dados estão prontos
   useEffect(() => {
