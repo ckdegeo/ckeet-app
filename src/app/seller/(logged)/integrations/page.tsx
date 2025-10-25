@@ -98,9 +98,6 @@ function IntegrationsContent() {
           <h3 className="mt-6 text-lg font-medium text-[var(--foreground)]">
             Carregando integrações
           </h3>
-          <p className="mt-2 text-[var(--on-background)]">
-            Aguarde enquanto buscamos seus dados...
-          </p>
           <div className="mt-4 flex items-center justify-center space-x-1">
             <div className="w-2 h-2 bg-[var(--primary)] rounded-full animate-bounce"></div>
             <div className="w-2 h-2 bg-[var(--primary)] rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
