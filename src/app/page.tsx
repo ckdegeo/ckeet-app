@@ -96,7 +96,7 @@ export default function LandingPage() {
 
   const handleGetStarted = () => {
     // Redirecionar para registro
-    window.location.href = '/auth/register';
+    window.location.href = '/seller/auth/register';
   };
 
   const handleWatchDemo = () => {
