@@ -60,15 +60,40 @@ export async function POST(request: NextRequest) {
     }
     console.log('✅ Supabase login successful');
 
-    // Verificar se é um customer
+    // Verificar se é um customer ou se pode se tornar um
     const userType = authData.user?.user_metadata?.user_type;
     console.log('🔍 User type:', userType);
+    
+    // Se não é customer, verificar se pode se tornar um (criar conta de customer)
     if (userType !== 'customer') {
-      console.log('❌ User is not a customer:', userType);
-      return NextResponse.json(
-        { error: 'Acesso negado. Esta área é apenas para clientes.' },
-        { status: 403 }
-      );
+      console.log('🔍 User is not a customer, checking if can become one:', userType);
+      
+      // Verificar se já existe um customer com este email nesta loja
+      const existingCustomer = await AuthService.getCustomerByEmailAndSeller(email, seller.id);
+      
+      if (!existingCustomer) {
+        console.log('❌ Customer not found for this seller');
+        return NextResponse.json(
+          { error: 'Acesso negado. Esta área é apenas para clientes. Cadastre-se como cliente primeiro.' },
+          { status: 403 }
+        );
+      }
+      
+      // Se existe customer, atualizar user_type nos metadados
+      console.log('✅ Customer exists, updating user_type to customer');
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: {
+          ...authData.user.user_metadata,
+          user_type: 'customer'
+        }
+      });
+      
+      if (updateError) {
+        console.error('❌ Error updating user_type:', updateError);
+        // Continuar mesmo com erro, pois o customer existe
+      } else {
+        console.log('✅ User type updated to customer');
+      }
     }
 
     // Verificar se o customer pertence a esta loja específica
