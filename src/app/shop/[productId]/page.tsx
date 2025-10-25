@@ -7,6 +7,7 @@ import { ArrowLeft, Zap, Headphones, Shield } from 'lucide-react';
 import { Store, Product } from '@/lib/types';
 import StoreNavbar from '../patterns/storeNavbar';
 import Footer from '../patterns/footer';
+import PixModal from '@/app/components/modals/pixModal';
 
 export default function ProductPage() {
   const params = useParams();
@@ -19,6 +20,7 @@ export default function ProductPage() {
   const [selectedImage, setSelectedImage] = useState<string>('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState<string>();
+  const [isPixModalOpen, setIsPixModalOpen] = useState(false);
 
   useEffect(() => {
     fetchProductData();
@@ -353,10 +355,7 @@ export default function ProductPage() {
             {/* Botão de Compra */}
             <div className="pt-6">
               <button
-                onClick={() => {
-                  // TODO: Implementar lógica de carrinho/checkout
-                  alert('Funcionalidade de compra em desenvolvimento!');
-                }}
+                onClick={() => setIsPixModalOpen(true)}
                 className="cursor-pointer w-full py-4 text-base font-semibold text-white shadow-lg hover:shadow-xl rounded-full transition-all hover:opacity-90"
                 style={{ backgroundColor: store.secondaryColor || '#03DAC6' }}
               >
@@ -369,6 +368,23 @@ export default function ProductPage() {
 
       {/* Footer */}
       <Footer store={store} />
+
+      {/* Modal PIX */}
+      {product && store && (
+        <PixModal
+          isOpen={isPixModalOpen}
+          onClose={() => setIsPixModalOpen(false)}
+          productName={product.name}
+          productPrice={product.price}
+          orderNumber={`ORD-${Date.now()}`}
+          primaryColor={store.primaryColor}
+          secondaryColor={store.secondaryColor}
+          onPaymentSuccess={(paymentData) => {
+            console.log('Pagamento realizado:', paymentData);
+            setIsPixModalOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }
