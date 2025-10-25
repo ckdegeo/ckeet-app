@@ -8,11 +8,13 @@ import { Store, Product } from '@/lib/types';
 import StoreNavbar from '../patterns/storeNavbar';
 import Footer from '../patterns/footer';
 import PixModal from '@/app/components/modals/pixModal';
+import { useCustomerLogout } from '@/lib/hooks/useCustomerLogout';
 
 export default function ProductPage() {
   const params = useParams();
   const router = useRouter();
   const productId = params.productId as string;
+  const { logout } = useCustomerLogout();
 
   const [loading, setLoading] = useState(true);
   const [store, setStore] = useState<Store | null>(null);

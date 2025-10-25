@@ -341,7 +341,6 @@ export default function OrdersPage() {
         userName={userName}
         onLoginClick={() => window.location.href = '/shop/auth/login'}
         onRegisterClick={() => window.location.href = '/shop/auth/register'}
-        onLogoutClick={() => window.location.href = '/shop/auth/logout'}
       />
 
       {/* Conteúdo Principal */}

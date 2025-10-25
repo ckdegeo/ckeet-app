@@ -5,6 +5,7 @@ import { User, Menu, Backpack, LogOut } from "lucide-react";
 import Button from "@/app/components/buttons/button";
 import IconOnlyButton from "@/app/components/buttons/iconOnlyButton";
 import { useState } from "react";
+import { useCustomerLogout } from "@/lib/hooks/useCustomerLogout";
 
 interface StoreNavbarProps {
   store: {
@@ -31,6 +32,7 @@ export default function StoreNavbar({
   onLogoutClick,
 }: StoreNavbarProps) {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const { logout } = useCustomerLogout();
 
   const primaryColor = store.primaryColor || '#bd253c';
   const secondaryColor = store.secondaryColor || '#970b27';
@@ -83,7 +85,7 @@ export default function StoreNavbar({
                 {/* Botão de Logout */}
                 <IconOnlyButton
                   icon={LogOut}
-                  onClick={onLogoutClick}
+                  onClick={logout}
                   variant="surface"
                   title="Sair"
                   className="text-white hover:bg-white/20 border-white/30 hover:border-white/50"
@@ -201,7 +203,7 @@ export default function StoreNavbar({
                 <button
                   onClick={() => {
                     setShowMobileMenu(false);
-                    onLogoutClick?.();
+                    logout();
                   }}
                   className="w-full flex items-center gap-2 px-4 py-3 rounded-lg hover:bg-white/10 text-red-300 transition-colors"
                 >

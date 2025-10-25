@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Store, Category, Product } from '@/lib/types';
 import StoreNavbar from './patterns/storeNavbar';
 import Footer from './patterns/footer';
+import { useCustomerLogout } from '@/lib/hooks/useCustomerLogout';
 
 export default function ShopPage() {
   const [loading, setLoading] = useState(true);
@@ -12,6 +13,7 @@ export default function ShopPage() {
   const [categories, setCategories] = useState<(Category & { products: Product[] })[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState<string>();
+  const { logout } = useCustomerLogout();
 
   useEffect(() => {
     fetchStoreData();
@@ -84,70 +86,7 @@ export default function ShopPage() {
     window.location.href = '/shop/auth/register';
   };
 
-  const handleProfileClick = () => {
-    // Redirecionar para página de perfil do customer
-    window.location.href = '/customer/profile';
-  };
 
-  const handleLogoutClick = async () => {
-    console.log('🔴 INICIANDO LOGOUT...');
-    try {
-      // Obter o token de acesso do localStorage
-      const accessToken = localStorage.getItem('customer_access_token');
-      console.log('🔍 Token encontrado:', accessToken ? 'SIM' : 'NÃO');
-      console.log('🔍 Dados atuais no localStorage:', {
-        access_token: localStorage.getItem('customer_access_token'),
-        user_data: localStorage.getItem('customer_user_data'),
-        refresh_token: localStorage.getItem('customer_refresh_token')
-      });
-      
-      // Fazer logout na API
-      console.log('📡 Enviando requisição para API de logout...');
-      const response = await fetch('/api/customer/auth/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          access_token: accessToken
-        }),
-      });
-
-      console.log('📡 Resposta da API:', response.status, response.ok);
-
-      if (response.ok) {
-        console.log('✅ Logout API realizado com sucesso');
-        
-        // Limpar dados do localStorage
-        console.log('🧹 Limpando localStorage...');
-        localStorage.removeItem('customer_access_token');
-        localStorage.removeItem('customer_refresh_token');
-        localStorage.removeItem('customer_user_data');
-        localStorage.removeItem('customer_expires_at');
-        
-        // Limpar cookies (se necessário)
-        console.log('🧹 Limpando cookies...');
-        document.cookie = 'customer_access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        document.cookie = 'customer_refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        
-        // Atualizar estado
-        console.log('🔄 Atualizando estado do componente...');
-        setIsAuthenticated(false);
-        setUserName(undefined);
-        
-        console.log('🔄 Estado atualizado. Recarregando página...');
-        // Recarregar a página para garantir que tudo seja limpo
-        window.location.reload();
-      } else {
-        const errorData = await response.json();
-        console.error('❌ Erro na API de logout:', response.status, errorData);
-        alert(`Erro ao fazer logout: ${errorData.error || 'Erro desconhecido'}`);
-      }
-    } catch (error) {
-      console.error('❌ Erro no processo de logout:', error);
-      alert('Erro inesperado ao fazer logout. Tente novamente.');
-    }
-  };
 
   const handleProductClick = (productId: string) => {
     if (!isAuthenticated) {
@@ -188,8 +127,6 @@ export default function ShopPage() {
         userName={userName}
         onLoginClick={handleLoginClick}
         onRegisterClick={handleRegisterClick}
-        onProfileClick={handleProfileClick}
-        onLogoutClick={handleLogoutClick}
       />
 
       {/* Banner da Loja (se existir) */}
