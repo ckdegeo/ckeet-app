@@ -4,6 +4,7 @@ interface CacheOptions {
   key: string;
   duration?: number; // em milissegundos, padrão 5 minutos
   forceRefresh?: boolean;
+  userId?: string; // ID do usuário para isolar cache
 }
 
 interface CachedData<T> {
@@ -24,12 +25,21 @@ export function useCache<T>(
   const [error, setError] = useState<string | null>(null);
   const hasShownToast = useRef(false);
   
-  const { key, duration = 5 * 60 * 1000, forceRefresh = false } = options;
+  const { key, duration = 5 * 60 * 1000, forceRefresh = false, userId } = options;
+  
+  // Gerar chave única por usuário
+  const getCacheKey = () => {
+    if (userId) {
+      return `${key}_user_${userId}`;
+    }
+    return key;
+  };
 
   // Funções de cache
   const getCachedData = (): T | null => {
     try {
-      const cached = localStorage.getItem(key);
+      const cacheKey = getCacheKey();
+      const cached = localStorage.getItem(cacheKey);
       if (!cached) return null;
       
       const { data, timestamp }: CachedData<T> = JSON.parse(cached);
@@ -37,37 +47,39 @@ export function useCache<T>(
       
       // Verificar se o cache ainda é válido
       if (now - timestamp < duration) {
-        console.log(`📦 [Cache] Usando dados do cache para ${key}`);
+        console.log(`📦 [Cache] Usando dados do cache para ${cacheKey}`);
         return data;
       }
       
       // Cache expirado, remover
-      localStorage.removeItem(key);
+      localStorage.removeItem(cacheKey);
       return null;
     } catch (error) {
-      console.error(`Erro ao ler cache para ${key}:`, error);
-      localStorage.removeItem(key);
+      console.error(`Erro ao ler cache para ${getCacheKey()}:`, error);
+      localStorage.removeItem(getCacheKey());
       return null;
     }
   };
 
   const setCachedData = (data: T) => {
     try {
+      const cacheKey = getCacheKey();
       const cached: CachedData<T> = {
         data,
         timestamp: Date.now()
       };
-      localStorage.setItem(key, JSON.stringify(cached));
-      console.log(`💾 [Cache] Dados salvos no cache para ${key}`);
+      localStorage.setItem(cacheKey, JSON.stringify(cached));
+      console.log(`💾 [Cache] Dados salvos no cache para ${cacheKey}`);
     } catch (error) {
-      console.error(`Erro ao salvar cache para ${key}:`, error);
+      console.error(`Erro ao salvar cache para ${getCacheKey()}:`, error);
     }
   };
 
   const clearCache = () => {
-    localStorage.removeItem(key);
+    const cacheKey = getCacheKey();
+    localStorage.removeItem(cacheKey);
     hasShownToast.current = false;
-    console.log(`🗑️ [Cache] Cache limpo para ${key}`);
+    console.log(`🗑️ [Cache] Cache limpo para ${cacheKey}`);
   };
 
   const fetchData = async (force = false) => {
@@ -118,6 +130,21 @@ export function useCache<T>(
  * Hook específico para cache de configurações da loja
  */
 export function useStoreConfigCache() {
+  // Obter userId do token ou localStorage
+  const getUserId = () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        // Decodificar JWT para obter userId (método simples)
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.userId || payload.sub || null;
+      }
+    } catch (error) {
+      console.error('Erro ao obter userId do token:', error);
+    }
+    return null;
+  };
+
   return useCache(
     async () => {
       const accessToken = localStorage.getItem('access_token');
@@ -138,6 +165,7 @@ export function useStoreConfigCache() {
     {
       key: 'store_config',
       duration: 10 * 60 * 1000, // 10 minutos para configurações da loja
+      userId: getUserId(),
     }
   );
 }
@@ -146,6 +174,21 @@ export function useStoreConfigCache() {
  * Hook específico para cache de categorias e produtos
  */
 export function useCategoriesCache() {
+  // Obter userId do token ou localStorage
+  const getUserId = () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        // Decodificar JWT para obter userId (método simples)
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.userId || payload.sub || null;
+      }
+    } catch (error) {
+      console.error('Erro ao obter userId do token:', error);
+    }
+    return null;
+  };
+
   return useCache(
     async () => {
       const accessToken = localStorage.getItem('access_token');
@@ -166,6 +209,7 @@ export function useCategoriesCache() {
     {
       key: 'categories_products',
       duration: 3 * 60 * 1000, // 3 minutos para categorias e produtos
+      userId: getUserId(),
     }
   );
 }

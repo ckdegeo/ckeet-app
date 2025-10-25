@@ -62,9 +62,6 @@ function IntegrationsContent() {
           <h1 className="text-2xl font-bold text-[var(--foreground)]">
             Integrações
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Dados são armazenados em cache por 5 minutos para melhor performance
-          </p>
         </div>
       </div>
 

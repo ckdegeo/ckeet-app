@@ -34,8 +34,16 @@ interface UseMercadoPagoReturn {
 }
 
 // Cache para evitar consultas desnecessárias
-const CACHE_KEY = 'mercadopago_status';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+
+// Função para obter chave de cache única por usuário
+const getCacheKey = (userId?: string) => {
+  const baseKey = 'mercadopago_status';
+  if (userId) {
+    return `${baseKey}_user_${userId}`;
+  }
+  return baseKey;
+};
 
 interface CachedStatus {
   data: MercadoPagoStatus;
@@ -53,10 +61,25 @@ export function useMercadoPago(): UseMercadoPagoReturn {
   const [sellerId, setSellerId] = useState<string | null>(null);
   const hasShownToast = useRef(false);
 
+  // Obter userId do token
+  const getUserId = () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.userId || payload.sub || null;
+      }
+    } catch (error) {
+      console.error('Erro ao obter userId do token:', error);
+    }
+    return null;
+  };
+
   // Funções de cache
   const getCachedStatus = (): MercadoPagoStatus | null => {
     try {
-      const cached = localStorage.getItem(CACHE_KEY);
+      const cacheKey = getCacheKey(getUserId());
+      const cached = localStorage.getItem(cacheKey);
       if (!cached) return null;
       
       const { data, timestamp }: CachedStatus = JSON.parse(cached);
@@ -68,22 +91,23 @@ export function useMercadoPago(): UseMercadoPagoReturn {
       }
       
       // Cache expirado, remover
-      localStorage.removeItem(CACHE_KEY);
+      localStorage.removeItem(cacheKey);
       return null;
     } catch (error) {
       console.error('Erro ao ler cache:', error);
-      localStorage.removeItem(CACHE_KEY);
+      localStorage.removeItem(getCacheKey(getUserId()));
       return null;
     }
   };
 
   const setCachedStatus = (data: MercadoPagoStatus) => {
     try {
+      const cacheKey = getCacheKey(getUserId());
       const cached: CachedStatus = {
         data,
         timestamp: Date.now()
       };
-      localStorage.setItem(CACHE_KEY, JSON.stringify(cached));
+      localStorage.setItem(cacheKey, JSON.stringify(cached));
     } catch (error) {
       console.error('Erro ao salvar cache:', error);
     }
@@ -239,8 +263,10 @@ export function useMercadoPago(): UseMercadoPagoReturn {
 
   // Limpar cache
   const clearCache = () => {
-    localStorage.removeItem(CACHE_KEY);
+    const cacheKey = getCacheKey(getUserId());
+    localStorage.removeItem(cacheKey);
     hasShownToast.current = false;
+    console.log(`🗑️ [Cache] Cache limpo para ${cacheKey}`);
   };
 
   // Buscar sellerId inicial

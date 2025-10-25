@@ -2,6 +2,7 @@ import { useRouter } from 'next/navigation';
 import { clearAuthData } from '@/lib/utils/authUtils';
 import { clearAuthCookies } from '@/lib/utils/cookieUtils';
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
+import { clearAllCache } from '@/lib/utils/cacheUtils';
 
 export function useLogout() {
   const router = useRouter();
@@ -13,6 +14,9 @@ export function useLogout() {
       
       // Limpar cookies
       clearAuthCookies();
+      
+      // Limpar cache da aplicação
+      clearAllCache();
       
       // Mostrar toast de sucesso
       showSuccessToast('Logout realizado com sucesso!');
