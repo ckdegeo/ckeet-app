@@ -346,8 +346,15 @@ export default function OrdersPage() {
 
       {/* Conteúdo Principal */}
       <main className="container mx-auto px-8 py-12">
-        {/* Botão de Voltar */}
-        <div className="mb-6">
+        {/* Header com Botão de Voltar */}
+        <div className="flex items-center justify-between mb-8">
+          <h1 
+            className="text-3xl font-bold"
+            style={{ color: store.primaryColor || '#6200EE' }}
+          >
+            Pedidos
+          </h1>
+          
           <button
             onClick={() => window.location.href = '/shop'}
             className="px-8 py-3 text-md rounded-full transition-all flex items-center gap-2 cursor-pointer hover:opacity-90"
@@ -360,16 +367,6 @@ export default function OrdersPage() {
             <ArrowLeft className="w-4 h-4" />
             Voltar
           </button>
-        </div>
-
-        {/* Header */}
-        <div className="mb-8">
-          <h1 
-            className="text-3xl font-bold mb-2"
-            style={{ color: store.primaryColor || '#6200EE' }}
-          >
-            Pedidos
-          </h1>
         </div>
 
         {/* Estatísticas Rápidas */}
