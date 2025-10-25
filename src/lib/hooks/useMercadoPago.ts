@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
 
@@ -30,6 +30,16 @@ interface UseMercadoPagoReturn {
   connect: () => void;
   disconnect: () => Promise<void>;
   refreshStatus: () => Promise<void>;
+  clearCache: () => void;
+}
+
+// Cache para evitar consultas desnecessárias
+const CACHE_KEY = 'mercadopago_status';
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+
+interface CachedStatus {
+  data: MercadoPagoStatus;
+  timestamp: number;
 }
 
 /**
@@ -41,6 +51,43 @@ export function useMercadoPago(): UseMercadoPagoReturn {
   const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [sellerId, setSellerId] = useState<string | null>(null);
+  const hasShownToast = useRef(false);
+
+  // Funções de cache
+  const getCachedStatus = (): MercadoPagoStatus | null => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (!cached) return null;
+      
+      const { data, timestamp }: CachedStatus = JSON.parse(cached);
+      const now = Date.now();
+      
+      // Verificar se o cache ainda é válido
+      if (now - timestamp < CACHE_DURATION) {
+        return data;
+      }
+      
+      // Cache expirado, remover
+      localStorage.removeItem(CACHE_KEY);
+      return null;
+    } catch (error) {
+      console.error('Erro ao ler cache:', error);
+      localStorage.removeItem(CACHE_KEY);
+      return null;
+    }
+  };
+
+  const setCachedStatus = (data: MercadoPagoStatus) => {
+    try {
+      const cached: CachedStatus = {
+        data,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(CACHE_KEY, JSON.stringify(cached));
+    } catch (error) {
+      console.error('Erro ao salvar cache:', error);
+    }
+  };
 
   // Buscar sellerId do perfil autenticado
   const fetchSellerId = async () => {
@@ -72,39 +119,59 @@ export function useMercadoPago(): UseMercadoPagoReturn {
   };
 
   // Buscar status da conexão
-  const fetchStatus = async () => {
+  const fetchStatus = async (forceRefresh = false) => {
     if (!sellerId) return;
+
+    // Verificar cache primeiro (se não for refresh forçado)
+    if (!forceRefresh) {
+      const cachedStatus = getCachedStatus();
+      if (cachedStatus) {
+        console.log('📦 [MercadoPago] Usando dados do cache');
+        setStatus(cachedStatus);
+        return;
+      }
+    }
 
     try {
       setLoading(true);
+      console.log('🌐 [MercadoPago] Buscando status do servidor...');
       
       const response = await fetch(`/api/seller/mercadopago/status?sellerId=${sellerId}`);
       
       if (response.ok) {
         const data = await response.json();
         
+        // Salvar no cache
+        setCachedStatus(data);
+        
         // Verificar se a conexão mudou de desconectado para conectado
+        // Só mostrar toast se não foi mostrado antes e é uma mudança real
         const wasDisconnected = !status?.connected;
         const isNowConnected = data.connected;
         
-        if (wasDisconnected && isNowConnected) {
+        if (wasDisconnected && isNowConnected && !hasShownToast.current) {
           toast.success('Conectado ao Mercado Pago com sucesso!');
+          hasShownToast.current = true;
         }
         
         setStatus(data);
       } else {
         console.error('Erro ao buscar status do Mercado Pago');
-        setStatus({
+        const errorStatus = {
           connected: false,
-          status: 'DISCONNECTED'
-        });
+          status: 'DISCONNECTED' as const
+        };
+        setStatus(errorStatus);
+        setCachedStatus(errorStatus);
       }
     } catch (error) {
       console.error('Erro ao buscar status do Mercado Pago:', error);
-      setStatus({
+      const errorStatus = {
         connected: false,
-        status: 'DISCONNECTED'
-      });
+        status: 'DISCONNECTED' as const
+      };
+      setStatus(errorStatus);
+      setCachedStatus(errorStatus);
     } finally {
       setLoading(false);
     }
@@ -165,9 +232,15 @@ export function useMercadoPago(): UseMercadoPagoReturn {
     }
   };
 
-  // Atualizar status
+  // Atualizar status (força refresh)
   const refreshStatus = async () => {
-    await fetchStatus();
+    await fetchStatus(true);
+  };
+
+  // Limpar cache
+  const clearCache = () => {
+    localStorage.removeItem(CACHE_KEY);
+    hasShownToast.current = false;
   };
 
   // Buscar sellerId inicial
@@ -191,5 +264,6 @@ export function useMercadoPago(): UseMercadoPagoReturn {
     connect,
     disconnect,
     refreshStatus,
+    clearCache,
   };
 }

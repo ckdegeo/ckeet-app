@@ -12,7 +12,7 @@ function IntegrationsContent() {
   const searchParams = useSearchParams();
 
   // Hook do Mercado Pago (agora busca sellerId automaticamente)
-  const { status: mpStatus, connecting, disconnecting, connect, disconnect } = useMercadoPago();
+  const { status: mpStatus, connecting, disconnecting, connect, disconnect, clearCache } = useMercadoPago();
 
   // Verificar parâmetros da URL para mostrar mensagens de erro
   useEffect(() => {
@@ -35,6 +35,13 @@ function IntegrationsContent() {
     }
   };
 
+  // Função para limpar cache (útil para debug)
+  const handleClearCache = () => {
+    clearCache();
+    // Recarregar a página para forçar nova busca
+    window.location.reload();
+  };
+
   const getIntegrationStatus = () => {
     if (!mpStatus) return 'inactive';
     if (mpStatus.connected) return 'active';
@@ -55,6 +62,9 @@ function IntegrationsContent() {
           <h1 className="text-2xl font-bold text-[var(--foreground)]">
             Integrações
           </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Dados são armazenados em cache por 5 minutos para melhor performance
+          </p>
         </div>
       </div>
 
