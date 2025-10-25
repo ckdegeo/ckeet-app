@@ -1,0 +1,3 @@
+# Ignore Prisma cache to force regeneration
+node_modules/.prisma
+.next/cache
