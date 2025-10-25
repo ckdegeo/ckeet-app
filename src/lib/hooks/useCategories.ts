@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
+import { useCategoriesCache } from './useCache';
 
 interface ProductDisplay {
   id: string;
@@ -22,43 +23,37 @@ export interface Category {
 export { type ProductDisplay };
 
 export function useCategories() {
+  // Usar cache para categorias
+  const { data: cachedData, loading: cacheLoading, error: cacheError, refresh: refreshCache } = useCategoriesCache();
+  
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Buscar categorias
+  // Atualizar categorias quando dados do cache mudarem
+  useEffect(() => {
+    if (cachedData?.categories) {
+      setCategories(cachedData.categories);
+      setIsLoading(false);
+    }
+  }, [cachedData]);
+
+  // Atualizar loading e error baseado no cache
+  useEffect(() => {
+    setIsLoading(cacheLoading);
+    setError(cacheError);
+  }, [cacheLoading, cacheError]);
+
+  // Buscar categorias (agora usa cache)
   const fetchCategories = useCallback(async () => {
     try {
-      setIsLoading(true);
-      setError(null);
-
-      const accessToken = localStorage.getItem('access_token');
-      if (!accessToken) {
-        throw new Error('Token de acesso não encontrado');
-      }
-
-      const response = await fetch('/api/seller/categories/list', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Erro ao carregar categorias');
-      }
-
-      setCategories(data.categories || []);
+      await refreshCache();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       setError(errorMessage);
       showErrorToast(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
-  }, []);
+  }, [refreshCache]);
 
   // Criar categoria
   const createCategory = useCallback(async (name: string) => {
@@ -101,8 +96,8 @@ export function useCategories() {
 
       showSuccessToast(data.message || 'Categoria criada com sucesso!');
       
-      // Recarregar categorias
-      await fetchCategories();
+      // Limpar cache e recarregar categorias
+      await refreshCache();
       
       return data.category;
     } catch (err) {
@@ -157,8 +152,8 @@ export function useCategories() {
 
       showSuccessToast(data.message || 'Categoria atualizada com sucesso!');
       
-      // Recarregar categorias
-      await fetchCategories();
+      // Limpar cache e recarregar categorias
+      await refreshCache();
       
       return data.category;
     } catch (err) {
@@ -196,8 +191,8 @@ export function useCategories() {
 
       showSuccessToast(data.message || 'Categoria removida com sucesso!');
       
-      // Recarregar categorias
-      await fetchCategories();
+      // Limpar cache e recarregar categorias
+      await refreshCache();
       
       return data.category;
     } catch (err) {
@@ -232,8 +227,8 @@ export function useCategories() {
         throw new Error(data.error || 'Erro ao salvar ordem das categorias');
       }
 
-      // Recarregar categorias
-      await fetchCategories();
+      // Limpar cache e recarregar categorias
+      await refreshCache();
       
       return data;
     } catch (err) {
@@ -243,10 +238,7 @@ export function useCategories() {
     }
   }, [fetchCategories]);
 
-  // Carregar categorias ao montar o componente
-  useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
+  // O cache já carrega as categorias automaticamente
 
   return {
     categories,

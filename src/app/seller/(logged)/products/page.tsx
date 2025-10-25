@@ -344,9 +344,14 @@ export default function Products() {
     <div className="space-y-6">
       {/* Cabeçalho com título e botões de ação */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">
-          Produtos
-        </h1>
+        <div>
+          <h1 className="text-2xl font-bold text-[var(--foreground)]">
+            Produtos
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Dados são armazenados em cache por 3 minutos para melhor performance
+          </p>
+        </div>
         
         <div className="flex items-center gap-3 flex-wrap">
           {(hasOrderChanges || hasProductOrderChanges) && (

@@ -10,6 +10,7 @@ import DomainModal from '@/app/components/modals/domainModal';
 import { Save, Settings, Store as StoreIcon, Palette, Image, Globe } from 'lucide-react';
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 import { getAccessToken } from '@/lib/utils/authUtils';
+import { useStoreConfigCache } from '@/lib/hooks/useCache';
 
 // Interface para os dados da loja
 interface StoreConfig {
@@ -31,6 +32,9 @@ function StorePageContent() {
   const searchParams = useSearchParams();
   const [isDomainModalOpen, setIsDomainModalOpen] = useState(false);
 
+  // Usar cache para carregar dados da loja
+  const { data: storeData, loading: storeLoading, error: storeError, refresh: refreshStoreData } = useStoreConfigCache();
+
   // Verificar se veio do middleware e mostrar toast
   useEffect(() => {
     if (searchParams.get('incomplete') === 'true') {
@@ -38,40 +42,20 @@ function StorePageContent() {
     }
   }, [searchParams]);
 
-  // Carregar dados existentes da loja
+  // Carregar dados do cache para o estado local
   useEffect(() => {
-    const loadStoreData = async () => {
-      try {
-        const accessToken = getAccessToken();
-        if (!accessToken) return;
-
-        const response = await fetch('/api/seller/store/config', {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-          },
-        });
-
-                if (response.ok) {
-                  const data = await response.json();
-                  if (data.store) {
-                    setStoreConfig({
-                      storeName: data.store.name || '',
-                      contactEmail: data.store.contactEmail || '',
-                      logoUrl: data.store.logoUrl || '',
-                      homeBannerUrl: data.store.homeBannerUrl || '',
-                      storeBannerUrl: data.store.storeBannerUrl || '',
-                      primaryColor: data.store.primaryColor || '#6200EE',
-                      secondaryColor: data.store.secondaryColor || '#03DAC6'
-                    });
-                  }
-                }
-      } catch (error) {
-        // Erro silencioso
-      }
-    };
-
-    loadStoreData();
-  }, []);
+    if (storeData?.store) {
+      setStoreConfig({
+        storeName: storeData.store.name || '',
+        contactEmail: storeData.store.contactEmail || '',
+        logoUrl: storeData.store.logoUrl || '',
+        homeBannerUrl: storeData.store.homeBannerUrl || '',
+        storeBannerUrl: storeData.store.storeBannerUrl || '',
+        primaryColor: storeData.store.primaryColor || '#6200EE',
+        secondaryColor: storeData.store.secondaryColor || '#03DAC6'
+      });
+    }
+  }, [storeData]);
   
   const [storeConfig, setStoreConfig] = useState<StoreConfig>({
     storeName: '',
@@ -170,6 +154,9 @@ function StorePageContent() {
       }
 
       showSuccessToast('Configurações da loja salvas com sucesso!');
+      
+      // Limpar cache e recarregar dados
+      refreshStoreData();
       
       // Redirecionar para dashboard após salvar com sucesso
       setTimeout(() => {
@@ -312,13 +299,52 @@ function StorePageContent() {
   );
 
 
+  // Mostrar loading se estiver carregando
+  if (storeLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)] mx-auto"></div>
+          <p className="mt-4 text-[var(--on-background)]">Carregando configurações da loja...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar erro se houver
+  if (storeError) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-[var(--foreground)] mb-2">
+            Erro ao carregar configurações
+          </h3>
+          <p className="text-[var(--on-background)] mb-4">{storeError}</p>
+          <Button onClick={() => refreshStoreData()} className="flex items-center gap-2">
+            Tentar novamente
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Cabeçalho */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">
-          Loja          
-        </h1>
+        <div>
+          <h1 className="text-2xl font-bold text-[var(--foreground)]">
+            Loja          
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Dados são armazenados em cache por 10 minutos para melhor performance
+          </p>
+        </div>
         <div className="flex items-center gap-3">
           <Button 
             onClick={handleSave}
