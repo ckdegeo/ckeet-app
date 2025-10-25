@@ -1,6 +1,6 @@
 import { prisma } from '../prisma';
 import { createServerSupabaseClient } from '../supabase';
-import { Seller, Store } from '../types';
+import { Store } from '../types';
 
 // ===========================================
 // AUTH SERVICE
