@@ -6,12 +6,16 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   className?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
 }
 
 export default function Input({
   label,
   error,
   className = "",
+  primaryColor = '#6200EE',
+  secondaryColor = '#03DAC6',
   ...props
 }: InputProps) {
   return (
@@ -40,6 +44,14 @@ export default function Input({
           ${error ? "border-[var(--error)]" : ""}
           ${className}
         `}
+        style={{
+          '--primary': primaryColor,
+          '--secondary': secondaryColor,
+          '--background': '#ffffff',
+          '--foreground': '#111827',
+          '--on-background': '#6b7280',
+          '--error': '#ef4444'
+        } as React.CSSProperties}
       />
 
       {error && (

@@ -139,6 +139,8 @@ export default function LoginPage() {
               required
               error={errors?.email}
               disabled={isLoading}
+              primaryColor={store?.primaryColor}
+              secondaryColor={store?.secondaryColor}
             />
 
             <Input
@@ -150,6 +152,8 @@ export default function LoginPage() {
               required
               error={errors?.password}
               disabled={isLoading}
+              primaryColor={store?.primaryColor}
+              secondaryColor={store?.secondaryColor}
             />
 
             <div className="flex items-center justify-between">
@@ -158,7 +162,16 @@ export default function LoginPage() {
                   type="checkbox"
                   className="w-4 h-4 rounded border-[var(--on-background)] text-[var(--primary)]"
                 />
-                <span className="text-sm text-[var(--foreground)]">
+                <span 
+                  className="text-sm text-[var(--foreground)]"
+                  style={{
+                    '--primary': store?.primaryColor || '#6200EE',
+                    '--secondary': store?.secondaryColor || '#03DAC6',
+                    '--background': '#ffffff',
+                    '--foreground': '#111827',
+                    '--on-background': '#6b7280'
+                  } as React.CSSProperties}
+                >
                   Lembrar-me
                 </span>
               </label>
@@ -166,6 +179,13 @@ export default function LoginPage() {
               <a
                 href="#"
                 className="text-sm text-[var(--primary)] hover:opacity-90"
+                style={{
+                  '--primary': store?.primaryColor || '#6200EE',
+                  '--secondary': store?.secondaryColor || '#03DAC6',
+                  '--background': '#ffffff',
+                  '--foreground': '#111827',
+                  '--on-background': '#6b7280'
+                } as React.CSSProperties}
               >
                 Esqueceu a senha?
               </a>
@@ -183,11 +203,27 @@ export default function LoginPage() {
               {isLoading ? 'Entrando...' : 'Entrar'}
             </Button>
 
-            <p className="text-center text-sm text-[var(--on-background)]">
+            <p 
+              className="text-center text-sm text-[var(--on-background)]"
+              style={{
+                '--primary': store?.primaryColor || '#6200EE',
+                '--secondary': store?.secondaryColor || '#03DAC6',
+                '--background': '#ffffff',
+                '--foreground': '#111827',
+                '--on-background': '#6b7280'
+              } as React.CSSProperties}
+            >
               Não tem uma conta?{" "}
               <Link
                 href="/shop/auth/register"
                 className="text-[var(--primary)] hover:opacity-90"
+                style={{
+                  '--primary': store?.primaryColor || '#6200EE',
+                  '--secondary': store?.secondaryColor || '#03DAC6',
+                  '--background': '#ffffff',
+                  '--foreground': '#111827',
+                  '--on-background': '#6b7280'
+                } as React.CSSProperties}
               >
                 Cadastre-se
               </Link>

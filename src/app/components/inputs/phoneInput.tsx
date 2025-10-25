@@ -35,6 +35,8 @@ interface PhoneInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'o
   error?: string;
   className?: string;
   placeholder?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
   value: string; // Deve estar no formato brasileiro: (11) 99999-9999
   onChange: (value: string) => void; // Retorna no formato brasileiro: (11) 99999-9999
 }
@@ -46,6 +48,8 @@ export default function PhoneInput({
   value,
   onChange,
   placeholder = "Digite seu telefone",
+  primaryColor = '#6200EE',
+  secondaryColor = '#03DAC6',
   ...props
 }: PhoneInputProps) {
   // Função para lidar com mudanças e formatar o telefone
@@ -86,6 +90,14 @@ export default function PhoneInput({
           ${error ? "border-[var(--error)]" : ""}
           ${className}
         `}
+        style={{
+          '--primary': primaryColor,
+          '--secondary': secondaryColor,
+          '--background': '#ffffff',
+          '--foreground': '#111827',
+          '--on-background': '#6b7280',
+          '--error': '#ef4444'
+        } as React.CSSProperties}
         {...props}
       />
 

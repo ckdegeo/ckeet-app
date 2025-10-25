@@ -167,6 +167,8 @@ export default function RegisterPage() {
                 placeholder="Digite seu nome completo"
                 error={errors.name}
                 required
+                primaryColor={store?.primaryColor}
+                secondaryColor={store?.secondaryColor}
               />
             </div>
 
@@ -180,6 +182,8 @@ export default function RegisterPage() {
                 placeholder="Digite seu email"
                 error={errors.email}
                 required
+                primaryColor={store?.primaryColor}
+                secondaryColor={store?.secondaryColor}
               />
             </div>
 
@@ -191,6 +195,8 @@ export default function RegisterPage() {
                 onChange={setPhone}
                 placeholder="Digite seu telefone"
                 error={errors.phone}
+                primaryColor={store?.primaryColor}
+                secondaryColor={store?.secondaryColor}
               />
             </div>
 
@@ -204,6 +210,8 @@ export default function RegisterPage() {
                 placeholder="Digite sua senha"
                 error={errors.password}
                 required
+                primaryColor={store?.primaryColor}
+                secondaryColor={store?.secondaryColor}
               />
             </div>
 
@@ -217,6 +225,8 @@ export default function RegisterPage() {
                 placeholder="Confirme sua senha"
                 error={errors.confirmPassword}
                 required
+                primaryColor={store?.primaryColor}
+                secondaryColor={store?.secondaryColor}
               />
             </div>
 
@@ -242,11 +252,27 @@ export default function RegisterPage() {
 
             {/* Link para Login */}
             <div className="text-center">
-              <p className="text-[var(--foreground)] opacity-70">
+              <p 
+                className="text-[var(--foreground)] opacity-70"
+                style={{
+                  '--primary': store?.primaryColor || '#6200EE',
+                  '--secondary': store?.secondaryColor || '#03DAC6',
+                  '--background': '#ffffff',
+                  '--foreground': '#111827',
+                  '--on-background': '#6b7280'
+                } as React.CSSProperties}
+              >
                 Já tem uma conta?{' '}
                 <Link
                   href="/shop/auth/login"
                   className="text-[var(--primary)] hover:underline font-medium"
+                  style={{
+                    '--primary': store?.primaryColor || '#6200EE',
+                    '--secondary': store?.secondaryColor || '#03DAC6',
+                    '--background': '#ffffff',
+                    '--foreground': '#111827',
+                    '--on-background': '#6b7280'
+                  } as React.CSSProperties}
                 >
                   Faça login
                 </Link>
