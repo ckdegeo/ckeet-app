@@ -46,17 +46,7 @@ export async function POST(request: NextRequest) {
 
     // Buscar customer no banco
     const customer = await prisma.customer.findUnique({
-      where: { id: customerId },
-      include: {
-        seller: {
-          include: {
-            store: true,
-            paymentConfigs: {
-              where: { provider: 'MERCADO_PAGO' }
-            }
-          }
-        }
-      }
+      where: { id: customerId }
     });
 
     if (!customer) {
@@ -66,11 +56,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Buscar produto
+    // Buscar produto com dados da loja
     const product = await prisma.product.findUnique({
       where: { id: productId },
       include: {
-        store: true,
+        store: {
+          include: {
+            seller: {
+              include: {
+                paymentConfigs: {
+                  where: { provider: 'MERCADO_PAGO' }
+                }
+              }
+            }
+          }
+        },
         category: true
       }
     });
@@ -82,16 +82,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar se o produto pertence à loja do customer
-    if (product.storeId !== customer.seller?.store?.id) {
+    // Verificar se o produto está ativo
+    if (!product.isActive) {
       return NextResponse.json(
-        { error: 'Produto não pertence à loja do customer' },
-        { status: 403 }
+        { error: 'Produto não está disponível' },
+        { status: 400 }
       );
     }
 
-    // Verificar se há configuração do Mercado Pago
-    const mpConfig = customer.seller?.paymentConfigs?.[0];
+    // Verificar se a loja está ativa
+    if (!product.store.isActive) {
+      return NextResponse.json(
+        { error: 'Loja não está ativa' },
+        { status: 400 }
+      );
+    }
+
+    // Verificar se há configuração do Mercado Pago na loja
+    const mpConfig = product.store.seller?.paymentConfigs?.[0];
     if (!mpConfig || mpConfig.status !== 'CONNECTED') {
       return NextResponse.json(
         { error: 'Loja não possui integração com Mercado Pago ativa' },
@@ -99,9 +107,55 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verificar se o produto tem estoque disponível
+    if (product.stockType === 'LINE') {
+      const availableStock = await prisma.stockLine.count({
+        where: {
+          productId: product.id,
+          isUsed: false
+        }
+      });
+      
+      if (availableStock < quantity) {
+        return NextResponse.json(
+          { error: 'Estoque insuficiente' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Verificar se o customer já tem um pedido pendente para este produto
+    const existingOrder = await prisma.order.findFirst({
+      where: {
+        customerId: customer.id,
+        status: 'PENDING',
+        paymentStatus: 'PENDING',
+        products: {
+          some: {
+            productId: product.id
+          }
+        }
+      }
+    });
+
+    if (existingOrder) {
+      return NextResponse.json(
+        { error: 'Você já possui um pedido pendente para este produto' },
+        { status: 400 }
+      );
+    }
+
     // Calcular valores com split payment
     const productPrice = product.price;
     const totalAmount = productPrice * quantity;
+    
+    // Validar valores
+    if (totalAmount <= 0) {
+      return NextResponse.json(
+        { error: 'Valor inválido' },
+        { status: 400 }
+      );
+    }
     
     // Calcular split payment
     const split = calculateSplitPayment(totalAmount);
