@@ -43,7 +43,7 @@ export default function StoreNavbar({
         borderBottomColor: primaryColor
       }}
     >
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo e Nome da Loja */}
           <Link href="/shop" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
@@ -171,9 +171,9 @@ export default function StoreNavbar({
 
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="p-2 rounded-lg hover:bg-white/10 transition-colors text-white"
+              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white flex items-center justify-center"
             >
-              <Menu size={24} />
+              <Menu size={20} />
             </button>
           </div>
         </div>
