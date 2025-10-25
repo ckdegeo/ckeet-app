@@ -282,12 +282,34 @@ export class MercadoPagoService {
     error?: string;
   }> {
     try {
+      // Validar e ajustar application_fee
+      let applicationFee = params.applicationFee;
+      
+      // Mercado Pago requer application_fee > 0 e < transaction_amount
+      if (applicationFee <= 0) {
+        applicationFee = 0.01; // Mínimo permitido
+      }
+      
+      if (applicationFee >= params.amount) {
+        applicationFee = Math.max(0.01, params.amount * 0.01); // 1% do total ou 0.01
+      }
+      
+      // Arredondar para 2 casas decimais
+      applicationFee = Math.round(applicationFee * 100) / 100;
+      
+      console.log('🔧 [MP DEBUG] Application fee ajustada:', {
+        original: params.applicationFee,
+        adjusted: applicationFee,
+        amount: params.amount,
+        percentage: ((applicationFee / params.amount) * 100).toFixed(2) + '%'
+      });
+
       const paymentData = {
         transaction_amount: params.amount,
         description: params.description,
         payment_method_id: 'pix',
         external_reference: params.externalReference,
-        application_fee: params.applicationFee,
+        application_fee: applicationFee,
         payer: {
           email: params.customerEmail,
           ...(params.customerName && { first_name: params.customerName.split(' ')[0] }),

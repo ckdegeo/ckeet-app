@@ -124,26 +124,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Verificar se o customer já tem um pedido pendente para este produto
-    const existingOrder = await prisma.order.findFirst({
-      where: {
-        customerId: customer.id,
-        status: 'PENDING',
-        paymentStatus: 'PENDING',
-        products: {
-          some: {
-            productId: product.id
-          }
-        }
-      }
-    });
-
-    if (existingOrder) {
-      return NextResponse.json(
-        { error: 'Você já possui um pedido pendente para este produto' },
-        { status: 400 }
-      );
-    }
+    // Removida validação de pedido pendente duplicado
+    // Cliente pode comprar o mesmo produto múltiplas vezes
 
     // Calcular valores com split payment
     const productPrice = product.price;
@@ -159,6 +141,26 @@ export async function POST(request: NextRequest) {
     
     // Calcular split payment
     const split = calculateSplitPayment(totalAmount);
+    
+    // Debug: Log dos valores calculados
+    console.log('💰 [DEBUG] Valores calculados:', {
+      totalAmount,
+      platformAmount: split.platformAmount,
+      sellerAmount: split.sellerAmount,
+      commissionRate: split.commissionRate,
+      commissionFixedFee: split.commissionFixedFee
+    });
+
+    // Validar application_fee para Mercado Pago
+    if (split.platformAmount <= 0) {
+      console.log('⚠️ [DEBUG] Application fee inválida (<= 0), usando 0.01');
+      split.platformAmount = 0.01; // Mínimo permitido pelo MP
+    }
+    
+    if (split.platformAmount >= totalAmount) {
+      console.log('⚠️ [DEBUG] Application fee maior que total, ajustando');
+      split.platformAmount = Math.max(0.01, totalAmount * 0.01); // 1% do total ou 0.01
+    }
 
     // Gerar número do pedido
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
