@@ -8,9 +8,10 @@ import Input from '@/app/components/inputs/input';
 interface PixModalProps {
   isOpen: boolean;
   onClose: () => void;
+  productId: string;
   productName: string;
   productPrice: number;
-  orderNumber: string;
+  productImage?: string;
   primaryColor?: string;
   secondaryColor?: string;
   onPaymentSuccess?: (paymentData: PixPaymentData) => void;
@@ -21,15 +22,43 @@ interface PixPaymentData {
   qrCodeText: string;
   expiresAt: string;
   paymentId: string;
+  orderId: string;
+  orderNumber: string;
   status: 'pending' | 'paid' | 'expired' | 'failed';
+}
+
+interface OrderResponse {
+  success: boolean;
+  order: {
+    id: string;
+    orderNumber: string;
+    status: string;
+    paymentStatus: string;
+    totalAmount: number;
+    createdAt: string;
+  };
+  pix: {
+    qrCode: string;
+    qrCodeText: string;
+    paymentId: string;
+    expiresAt: string;
+  };
+  split: {
+    totalAmount: number;
+    sellerAmount: number;
+    platformAmount: number;
+    commissionRate: number;
+    commissionFixedFee: number;
+  };
 }
 
 export default function PixModal({
   isOpen,
   onClose,
+  productId,
   productName,
   productPrice,
-  orderNumber,
+  productImage,
   primaryColor = '#bd253c',
   secondaryColor = '#970b27',
   onPaymentSuccess
@@ -38,26 +67,78 @@ export default function PixModal({
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(0);
+  const [error, setError] = useState<string | null>(null);
+  const [orderNumber, setOrderNumber] = useState<string>('');
 
-  // Simular geração de PIX (será substituído pela integração real)
+  // Gerar PIX real via API
   const generatePixPayment = async () => {
     setIsLoading(true);
+    setError(null);
     
-    // Simular delay da API
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Dados simulados do PIX
-    const mockPaymentData: PixPaymentData = {
-      qrCode: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-      qrCodeText: '00020126580014br.gov.bcb.pix0136123e4567-e89b-12d3-a456-426614174000520400005303986540510.005802BR5913LOJA EXEMPLO6008BRASILIA62070503***6304',
-      expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutos
-      paymentId: `pix_${Date.now()}`,
-      status: 'pending'
-    };
-    
-    setPaymentData(mockPaymentData);
-    setTimeLeft(30 * 60); // 30 minutos em segundos
-    setIsLoading(false);
+    try {
+      // Buscar token de acesso do customer
+      const accessToken = localStorage.getItem('customer_access_token');
+      if (!accessToken) {
+        throw new Error('Usuário não autenticado. Faça login para continuar.');
+      }
+
+      // Criar pedido e gerar PIX
+      const response = await fetch('/api/customer/orders/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({
+          productId: productId,
+          quantity: 1
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao criar pedido');
+      }
+
+      const orderData: OrderResponse = await response.json();
+      
+      if (!orderData.success) {
+        throw new Error('Erro ao processar pedido');
+      }
+
+      // Converter dados da API para o formato do modal
+      const pixData: PixPaymentData = {
+        qrCode: orderData.pix.qrCode,
+        qrCodeText: orderData.pix.qrCodeText,
+        expiresAt: orderData.pix.expiresAt,
+        paymentId: orderData.pix.paymentId,
+        orderId: orderData.order.id,
+        orderNumber: orderData.order.orderNumber,
+        status: 'pending'
+      };
+
+      setPaymentData(pixData);
+      setOrderNumber(orderData.order.orderNumber);
+      
+      // Calcular tempo restante (30 minutos)
+      const expiresAt = new Date(orderData.pix.expiresAt);
+      const now = new Date();
+      const timeDiff = Math.max(0, Math.floor((expiresAt.getTime() - now.getTime()) / 1000));
+      setTimeLeft(timeDiff);
+      
+      console.log('✅ PIX gerado com sucesso:', {
+        orderNumber: orderData.order.orderNumber,
+        paymentId: orderData.pix.paymentId,
+        totalAmount: orderData.order.totalAmount,
+        split: orderData.split
+      });
+
+    } catch (error) {
+      console.error('❌ Erro ao gerar PIX:', error);
+      setError(error instanceof Error ? error.message : 'Erro desconhecido');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Contador regressivo
@@ -67,6 +148,17 @@ export default function PixModal({
       return () => clearTimeout(timer);
     }
   }, [timeLeft]);
+
+  // Verificar status automaticamente a cada 10 segundos
+  useEffect(() => {
+    if (!paymentData || paymentData.status !== 'pending') return;
+
+    const interval = setInterval(() => {
+      checkPaymentStatus();
+    }, 10000); // 10 segundos
+
+    return () => clearInterval(interval);
+  }, [paymentData]);
 
   // Formatar tempo restante
   const formatTime = (seconds: number) => {
@@ -89,10 +181,50 @@ export default function PixModal({
   };
 
 
-  // Verificar status do pagamento (simulado)
+  // Verificar status do pagamento real
   const checkPaymentStatus = async () => {
-    // Em implementação real, faria polling para verificar status
-    console.log('Verificando status do pagamento...');
+    if (!paymentData?.orderId) return;
+    
+    try {
+      const accessToken = localStorage.getItem('customer_access_token');
+      if (!accessToken) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      const response = await fetch(`/api/customer/orders/status?orderId=${paymentData.orderId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao verificar status');
+      }
+
+      const statusData = await response.json();
+      
+      if (statusData.success) {
+        const newStatus = statusData.order.paymentStatus === 'PAID' ? 'paid' : 
+                         statusData.order.paymentStatus === 'FAILED' ? 'failed' : 'pending';
+        
+        setPaymentData(prev => prev ? { ...prev, status: newStatus } : null);
+        
+        if (newStatus === 'paid' && onPaymentSuccess) {
+          onPaymentSuccess(paymentData);
+        }
+        
+        console.log('📊 Status atualizado:', {
+          orderNumber: statusData.order.orderNumber,
+          status: statusData.order.status,
+          paymentStatus: statusData.order.paymentStatus
+        });
+      }
+    } catch (error) {
+      console.error('❌ Erro ao verificar status:', error);
+      setError(error instanceof Error ? error.message : 'Erro ao verificar pagamento');
+    }
   };
 
   if (!isOpen) return null;
@@ -124,7 +256,7 @@ export default function PixModal({
                 Pagamento PIX
               </h2>
               <p className="text-sm text-[var(--on-background)]">
-                {orderNumber}
+                {orderNumber || 'Aguardando...'}
               </p>
             </div>
           </div>
@@ -141,8 +273,16 @@ export default function PixModal({
           {/* Produto */}
           <div className="flex items-center gap-4 mb-6 p-4 bg-gray-50 rounded-xl">
             {/* Imagem do produto */}
-            <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-              <QrCode size={24} className="text-gray-400" />
+            <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+              {productImage ? (
+                <img
+                  src={productImage}
+                  alt={productName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <QrCode size={24} className="text-gray-400" />
+              )}
             </div>
             
             {/* Informações do produto */}
@@ -164,6 +304,16 @@ export default function PixModal({
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: primaryColor }}></div>
               <p className="text-[var(--on-background)]">Gerando pagamento...</p>
+            </div>
+          )}
+
+          {/* Erro */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <AlertCircle size={16} className="text-red-600" />
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
             </div>
           )}
 
@@ -262,6 +412,17 @@ export default function PixModal({
               style={{ backgroundColor: primaryColor }}
             >
               Gerar pagamento PIX
+            </Button>
+          )}
+
+          {/* Botão para tentar novamente em caso de erro */}
+          {error && !isLoading && (
+            <Button
+              onClick={generatePixPayment}
+              className="w-full"
+              style={{ backgroundColor: primaryColor }}
+            >
+              Tentar novamente
             </Button>
           )}
         </div>

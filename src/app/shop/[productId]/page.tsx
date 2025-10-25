@@ -376,14 +376,17 @@ export default function ProductPage() {
         <PixModal
           isOpen={isPixModalOpen}
           onClose={() => setIsPixModalOpen(false)}
+          productId={product.id}
           productName={product.name}
           productPrice={product.price}
-          orderNumber={`ORD-${Date.now()}`}
+          productImage={product.imageUrl}
           primaryColor={store.primaryColor}
           secondaryColor={store.secondaryColor}
           onPaymentSuccess={(paymentData) => {
             console.log('Pagamento realizado:', paymentData);
             setIsPixModalOpen(false);
+            // Redirecionar para página de pedidos ou mostrar sucesso
+            router.push('/shop/orders');
           }}
         />
       )}

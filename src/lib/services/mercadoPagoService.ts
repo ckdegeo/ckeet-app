@@ -262,7 +262,139 @@ export class MercadoPagoService {
   }
 
   /**
-   * Cria pagamento com split (comissão da plataforma)
+   * Cria pagamento PIX com split (comissão da plataforma)
+   */
+  static async createPixPayment(params: {
+    amount: number;
+    description: string;
+    externalReference: string;
+    sellerAccessToken: string;
+    sellerCollectorId: string;
+    applicationFee: number;
+  }): Promise<{
+    success: boolean;
+    paymentId?: string;
+    qrCode?: string;
+    qrCodeText?: string;
+    expiresAt?: string;
+    error?: string;
+  }> {
+    try {
+      const paymentData = {
+        transaction_amount: params.amount,
+        description: params.description,
+        payment_method_id: 'pix',
+        external_reference: params.externalReference,
+        application_fee: params.applicationFee,
+        metadata: {
+          order_id: params.externalReference,
+          collector_id: params.sellerCollectorId,
+        },
+      };
+
+      const response = await fetch(`${this.BASE_URL}/v1/payments`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${params.sellerAccessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paymentData),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        return {
+          success: false,
+          error: `Erro ao criar pagamento PIX: ${error}`
+        };
+      }
+
+      const payment: MercadoPagoPaymentResponse = await response.json();
+
+      // Buscar QR Code do PIX
+      const qrResponse = await fetch(`${this.BASE_URL}/v1/payments/${payment.id}`, {
+        headers: {
+          'Authorization': `Bearer ${params.sellerAccessToken}`,
+        },
+      });
+
+      if (!qrResponse.ok) {
+        return {
+          success: false,
+          error: 'Erro ao buscar QR Code do PIX'
+        };
+      }
+
+      const qrData = await qrResponse.json();
+      const pointOfInteraction = qrData.point_of_interaction?.transaction_data;
+
+      return {
+        success: true,
+        paymentId: payment.id,
+        qrCode: pointOfInteraction?.qr_code_base64,
+        qrCodeText: pointOfInteraction?.qr_code,
+        expiresAt: payment.date_created ? new Date(payment.date_created).toISOString() : undefined
+      };
+
+    } catch (error) {
+      console.error('Erro ao criar pagamento PIX:', error);
+      return {
+        success: false,
+        error: 'Erro interno ao criar pagamento PIX'
+      };
+    }
+  }
+
+  /**
+   * Busca status de um pagamento
+   */
+  static async getPaymentStatus(params: {
+    paymentId: string;
+    accessToken: string;
+  }): Promise<{
+    success: boolean;
+    status?: string;
+    statusDetail?: string;
+    transactionAmount?: number;
+    dateApproved?: string;
+    error?: string;
+  }> {
+    try {
+      const response = await fetch(`${this.BASE_URL}/v1/payments/${params.paymentId}`, {
+        headers: {
+          'Authorization': `Bearer ${params.accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        return {
+          success: false,
+          error: `Erro ao buscar status: ${error}`
+        };
+      }
+
+      const payment: MercadoPagoPaymentResponse = await response.json();
+
+      return {
+        success: true,
+        status: payment.status,
+        statusDetail: payment.status_detail,
+        transactionAmount: payment.transaction_amount,
+        dateApproved: payment.date_approved
+      };
+
+    } catch (error) {
+      console.error('Erro ao buscar status do pagamento:', error);
+      return {
+        success: false,
+        error: 'Erro interno ao buscar status'
+      };
+    }
+  }
+
+  /**
+   * Cria pagamento com split (comissão da plataforma) - Método legado
    */
   static async createSplitPayment(
     sellerId: string,
@@ -313,29 +445,6 @@ export class MercadoPagoService {
     return await response.json();
   }
 
-  /**
-   * Busca status de um pagamento
-   */
-  static async getPaymentStatus(paymentId: string, sellerId: string): Promise<MercadoPagoPaymentResponse> {
-    const config = await this.getSellerCredentials(sellerId);
-    
-    if (!config?.accessToken) {
-      throw new Error('Seller não conectado ao Mercado Pago');
-    }
-
-    const response = await fetch(`${this.BASE_URL}/v1/payments/${paymentId}`, {
-      headers: {
-        'Authorization': `Bearer ${config.accessToken}`,
-      },
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Erro ao buscar status do pagamento: ${error}`);
-    }
-
-    return await response.json();
-  }
 
   /**
    * Cancela um pagamento
