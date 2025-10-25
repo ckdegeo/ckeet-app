@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 import { useCategoriesCache } from './useCache';
+import { invalidateProductCategoryCaches } from '@/lib/utils/cacheInvalidation';
 
 interface ProductDisplay {
   id: string;
@@ -28,6 +29,22 @@ export function useCategories() {
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Função auxiliar para obter userId e invalidar cache
+  const invalidateCache = () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userId = payload.userId || payload.sub;
+        if (userId) {
+          invalidateProductCategoryCaches(userId);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao obter userId para invalidação de cache:', error);
+    }
+  };
   const [error, setError] = useState<string | null>(null);
 
   // Atualizar categorias quando dados do cache mudarem
@@ -96,6 +113,9 @@ export function useCategories() {
 
       showSuccessToast(data.message || 'Categoria criada com sucesso!');
       
+      // Invalidar cache relacionado a produtos/categorias
+      invalidateCache();
+      
       // Limpar cache e recarregar categorias
       await refreshCache();
       
@@ -152,6 +172,9 @@ export function useCategories() {
 
       showSuccessToast(data.message || 'Categoria atualizada com sucesso!');
       
+      // Invalidar cache relacionado a produtos/categorias
+      invalidateCache();
+      
       // Limpar cache e recarregar categorias
       await refreshCache();
       
@@ -191,6 +214,9 @@ export function useCategories() {
 
       showSuccessToast(data.message || 'Categoria removida com sucesso!');
       
+      // Invalidar cache relacionado a produtos/categorias
+      invalidateCache();
+      
       // Limpar cache e recarregar categorias
       await refreshCache();
       
@@ -227,6 +253,9 @@ export function useCategories() {
         throw new Error(data.error || 'Erro ao salvar ordem das categorias');
       }
 
+      // Invalidar cache relacionado a produtos/categorias
+      invalidateCache();
+      
       // Limpar cache e recarregar categorias
       await refreshCache();
       

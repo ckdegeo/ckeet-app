@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Save, Box, Hash, Key, Edit, Trash2, Upload, Download, Plus } from 'lucide-react';
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
+import { invalidateProductCategoryCaches } from '@/lib/utils/cacheInvalidation';
 import IconOnlyButton from '@/app/components/buttons/iconOnlyButton';
 import Button from '@/app/components/buttons/button';
 import Input from '@/app/components/inputs/input';
@@ -461,6 +462,20 @@ export default function ProductPage() {
       
       // Mostrar toast de sucesso
       showSuccessToast(isNewProduct ? 'Produto criado com sucesso!' : 'Produto atualizado com sucesso!');
+      
+      // Invalidar cache relacionado a produtos/categorias
+      try {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const userId = payload.userId || payload.sub;
+          if (userId) {
+            invalidateProductCategoryCaches(userId);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao obter userId para invalidação de cache:', error);
+      }
       
       // Redirecionar para lista de produtos no ambiente logado após um pequeno delay
       setTimeout(() => {

@@ -10,6 +10,7 @@ import DeleteCategoryModal from '@/app/components/modals/deleteCategoryModal';
 import DeleteProductModal from '@/app/components/modals/deleteProductModal';
 import { useCategories, Category } from '@/lib/hooks/useCategories';
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
+import { invalidateProductCategoryCaches } from '@/lib/utils/cacheInvalidation';
 
 // Interface local para compatibilidade com dados existentes
 interface ProductDisplay {
@@ -170,6 +171,20 @@ export default function Products() {
 
       showSuccessToast('Produto excluído com sucesso!');
       
+      // Invalidar cache relacionado a produtos/categorias
+      try {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const userId = payload.userId || payload.sub;
+          if (userId) {
+            invalidateProductCategoryCaches(userId);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao obter userId para invalidação de cache:', error);
+      }
+      
       // Recarregar categorias para atualizar a lista
       window.location.reload();
     } catch (error) {
@@ -317,6 +332,20 @@ export default function Products() {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Erro ao salvar ordem dos produtos');
+    }
+
+    // Invalidar cache relacionado a produtos/categorias após reordenação
+    try {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userId = payload.userId || payload.sub;
+        if (userId) {
+          invalidateProductCategoryCaches(userId);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao obter userId para invalidação de cache:', error);
     }
   };
 
