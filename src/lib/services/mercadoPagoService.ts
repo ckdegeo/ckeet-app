@@ -271,6 +271,8 @@ export class MercadoPagoService {
     sellerAccessToken: string;
     sellerCollectorId: string;
     applicationFee: number;
+    customerEmail: string;
+    customerName?: string;
   }): Promise<{
     success: boolean;
     paymentId?: string;
@@ -286,6 +288,10 @@ export class MercadoPagoService {
         payment_method_id: 'pix',
         external_reference: params.externalReference,
         application_fee: params.applicationFee,
+        payer: {
+          email: params.customerEmail,
+          ...(params.customerName && { first_name: params.customerName.split(' ')[0] }),
+        },
         metadata: {
           order_id: params.externalReference,
           collector_id: params.sellerCollectorId,

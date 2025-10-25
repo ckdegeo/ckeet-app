@@ -200,7 +200,9 @@ export async function POST(request: NextRequest) {
       externalReference: orderNumber,
       sellerAccessToken: mpConfig.accessToken!,
       sellerCollectorId: mpConfig.userId!,
-      applicationFee: split.platformAmount
+      applicationFee: split.platformAmount,
+      customerEmail: customer.email,
+      customerName: customer.name || undefined
     });
 
     if (!pixData.success) {
