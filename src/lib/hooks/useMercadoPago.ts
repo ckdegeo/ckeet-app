@@ -257,10 +257,19 @@ export function useMercadoPago(): UseMercadoPagoReturn {
       });
 
       if (response.ok) {
-        setStatus({
+        // Atualizar status local
+        const disconnectedStatus = {
           connected: false,
-          status: 'DISCONNECTED'
-        });
+          status: 'DISCONNECTED' as const
+        };
+        setStatus(disconnectedStatus);
+        
+        // Limpar cache do Mercado Pago
+        setCachedStatus(disconnectedStatus);
+        
+        // Limpar cache de dados de integração também
+        clearCache();
+        
         toast.success('Desconectado do Mercado Pago com sucesso!');
       } else {
         console.error('Erro ao desconectar do Mercado Pago');

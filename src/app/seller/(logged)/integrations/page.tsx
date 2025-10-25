@@ -52,8 +52,12 @@ function IntegrationsContent() {
     
     if (mpStatus?.connected) {
       await disconnect();
-      // Limpar cache após desconectar
+      // Limpar cache de dados de integração após desconectar
       refreshIntegrationData();
+      // Aguardar um pouco para garantir que o cache foi limpo
+      setTimeout(() => {
+        setIsDataReady(true);
+      }, 500);
     } else {
       await connect();
       // Limpar cache após conectar
