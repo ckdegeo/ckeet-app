@@ -61,7 +61,6 @@ export class VercelService {
       }
 
       const domainData = data as VercelDomainResponse;
-      console.log('Domínio criado com sucesso:', domainData);
 
       return {
         success: true,

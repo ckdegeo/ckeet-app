@@ -10,11 +10,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     
-    console.log('🔍 [Profile] Iniciando busca do perfil do seller...');
-    console.log('👤 [Profile] UserId recebido:', userId);
-    
     if (!userId) {
-      console.log('❌ [Profile] UserId não fornecido');
       return NextResponse.json(
         { error: 'UserId é obrigatório' },
         { status: 400 }
@@ -22,8 +18,6 @@ export async function GET(request: NextRequest) {
     }
 
     // Buscar seller no banco pelo ID
-    console.log('📧 [Profile] Buscando seller com ID:', userId);
-    
     const seller = await prisma.seller.findUnique({
       where: {
         id: userId,
@@ -42,21 +36,13 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    console.log('👤 [Profile] Seller encontrado:', { 
-      found: !!seller, 
-      id: seller?.id, 
-      email: seller?.email 
-    });
-
     if (!seller) {
-      console.log('❌ [Profile] Seller não encontrado no banco');
       return NextResponse.json(
         { error: 'Seller não encontrado' },
         { status: 404 }
       );
     }
 
-    console.log('✅ [Profile] Retornando dados do seller');
     return NextResponse.json({
       id: seller.id,
       email: seller.email,

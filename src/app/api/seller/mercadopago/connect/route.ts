@@ -17,13 +17,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Gerar URL de autorização
+    // Gerar URL de autorização e redirecionar para o Mercado Pago
     const authUrl = MercadoPagoService.getOAuthRedirectUrl(sellerId);
-    
-    console.log('🔗 [MP Connect] Seller ID:', sellerId);
-    console.log('🌐 [MP Connect] Auth URL:', authUrl);
-
-    // Redirecionar para o Mercado Pago
     return NextResponse.redirect(authUrl);
 
   } catch (error) {

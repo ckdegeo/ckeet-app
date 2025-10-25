@@ -27,12 +27,9 @@ export class ImageService {
     fileName?: string
   ): Promise<UploadResult> {
     try {
-      console.log('[ImageService] Iniciando upload via API do servidor...');
-      
       // Obter token de acesso
       const accessToken = getAccessToken();
       if (!accessToken) {
-        console.log('[ImageService] Token de acesso não encontrado');
         return {
           success: false,
           error: 'Token de acesso não encontrado'
@@ -49,7 +46,6 @@ export class ImageService {
       // Não enviar fileName - será gerado com caminho fixo na API
 
       // Fazer upload via API do servidor
-      console.log('[ImageService] Enviando requisição para API do servidor...');
       const response = await fetch('/api/seller/store/images', {
         method: 'POST',
         headers: {
@@ -90,12 +86,9 @@ export class ImageService {
     imageType: 'image1' | 'image2' | 'image3' = 'image1'
   ): Promise<UploadResult> {
     try {
-      console.log('[ImageService] Iniciando upload de imagem de produto...');
-      
       // Obter token de acesso
       const accessToken = getAccessToken();
       if (!accessToken) {
-        console.log('[ImageService] Token de acesso não encontrado');
         return {
           success: false,
           error: 'Token de acesso não encontrado'
@@ -111,7 +104,6 @@ export class ImageService {
       }
 
       // Fazer upload via API do servidor
-      console.log('[ImageService] Enviando requisição para API de produtos...');
       const response = await fetch('/api/seller/products/upload-image', {
         method: 'POST',
         headers: {

@@ -111,7 +111,6 @@ model SellerPaymentConfig {
   
   // OAuth Credentials (Mercado Pago)
   accessToken  String? // Token de acesso do seller
-  publicKey    String? // Chave pública
   refreshToken String? // Token para renovar o accessToken
   userId       String? // user_id ou collector_id do Mercado Pago
   expiresAt    DateTime? // Expiração do accessToken

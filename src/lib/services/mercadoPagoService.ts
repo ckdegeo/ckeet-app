@@ -89,11 +89,6 @@ export class MercadoPagoService {
     const clientSecret = process.env.MERCADOPAGO_CLIENT_SECRET;
     const redirectUri = process.env.MERCADOPAGO_REDIRECT_URI;
 
-    console.log('🔐 [MP OAuth] Trocando código por tokens...');
-    console.log('📋 [MP OAuth] Client ID:', clientId?.substring(0, 10) + '...');
-    console.log('📋 [MP OAuth] Redirect URI:', redirectUri);
-    console.log('📋 [MP OAuth] Code:', code?.substring(0, 20) + '...');
-
     if (!clientId || !clientSecret || !redirectUri) {
       throw new Error('Variáveis de ambiente do Mercado Pago não configuradas');
     }
@@ -102,15 +97,10 @@ export class MercadoPagoService {
     const tokenUrls = [
       `${this.AUTH_URL}/oauth/token`,
       'https://api.mercadopago.com/oauth/token',
-      'https://api.mercadopago.com/oauth/token'
     ];
-    
-    console.log('🌐 [MP OAuth] Tentando diferentes endpoints OAuth...');
     
     for (const tokenUrl of tokenUrls) {
       try {
-        console.log('🌐 [MP OAuth] Testando URL:', tokenUrl);
-
         const response = await fetch(tokenUrl, {
           method: 'POST',
           headers: {
@@ -126,53 +116,28 @@ export class MercadoPagoService {
           }),
         });
 
-        console.log('📊 [MP OAuth] Response status:', response.status);
-        console.log('📊 [MP OAuth] Response headers:', Object.fromEntries(response.headers.entries()));
-
         if (response.ok) {
           const data: MercadoPagoOAuthResponse = await response.json();
-          
-          // Salvar credenciais no banco
           await this.saveSellerCredentials(sellerId, data);
-          
-          console.log('✅ [MP OAuth] Sucesso com URL:', tokenUrl);
           return data;
         } else {
           const error = await response.text();
-          console.error('❌ [MP OAuth] Erro na resposta:', error.substring(0, 500));
-          
-          // Log detalhado para debug
-          console.error('🔍 [MP OAuth] Debug completo:');
-          console.error('🔍 [MP OAuth] URL:', tokenUrl);
-          console.error('🔍 [MP OAuth] Headers enviados:', {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'application/json',
-          });
-          console.error('🔍 [MP OAuth] Body enviado:', {
-            grant_type: 'authorization_code',
-            client_id: clientId,
-            client_secret: clientSecret?.substring(0, 10) + '...',
-            code: code?.substring(0, 20) + '...',
-            redirect_uri: redirectUri,
-          });
           
           // Se não é o último endpoint, continuar tentando
           if (tokenUrl !== tokenUrls[tokenUrls.length - 1]) {
-            console.log('🔄 [MP OAuth] Tentando próximo endpoint...');
             continue;
           }
           
-          throw new Error(`Erro ao trocar código por tokens (${response.status}): ${error.substring(0, 200)}`);
+          console.error('[MercadoPago] Erro ao trocar código por tokens:', error.substring(0, 200));
+          throw new Error(`Erro ao trocar código por tokens (${response.status})`);
         }
       } catch (error) {
-        console.error('❌ [MP OAuth] Erro na requisição:', error);
-        
         // Se não é o último endpoint, continuar tentando
         if (tokenUrl !== tokenUrls[tokenUrls.length - 1]) {
-          console.log('🔄 [MP OAuth] Tentando próximo endpoint...');
           continue;
         }
         
+        console.error('[MercadoPago] Erro na requisição OAuth:', error);
         throw error;
       }
     }
