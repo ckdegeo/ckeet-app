@@ -56,11 +56,6 @@ export default function Footer({ store }: FooterProps) {
                   Produtos
                 </Link>
               </li>
-              <li>
-                <Link href="/customer/orders" className="text-white/80 hover:text-white transition-colors">
-                  Meus Pedidos
-                </Link>
-              </li>
             </ul>
           </div>
 

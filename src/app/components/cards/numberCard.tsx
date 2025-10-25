@@ -10,6 +10,7 @@ interface NumberCardProps {
   changeType?: 'increase' | 'decrease' | 'neutral';
   background?: 'transparent' | 'colored';
   className?: string;
+  style?: React.CSSProperties;
 }
 
 export default function NumberCard({
@@ -20,6 +21,7 @@ export default function NumberCard({
   changeType,
   background = 'transparent',
   className = "",
+  style,
 }: NumberCardProps) {
   return (
     <div 
@@ -35,6 +37,7 @@ export default function NumberCard({
         hover:shadow-md
         ${className}
       `}
+      style={style}
     >
       {/* Header com título e ícone */}
       <div className="flex items-center justify-between mb-4">

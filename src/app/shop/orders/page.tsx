@@ -6,9 +6,10 @@ import StoreNavbar from '../patterns/storeNavbar';
 import Footer from '../patterns/footer';
 import Table from '@/app/components/tables/table';
 import Search from '@/app/components/inputs/search';
-import { Download, Eye, Copy, CheckCircle } from 'lucide-react';
+import { Download, Eye, Copy, CheckCircle, ArrowLeft } from 'lucide-react';
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 import { useCache } from '@/lib/hooks/useCache';
+import NumberCard from '@/app/components/cards/numberCard';
 
 interface OrderWithDetails extends Order {
   products: (OrderItem & { product: Product })[];
@@ -345,6 +346,22 @@ export default function OrdersPage() {
 
       {/* Conteúdo Principal */}
       <main className="container mx-auto px-8 py-12">
+        {/* Botão de Voltar */}
+        <div className="mb-6">
+          <button
+            onClick={() => window.location.href = '/shop'}
+            className="px-8 py-3 text-md rounded-full transition-all flex items-center gap-2 cursor-pointer hover:opacity-90"
+            style={{
+              backgroundColor: store.secondaryColor || '#03DAC6',
+              color: 'white',
+              border: `2px solid ${store.secondaryColor || '#03DAC6'}`
+            }}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar
+          </button>
+        </div>
+
         {/* Header */}
         <div className="mb-8">
           <h1 
@@ -357,63 +374,53 @@ export default function OrdersPage() {
 
         {/* Estatísticas Rápidas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-12 h-12 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: `${store.primaryColor || '#6200EE'}10` }}
-              >
-                <CheckCircle 
-                  size={24} 
-                  style={{ color: store.primaryColor || '#6200EE' }}
-                />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Total de pedidos</p>
-                <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
-              </div>
-            </div>
-          </div>
+          <NumberCard
+            title="Total de pedidos"
+            value={orders.length}
+            icon={CheckCircle}
+            background="transparent"
+            className="shadow-sm border border-gray-100"
+            style={{
+              '--primary': store.primaryColor || '#6200EE',
+              '--secondary': store.secondaryColor || '#03DAC6',
+              '--background': '#ffffff',
+              '--foreground': '#111827',
+              '--on-background': '#6b7280',
+              '--on-primary': '#ffffff'
+            } as React.CSSProperties}
+          />
 
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-12 h-12 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: `${store.secondaryColor || '#03DAC6'}10` }}
-              >
-                <Download 
-                  size={24} 
-                  style={{ color: store.secondaryColor || '#03DAC6' }}
-                />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Produtos entregues</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {tableData.filter(item => item.deliveredContent).length}
-                </p>
-              </div>
-            </div>
-          </div>
+          <NumberCard
+            title="Produtos entregues"
+            value={tableData.filter(item => item.deliveredContent).length}
+            icon={Download}
+            background="transparent"
+            className="shadow-sm border border-gray-100"
+            style={{
+              '--primary': store.secondaryColor || '#03DAC6',
+              '--secondary': store.primaryColor || '#6200EE',
+              '--background': '#ffffff',
+              '--foreground': '#111827',
+              '--on-background': '#6b7280',
+              '--on-primary': '#ffffff'
+            } as React.CSSProperties}
+          />
 
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-12 h-12 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: `${store.primaryColor || '#6200EE'}10` }}
-              >
-                <Eye 
-                  size={24} 
-                  style={{ color: store.primaryColor || '#6200EE' }}
-                />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Downloads realizados</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {tableData.reduce((sum, item) => sum + (item.downloadCount || 0), 0)}
-                </p>
-              </div>
-            </div>
-          </div>
+          <NumberCard
+            title="Downloads realizados"
+            value={tableData.reduce((sum, item) => sum + (item.downloadCount || 0), 0)}
+            icon={Eye}
+            background="transparent"
+            className="shadow-sm border border-gray-100"
+            style={{
+              '--primary': store.primaryColor || '#6200EE',
+              '--secondary': store.secondaryColor || '#03DAC6',
+              '--background': '#ffffff',
+              '--foreground': '#111827',
+              '--on-background': '#6b7280',
+              '--on-primary': '#ffffff'
+            } as React.CSSProperties}
+          />
         </div>
 
         {/* Tabela de Pedidos */}
