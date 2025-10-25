@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
       user: {
         id: authData.user.id,
         email: authData.user.email,
-        name: authData.user.user_metadata?.name,
+        name: customer.name || authData.user.user_metadata?.name || 'Cliente',
         user_type: 'customer',
         customer_id: customer.id,
         seller_id: seller.id,
