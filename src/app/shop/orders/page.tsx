@@ -319,8 +319,12 @@ export default function OrdersPage() {
             <p className="text-gray-600 mb-4">Você precisa estar logado para ver seus pedidos.</p>
             <button
               onClick={() => window.location.href = '/shop/auth/login'}
-              className="px-6 py-3 rounded-lg text-white font-medium transition-colors"
-              style={{ backgroundColor: store.primaryColor || '#bd253c' }}
+              className="px-8 py-3 text-md rounded-full transition-all flex items-center gap-2 cursor-pointer hover:opacity-90 font-medium"
+              style={{ 
+                backgroundColor: store.primaryColor || '#bd253c',
+                color: 'white',
+                border: `2px solid ${store.primaryColor || '#bd253c'}`
+              }}
             >
               Fazer login
             </button>
