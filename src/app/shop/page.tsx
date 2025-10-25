@@ -149,6 +149,17 @@ export default function ShopPage() {
     }
   };
 
+  const handleProductClick = (productId: string) => {
+    if (!isAuthenticated) {
+      // Se não estiver logado, redirecionar para login
+      window.location.href = '/shop/auth/login';
+      return;
+    }
+    
+    // Se estiver logado, ir para a página do produto
+    window.location.href = `/shop/${productId}`;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -233,10 +244,10 @@ export default function ShopPage() {
                     .filter(product => product.isActive)
                     .sort((a, b) => a.order - b.order)
                     .map((product) => (
-                      <a
+                      <div
                         key={product.id}
-                        href={`/shop/${product.id}`}
-                        className="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 hover:border-transparent transform hover:-translate-y-1"
+                        onClick={() => handleProductClick(product.id)}
+                        className="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 hover:border-transparent transform hover:-translate-y-1 cursor-pointer"
                       >
                         {/* Imagem do Produto */}
                         {product.imageUrl ? (
@@ -332,13 +343,17 @@ export default function ShopPage() {
                         {/* Ações */}
                         <div className="flex items-center justify-end gap-2 p-3 pt-0">
                           <button
+                            onClick={(e) => {
+                              e.stopPropagation(); // Evitar que o clique no botão acione o clique no card
+                              handleProductClick(product.id);
+                            }}
                             className="cursor-pointer flex items-center justify-center gap-2 px-6 py-3 rounded-full font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed text-white hover:opacity-90"
                             style={{ backgroundColor: store.secondaryColor || '#03DAC6' }}
                           >
                             Comprar
                           </button>
                         </div>
-                      </a>
+                      </div>
                     ))}
                 </div>
               </section>
