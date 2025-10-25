@@ -44,7 +44,7 @@ export default function Footer({ store }: FooterProps) {
 
           {/* Links Rápidos */}
           <div className="text-center">
-            <h4 className="font-semibold mb-4">Links Rápidos</h4>
+            <h4 className="font-semibold mb-4">Links rápidos</h4>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link href="/shop" className="text-white/80 hover:text-white transition-colors">
