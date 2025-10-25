@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'react-hot-toast';
 
 interface MercadoPagoStatus {
   connected: boolean;
@@ -81,6 +82,15 @@ export function useMercadoPago(): UseMercadoPagoReturn {
       
       if (response.ok) {
         const data = await response.json();
+        
+        // Verificar se a conexão mudou de desconectado para conectado
+        const wasDisconnected = !status?.connected;
+        const isNowConnected = data.connected;
+        
+        if (wasDisconnected && isNowConnected) {
+          toast.success('Conectado ao Mercado Pago com sucesso!');
+        }
+        
         setStatus(data);
       } else {
         console.error('Erro ao buscar status do Mercado Pago');
@@ -142,11 +152,14 @@ export function useMercadoPago(): UseMercadoPagoReturn {
           connected: false,
           status: 'DISCONNECTED'
         });
+        toast.success('Desconectado do Mercado Pago com sucesso!');
       } else {
         console.error('Erro ao desconectar do Mercado Pago');
+        toast.error('Erro ao desconectar do Mercado Pago');
       }
     } catch (error) {
       console.error('Erro ao desconectar do Mercado Pago:', error);
+      toast.error('Erro ao desconectar do Mercado Pago');
     } finally {
       setDisconnecting(false);
     }

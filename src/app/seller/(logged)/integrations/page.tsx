@@ -14,14 +14,11 @@ function IntegrationsContent() {
   // Hook do Mercado Pago (agora busca sellerId automaticamente)
   const { status: mpStatus, connecting, disconnecting, connect, disconnect } = useMercadoPago();
 
-  // Verificar parâmetros da URL para mostrar mensagens
+  // Verificar parâmetros da URL para mostrar mensagens de erro
   useEffect(() => {
-    const success = searchParams.get('success');
     const error = searchParams.get('error');
 
-    if (success === 'connected') {
-      toast.success('Conectado ao Mercado Pago com sucesso!');
-    } else if (error === 'authorization_denied') {
+    if (error === 'authorization_denied') {
       toast.error('Autorização negada pelo Mercado Pago');
     } else if (error === 'missing_parameters') {
       toast.error('Parâmetros inválidos na conexão');
