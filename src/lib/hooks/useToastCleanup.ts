@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { clearAllToasts, forceCloseToasts } from '@/lib/utils/toastUtils';
+import { clearAllToasts } from '@/lib/utils/toastUtils';
 
 // Hook para limpar toasts automaticamente
 export function useToastCleanup() {
@@ -9,7 +9,7 @@ export function useToastCleanup() {
 
     // Forçar fechamento de toasts após 10 segundos
     const timeout = setTimeout(() => {
-      forceCloseToasts();
+      clearAllToasts();
     }, 10000);
 
     return () => {

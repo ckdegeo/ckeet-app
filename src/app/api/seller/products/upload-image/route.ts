@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Upload da imagem
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('store-images')
       .upload(filePath, file, {
         cacheControl: '3600',

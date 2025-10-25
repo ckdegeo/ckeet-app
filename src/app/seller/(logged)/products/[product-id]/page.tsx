@@ -342,28 +342,13 @@ export default function ProductPage() {
     if (errorMessages.length > 0) {
       // Toast principal com contagem
       showErrorToast(
-        `Preencha os campos obrigatórios (${errorMessages.length} ${errorMessages.length === 1 ? 'pendente' : 'pendentes'})`,
-        {
-          autoClose: 5000,
-          position: 'top-center'
-        }
+        `Preencha os campos obrigatórios (${errorMessages.length} ${errorMessages.length === 1 ? 'pendente' : 'pendentes'})`
       );
       
       // Toast detalhado com lista
       setTimeout(() => {
-        toast.warning(
-          <div>
-            <strong>Campos pendentes:</strong>
-            <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
-              {errorMessages.map((msg, index) => (
-                <li key={index} style={{ marginBottom: '4px' }}>{msg}</li>
-              ))}
-            </ul>
-          </div>,
-          {
-            autoClose: 8000,
-            position: 'top-right'
-          }
+        showErrorToast(
+          `Campos pendentes: ${errorMessages.join(', ')}`
         );
       }, 300);
       

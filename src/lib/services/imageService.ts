@@ -1,4 +1,3 @@
-import { supabase } from '@/lib/supabase';
 import { getAccessToken } from '@/lib/utils/authUtils';
 
 export interface UploadResult {
@@ -23,8 +22,7 @@ export class ImageService {
    */
   static async uploadImage(
     file: File, 
-    folder: string = 'store',
-    fileName?: string
+    folder: string = 'store'
   ): Promise<UploadResult> {
     try {
       // Obter token de acesso
@@ -37,7 +35,6 @@ export class ImageService {
       }
 
       // Usar caminho fixo baseado no tipo de imagem
-      const fileExtension = file.name.split('.').pop();
       
       // Criar FormData para enviar o arquivo
       const formData = new FormData();

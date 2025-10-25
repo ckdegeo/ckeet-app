@@ -1,5 +1,5 @@
 import { prisma } from '../prisma';
-import { Order, OrderStatus, PaymentMethod, PaymentStatus } from '../types';
+import { OrderStatus, PaymentMethod, PaymentStatus } from '../types';
 import { ProductService as ProductServiceClass } from './productService';
 
 // ===========================================

@@ -325,7 +325,7 @@ export default function Products() {
     setHasOrderChanges(false);
     setHasProductOrderChanges(false);
     setProductOrderChangesByCategory({});
-    toast.info('Alterações canceladas');
+    showSuccessToast('Alterações canceladas');
   };
 
   // Exibir loading

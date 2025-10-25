@@ -1,5 +1,5 @@
 import { prisma } from '../prisma';
-import { Product, StockType, StockLine, Deliverable } from '../types';
+import { StockType } from '../types';
 
 // ===========================================
 // PRODUCT SERVICE

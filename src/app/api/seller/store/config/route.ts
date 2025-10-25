@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
               store: storeData
             });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Erro interno do servidor' },
       { status: 500 }
@@ -101,8 +101,8 @@ export async function POST(request: NextRequest) {
     let body;
     try {
       body = await request.json();
-    } catch (error) {
-      console.error('Erro ao fazer parse do JSON:', error);
+    } catch (parseError) {
+      console.error('Erro ao fazer parse do JSON:', parseError);
       return NextResponse.json(
         { error: 'Dados inválidos no request' },
         { status: 400 }
@@ -203,7 +203,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Erro interno do servidor' },
       { status: 500 }

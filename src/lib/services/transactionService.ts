@@ -1,5 +1,5 @@
 import { prisma } from '../prisma';
-import { Transaction, TransactionType, TransactionStatus, OrderStatus } from '../types';
+import { TransactionType, TransactionStatus, OrderStatus } from '../types';
 
 // ===========================================
 // TRANSACTION SERVICE
@@ -190,7 +190,7 @@ export class TransactionService {
       if (endDate) whereClause.createdAt.lte = endDate;
     }
 
-    const [sales, refunds, totalRevenue, totalCommissions] = await Promise.all([
+    const [sales, refunds] = await Promise.all([
       prisma.transaction.aggregate({
         where: { ...whereClause, type: TransactionType.SALE },
         _sum: { amount: true, sellerAmount: true, platformAmount: true },
