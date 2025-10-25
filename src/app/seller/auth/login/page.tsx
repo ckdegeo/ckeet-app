@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSellerLogin } from "@/lib/hooks/useSellerLogin";
 import { loginSchema, type LoginData } from "@/lib/validations/authSchemas";
+import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -60,7 +61,7 @@ export default function Login() {
               className="h-auto"
             />
             <h2 className="text-2xl font-semibold text-[var(--foreground)]">
-              Login do Vendedor
+              Login
             </h2>
           </div>
 
@@ -113,9 +114,8 @@ export default function Login() {
                      <button
                        type="button"
                        onClick={async () => {
-                         const email = (document.querySelector('input[type="email"]') as HTMLInputElement)?.value;
                          if (!email) {
-                           alert('Digite seu email primeiro');
+                           showErrorToast('Digite seu email primeiro');
                            return;
                          }
                          
@@ -129,12 +129,12 @@ export default function Login() {
                            const result = await response.json();
                            
                            if (response.ok) {
-                             alert('Email de confirmação reenviado! Verifique sua caixa de entrada.');
+                             showSuccessToast('Email de confirmação reenviado! Verifique sua caixa de entrada.');
                            } else {
-                             alert(result.error || 'Erro ao reenviar email');
+                             showErrorToast(result.error || 'Erro ao reenviar email');
                            }
                          } catch (error) {
-                           alert('Erro ao reenviar email');
+                           showErrorToast('Erro ao reenviar email');
                          }
                        }}
                        className="text-sm text-[var(--primary)] hover:opacity-90 underline"

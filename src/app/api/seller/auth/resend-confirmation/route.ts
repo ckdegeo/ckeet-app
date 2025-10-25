@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,31 +17,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createServerSupabaseClient();
-
     // Reenviar email de confirmação
     const { error } = await supabase.auth.resend({
       type: 'signup',
-      email,
-      options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/seller/auth/login`,
-      },
+      email: email,
     });
 
     if (error) {
+      console.error('Erro ao reenviar confirmação:', error);
       return NextResponse.json(
-        { error: error.message },
+        { error: error.message || 'Erro ao reenviar email de confirmação' },
         { status: 400 }
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Email de confirmação reenviado! Verifique sua caixa de entrada.',
-    });
+    return NextResponse.json(
+      { message: 'Email de confirmação reenviado com sucesso' },
+      { status: 200 }
+    );
 
   } catch (error) {
-    console.error('Erro ao reenviar confirmação:', error);
+    console.error('Erro no resend-confirmation:', error);
     return NextResponse.json(
       { error: 'Erro interno do servidor' },
       { status: 500 }

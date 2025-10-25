@@ -160,6 +160,22 @@ export function useStoreConfigCache() {
       });
 
       if (!response.ok) {
+        // Se a loja não existe (404), retornar dados padrão
+        if (response.status === 404) {
+          return {
+            store: {
+              id: null,
+              name: '',
+              contactEmail: '',
+              logoUrl: null,
+              homeBannerUrl: null,
+              storeBannerUrl: null,
+              primaryColor: '#6200EE',
+              secondaryColor: '#03DAC6',
+              subdomain: null,
+            }
+          };
+        }
         throw new Error('Erro ao buscar configurações da loja');
       }
 

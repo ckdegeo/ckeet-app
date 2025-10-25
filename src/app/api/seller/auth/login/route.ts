@@ -43,14 +43,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar se é um seller
+    // Verificar se é um seller ou se pode se tornar um
     const userType = authData.user?.user_metadata?.user_type;
     
+    // Se não é seller, verificar se pode se tornar um (criar conta de seller)
     if (userType !== 'seller') {
-      return NextResponse.json(
-        { error: 'Acesso negado. Esta área é apenas para vendedores.' },
-        { status: 403 }
-      );
+      // Verificar se já existe um seller com este email
+      const existingSeller = await AuthService.getSellerByEmail(email);
+      
+      if (!existingSeller) {
+        return NextResponse.json(
+          { error: 'Acesso negado. Esta área é apenas para vendedores. Cadastre-se como vendedor primeiro.' },
+          { status: 403 }
+        );
+      }
+      
+      // Se existe seller, atualizar user_type nos metadados
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: {
+          ...authData.user.user_metadata,
+          user_type: 'seller'
+        }
+      });
+      
+      if (updateError) {
+        console.error('Erro ao atualizar user_type:', updateError);
+        // Continuar mesmo com erro, pois o seller existe
+      }
     }
 
     // Sincronizar usuário com Prisma

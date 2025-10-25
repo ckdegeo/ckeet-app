@@ -73,7 +73,7 @@ export default function Register() {
               className="h-auto"
             />
             <h2 className="text-2xl font-semibold text-[var(--foreground)]">
-              Cadastro de Vendedor
+              Cadastro
             </h2>
           </div>
 
