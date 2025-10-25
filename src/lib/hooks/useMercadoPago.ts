@@ -121,8 +121,23 @@ export function useMercadoPago(): UseMercadoPagoReturn {
     try {
       console.log('🔍 [MercadoPago] Buscando sellerId...');
       
-      // Usar o mesmo userId que outras rotas estão usando (que está funcionando)
-      const userId = '428378ac-2e5e-488a-adcb-f615925df0c6';
+      // Buscar sellerId dinamicamente do token de acesso
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) {
+        console.error('❌ [MercadoPago] Token de acesso não encontrado');
+        setSellerId(null);
+        return;
+      }
+
+      // Decodificar JWT para obter userId
+      const payload = JSON.parse(atob(accessToken.split('.')[1]));
+      const userId = payload.userId || payload.sub;
+      
+      if (!userId) {
+        console.error('❌ [MercadoPago] userId não encontrado no token');
+        setSellerId(null);
+        return;
+      }
       
       console.log('👤 [MercadoPago] Usando userId:', userId);
       
