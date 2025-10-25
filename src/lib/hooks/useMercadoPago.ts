@@ -64,6 +64,9 @@ export function useMercadoPago(): UseMercadoPagoReturn {
   // Obter userId do token
   const getUserId = () => {
     try {
+      // Verificar se estamos no lado do cliente
+      if (typeof window === 'undefined') return null;
+      
       const token = localStorage.getItem('access_token');
       if (token) {
         const payload = JSON.parse(atob(token.split('.')[1]));

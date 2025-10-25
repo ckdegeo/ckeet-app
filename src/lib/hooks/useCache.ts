@@ -133,6 +133,9 @@ export function useStoreConfigCache() {
   // Obter userId do token ou localStorage
   const getUserId = () => {
     try {
+      // Verificar se estamos no lado do cliente
+      if (typeof window === 'undefined') return null;
+      
       const token = localStorage.getItem('access_token');
       if (token) {
         // Decodificar JWT para obter userId (método simples)
@@ -177,6 +180,9 @@ export function useCategoriesCache() {
   // Obter userId do token ou localStorage
   const getUserId = () => {
     try {
+      // Verificar se estamos no lado do cliente
+      if (typeof window === 'undefined') return null;
+      
       const token = localStorage.getItem('access_token');
       if (token) {
         // Decodificar JWT para obter userId (método simples)
@@ -209,6 +215,62 @@ export function useCategoriesCache() {
     {
       key: 'categories_products',
       duration: 3 * 60 * 1000, // 3 minutos para categorias e produtos
+      userId: getUserId(),
+    }
+  );
+}
+
+/**
+ * Hook específico para cache de dados de integração
+ */
+export function useIntegrationDataCache() {
+  // Obter userId do token ou localStorage
+  const getUserId = () => {
+    try {
+      // Verificar se estamos no lado do cliente
+      if (typeof window === 'undefined') return null;
+      
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        // Decodificar JWT para obter userId (método simples)
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.userId || payload.sub || null;
+      }
+    } catch (error) {
+      console.error('Erro ao obter userId do token:', error);
+    }
+    return null;
+  };
+
+  return useCache(
+    async () => {
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) throw new Error('Token de acesso não encontrado');
+
+      // Buscar dados de integração em paralelo
+      const [mpStatusResponse, storeResponse] = await Promise.all([
+        fetch('/api/seller/mercadopago/status', {
+          headers: { 'Authorization': `Bearer ${accessToken}` },
+        }),
+        fetch('/api/seller/store/config', {
+          headers: { 'Authorization': `Bearer ${accessToken}` },
+        })
+      ]);
+
+      const mpStatus = mpStatusResponse.ok ? await mpStatusResponse.json() : null;
+      const storeData = storeResponse.ok ? await storeResponse.json() : null;
+
+      return {
+        mpStatus,
+        storeData,
+        activeIntegrations: mpStatus?.connected ? 1 : 0,
+        lastSync: mpStatus?.lastSync,
+        connected: mpStatus?.connected || false
+      };
+    },
+    {
+      key: 'integration_data',
+      duration: 2 * 60 * 1000, // 2 minutos para dados de integração
       userId: getUserId(),
     }
   );

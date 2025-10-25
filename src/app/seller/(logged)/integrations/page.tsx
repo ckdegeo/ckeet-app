@@ -7,12 +7,16 @@ import { toast } from 'react-hot-toast';
 import NumberCard from '@/app/components/cards/numberCard';
 import IntegrationCard from '@/app/components/cards/integrationCard';
 import { useMercadoPago } from '@/lib/hooks/useMercadoPago';
+import { useIntegrationDataCache } from '@/lib/hooks/useCache';
 
 function IntegrationsContent() {
   const searchParams = useSearchParams();
 
   // Hook do Mercado Pago (agora busca sellerId automaticamente)
   const { status: mpStatus, connecting, disconnecting, connect, disconnect, clearCache } = useMercadoPago();
+  
+  // Hook de cache para dados de integração
+  const { data: integrationData, loading: integrationLoading, error: integrationError, refresh: refreshIntegrationData } = useIntegrationDataCache();
 
   // Verificar parâmetros da URL para mostrar mensagens de erro
   useEffect(() => {
@@ -27,11 +31,15 @@ function IntegrationsContent() {
     }
   }, [searchParams]);
 
-  const handleConfigureIntegration = () => {
+  const handleConfigureIntegration = async () => {
     if (mpStatus?.connected) {
-      disconnect();
+      await disconnect();
+      // Limpar cache após desconectar
+      refreshIntegrationData();
     } else {
-      connect();
+      await connect();
+      // Limpar cache após conectar
+      refreshIntegrationData();
     }
   };
 
@@ -43,16 +51,62 @@ function IntegrationsContent() {
   };
 
   const getIntegrationStatus = () => {
-    if (!mpStatus) return 'inactive';
-    if (mpStatus.connected) return 'active';
-    if (mpStatus.status === 'EXPIRED') return 'error';
+    // Usar dados do cache se disponível, senão usar dados do hook
+    const status = integrationData?.mpStatus || mpStatus;
+    if (!status) return 'inactive';
+    if (status.connected) return 'active';
+    if (status.status === 'EXPIRED') return 'error';
     return 'inactive';
   };
 
   const getLastSync = () => {
-    if (!mpStatus?.lastSync) return undefined;
-    return new Date(mpStatus.lastSync).toLocaleString('pt-BR');
+    // Usar dados do cache se disponível, senão usar dados do hook
+    const lastSync = integrationData?.lastSync || mpStatus?.lastSync;
+    if (!lastSync) return undefined;
+    return new Date(lastSync).toLocaleString('pt-BR');
   };
+
+  const getActiveIntegrations = () => {
+    // Usar dados do cache se disponível
+    return integrationData?.activeIntegrations || (mpStatus?.connected ? 1 : 0);
+  };
+
+  // Mostrar loading se estiver carregando
+  if (integrationLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)] mx-auto"></div>
+          <p className="mt-4 text-[var(--on-background)]">Carregando integrações...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar erro se houver
+  if (integrationError) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-[var(--foreground)] mb-2">
+            Erro ao carregar integrações
+          </h3>
+          <p className="text-[var(--on-background)] mb-4">{integrationError}</p>
+          <button 
+            onClick={() => refreshIntegrationData()} 
+            className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg hover:bg-[var(--primary-variant)] transition-colors"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -69,7 +123,7 @@ function IntegrationsContent() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <NumberCard
           title="Integrações Ativas"
-          value={mpStatus?.connected ? 1 : 0}
+          value={getActiveIntegrations()}
           icon={CheckCircle}
         />
       </div>
