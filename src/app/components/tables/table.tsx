@@ -8,7 +8,7 @@ interface Column<T> {
   key: keyof T;
   label: string;
   width?: string;
-  render?: (value: unknown) => string | React.ReactElement;
+  render?: (value: unknown, item: T) => string | React.ReactElement;
 }
 
 interface Action<T> {
@@ -136,7 +136,7 @@ export default function Table<T>({
                         overflowWrap: 'break-word'
                       }}
                     >
-                      {column.render ? column.render(item[column.key]) : String(item[column.key])}
+                      {column.render ? column.render(item[column.key], item) : String(item[column.key])}
                     </td>
                   ))}
                   {actions && (

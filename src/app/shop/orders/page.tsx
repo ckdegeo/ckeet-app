@@ -245,6 +245,9 @@ export default function OrdersPage() {
     totalAmount: 0
   };
 
+  // Calcular pedidos pagos (deliveredPurchases + pendingPurchases)
+  const paidOrders = stats.deliveredPurchases + stats.pendingPurchases;
+
   const tableData = purchases.map((purchase: {
     id: string;
     orderNumber: string;
@@ -316,8 +319,12 @@ export default function OrdersPage() {
       key: 'deliveredContent' as keyof OrderItem,
       label: 'Conteúdo',
       width: 'w-32',
-      render: (value: unknown) => {
-        return value ? 'Entregue' : 'Pendente';
+      render: (value: unknown, item: OrderItem) => {
+        // Só mostra "Entregue" se o pedido estiver pago E tiver conteúdo
+        if (item.orderStatus === 'PAID' && value) {
+          return 'Entregue';
+        }
+        return 'Pendente';
       },
     },
     {
@@ -383,40 +390,44 @@ export default function OrdersPage() {
       icon: Eye,
       label: 'Ver Conteúdo',
       onClick: (item: OrderItem) => {
-        if (item.deliveredContent) {
+        if (item.orderStatus === 'PAID' && item.deliveredContent) {
           handleViewContent(item);
         } else {
           showErrorToast('Conteúdo ainda não foi entregue');
         }
       },
-      show: (item: OrderItem) => !!item.deliveredContent,
+      show: (item: OrderItem) => item.orderStatus === 'PAID' && !!item.deliveredContent,
     },
     {
       icon: Copy,
       label: 'Copiar Conteúdo',
       onClick: (item: OrderItem) => {
-        if (item.deliveredContent) {
+        if (item.orderStatus === 'PAID' && item.deliveredContent) {
           handleCopyContent(item.deliveredContent);
         } else {
           showErrorToast('Conteúdo ainda não foi entregue');
         }
       },
-      show: (item: OrderItem) => !!item.deliveredContent,
+      show: (item: OrderItem) => item.orderStatus === 'PAID' && !!item.deliveredContent,
     },
     {
       icon: Download,
       label: 'Download',
       onClick: (item: OrderItem) => {
-        if (item.downloadUrl) {
-          handleDownload(item.id, item.downloadUrl);
-        } else if (item.deliverables && item.deliverables.length > 0) {
-          // Se não tem downloadUrl mas tem deliverables, usar o primeiro
-          handleDownload(item.id, item.deliverables[0].url);
+        if (item.orderStatus === 'PAID') {
+          if (item.downloadUrl) {
+            handleDownload(item.id, item.downloadUrl);
+          } else if (item.deliverables && item.deliverables.length > 0) {
+            // Se não tem downloadUrl mas tem deliverables, usar o primeiro
+            handleDownload(item.id, item.deliverables[0].url);
+          } else {
+            showErrorToast('Download não disponível');
+          }
         } else {
-          showErrorToast('Download não disponível');
+          showErrorToast('Pedido ainda não foi pago');
         }
       },
-      show: (item: OrderItem) => !!(item.downloadUrl || (item.deliverables && item.deliverables.length > 0)),
+      show: (item: OrderItem) => item.orderStatus === 'PAID' && !!(item.downloadUrl || (item.deliverables && item.deliverables.length > 0)),
     },
   ];
 
@@ -529,8 +540,8 @@ export default function OrdersPage() {
           />
 
           <NumberCard
-            title="Produtos entregues"
-            value={ordersLoading ? '...' : stats.deliveredPurchases}
+            title="Pedidos pagos"
+            value={ordersLoading ? '...' : paidOrders}
             icon={Download}
             background="transparent"
             className={`shadow-sm border border-gray-100 ${ordersLoading ? 'opacity-75' : ''}`}
