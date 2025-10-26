@@ -37,9 +37,11 @@ function IntegrationsContent() {
       toast.success('Conectado ao Mercado Pago com sucesso!');
       clearCache(); // Limpar cache do MercadoPago
       refreshIntegrationData(); // Recarregar dados de integração
-      // Forçar refresh do status do MercadoPago
+      // Resetar estado de loading para permitir nova verificação
+      setIsDataReady(false);
+      // Aguardar um pouco para garantir que os dados foram atualizados
       setTimeout(() => {
-        window.location.reload();
+        setIsDataReady(true);
       }, 1000);
     }
   }, [searchParams, clearCache, refreshIntegrationData]);
@@ -72,6 +74,10 @@ function IntegrationsContent() {
       await connect();
       // Limpar cache após conectar
       refreshIntegrationData();
+      // Aguardar um pouco para garantir que o cache foi limpo
+      setTimeout(() => {
+        setIsDataReady(true);
+      }, 500);
     }
   };
 
