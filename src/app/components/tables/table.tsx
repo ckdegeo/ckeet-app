@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ChevronLeft, ChevronRight, LucideIcon } from 'lucide-react';
 import '../tabs/tabs.css';
 
@@ -25,6 +25,8 @@ interface TableProps<T> {
   actions?: Action<T>[];
   itemsPerPage?: number;
   emptyMessage?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
 }
 
 export default function Table<T>({
@@ -32,7 +34,9 @@ export default function Table<T>({
   columns,
   actions,
   itemsPerPage = 10,
-  emptyMessage = "Nenhum item encontrado"
+  emptyMessage = "Nenhum item encontrado",
+  primaryColor = '#bd253c',
+  secondaryColor = '#970b27'
 }: TableProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(data.length / itemsPerPage);
@@ -57,25 +61,43 @@ export default function Table<T>({
   return (
           <div className="w-full flex flex-col gap-4">
       {/* Container da tabela com scroll horizontal */}
-      <div className="w-full overflow-x-auto rounded-2xl border border-[var(--on-background)] bg-[var(--background)] hide-scrollbar relative isolate">
+      <div 
+        className="w-full overflow-x-auto rounded-2xl border hide-scrollbar relative isolate"
+        style={{
+          borderColor: `${primaryColor}20`,
+          backgroundColor: 'white'
+        }}
+      >
         <table className="w-full table-fixed" style={{minWidth: '900px'}}>
           {/* Cabeçalho */}
           <thead>
-            <tr className="border-b border-[var(--on-background)]">
+            <tr 
+              className="border-b"
+              style={{ borderColor: `${primaryColor}20` }}
+            >
               {columns.map((column, index) => (
                 <th
                   key={index}
                   className={`
-                    px-6 py-4 text-left
-                    text-sm font-semibold text-[var(--foreground)]
+                    px-6 py-4 text-left text-sm font-semibold
                     ${column.width ? column.width : ""}
                   `}
+                  style={{ 
+                    color: primaryColor,
+                    backgroundColor: `${primaryColor}05`
+                  }}
                 >
                   {column.label}
                 </th>
               ))}
               {actions && (
-                <th className="px-6 py-4 text-right w-[140px]">
+                <th 
+                  className="px-6 py-4 text-right w-[140px]"
+                  style={{ 
+                    color: primaryColor,
+                    backgroundColor: `${primaryColor}05`
+                  }}
+                >
                   <span className="sr-only">Ações</span>
                 </th>
               )}
@@ -83,17 +105,30 @@ export default function Table<T>({
           </thead>
 
           {/* Corpo */}
-          <tbody className="divide-y divide-[var(--on-background)]">
+          <tbody 
+            className="divide-y"
+            style={{ borderColor: `${primaryColor}10` }}
+          >
             {paginatedData.length > 0 ? (
               paginatedData.map((item, rowIndex) => (
                 <tr
                   key={rowIndex}
-                  className="transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
+                  className="transition-colors"
+                  style={{
+                    backgroundColor: rowIndex % 2 === 0 ? 'white' : `${primaryColor}02`
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = `${primaryColor}05`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = rowIndex % 2 === 0 ? 'white' : `${primaryColor}02`;
+                  }}
                 >
                   {columns.map((column, colIndex) => (
                     <td
                       key={colIndex}
-                      className="px-6 py-4 text-sm text-[var(--foreground)] whitespace-nowrap"
+                      className="px-6 py-4 text-sm whitespace-nowrap"
+                      style={{ color: '#374151' }}
                     >
                       {column.render ? column.render(item[column.key]) : String(item[column.key])}
                     </td>
@@ -105,23 +140,27 @@ export default function Table<T>({
                           .filter(action => !action.show || action.show(item))
                           .map((action, actionIndex) => {
                             const Icon = action.icon;
-                            const colorClasses: Record<string, string> = {
-                              primary: "text-[var(--primary)] hover:bg-[var(--primary)]",
-                              error: "text-[var(--error)] hover:bg-[var(--error)]",
-                              secondary: "text-[var(--secondary)] hover:bg-[var(--secondary)]"
-                            };
                             const color = action.color || "primary";
 
                             return (
                               <button
                                 key={actionIndex}
                                 onClick={() => action.onClick(item)}
-                                className={`
-                                  p-1.5 sm:p-2 rounded-full
-                                  ${colorClasses[color]}
-                                  hover:bg-opacity-10
-                                  transition-colors
-                                `}
+                                className="p-1.5 sm:p-2 rounded-full hover:bg-opacity-10 transition-colors"
+                                style={{
+                                  color: color === 'primary' ? primaryColor : 
+                                         color === 'secondary' ? secondaryColor : 
+                                         color === 'error' ? '#dc2626' : primaryColor
+                                }}
+                                onMouseEnter={(e) => {
+                                  const bgColor = color === 'primary' ? primaryColor : 
+                                                color === 'secondary' ? secondaryColor : 
+                                                color === 'error' ? '#dc2626' : primaryColor;
+                                  e.currentTarget.style.backgroundColor = `${bgColor}10`;
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = 'transparent';
+                                }}
                                 title={action.label}
                               >
                                 <Icon size={16} className="sm:w-5 sm:h-5" />
@@ -138,7 +177,8 @@ export default function Table<T>({
               <tr>
                 <td
                   colSpan={actions ? columns.length + 1 : columns.length}
-                  className="px-6 py-8 text-center text-sm text-[var(--on-background)]"
+                  className="px-6 py-8 text-center text-sm"
+                  style={{ color: '#6b7280' }}
                 >
                   {emptyMessage}
                 </td>
@@ -151,20 +191,33 @@ export default function Table<T>({
       {/* Paginação */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-2">
-          <div className="text-sm text-[var(--foreground)]">
+          <div 
+            className="text-sm"
+            style={{ color: '#374151' }}
+          >
             Página {currentPage} de {totalPages}
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={prevPage}
               disabled={currentPage === 1}
-              className={`
-                p-2 rounded-full
-                text-[var(--foreground)]
-                hover:bg-[var(--primary)] hover:bg-opacity-10
-                transition-colors
-                disabled:opacity-50 disabled:cursor-not-allowed
-              `}
+              className="p-2 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ 
+                color: '#374151',
+                backgroundColor: 'transparent'
+              }}
+              onMouseEnter={(e) => {
+                if (!e.currentTarget.disabled) {
+                  e.currentTarget.style.backgroundColor = `${primaryColor}10`;
+                  e.currentTarget.style.color = primaryColor;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!e.currentTarget.disabled) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = '#374151';
+                }
+              }}
             >
               <ChevronLeft size={20} />
               <span className="sr-only">Página anterior</span>
@@ -172,13 +225,23 @@ export default function Table<T>({
             <button
               onClick={nextPage}
               disabled={currentPage === totalPages}
-              className={`
-                p-2 rounded-full
-                text-[var(--foreground)]
-                hover:bg-[var(--primary)] hover:bg-opacity-10
-                transition-colors
-                disabled:opacity-50 disabled:cursor-not-allowed
-              `}
+              className="p-2 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ 
+                color: '#374151',
+                backgroundColor: 'transparent'
+              }}
+              onMouseEnter={(e) => {
+                if (!e.currentTarget.disabled) {
+                  e.currentTarget.style.backgroundColor = `${primaryColor}10`;
+                  e.currentTarget.style.color = primaryColor;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!e.currentTarget.disabled) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = '#374151';
+                }
+              }}
             >
               <ChevronRight size={20} />
               <span className="sr-only">Próxima página</span>

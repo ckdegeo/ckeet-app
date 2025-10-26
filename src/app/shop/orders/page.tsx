@@ -512,6 +512,8 @@ export default function OrdersPage() {
               actions={actions}
               itemsPerPage={10}
               emptyMessage="Nenhum pedido encontrado. Faça sua primeira compra!"
+              primaryColor={store.primaryColor}
+              secondaryColor={store.secondaryColor}
             />
           </div>
         </div>
