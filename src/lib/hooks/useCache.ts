@@ -240,9 +240,35 @@ export function useIntegrationDataCache() {
       const accessToken = localStorage.getItem('access_token');
       if (!accessToken) throw new Error('Token de acesso não encontrado');
 
+      // Obter userId do token para buscar sellerId
+      let userId: string | null = null;
+      try {
+        const payload = JSON.parse(atob(accessToken.split('.')[1]));
+        userId = payload.userId || payload.sub || null;
+      } catch (error) {
+        console.error('Erro ao obter userId do token:', error);
+        throw new Error('Token inválido');
+      }
+
+      if (!userId) {
+        throw new Error('UserId não encontrado no token');
+      }
+
+      // Buscar sellerId primeiro
+      const profileResponse = await fetch(`/api/seller/profile/me?userId=${userId}`, {
+        credentials: 'include',
+      });
+
+      if (!profileResponse.ok) {
+        throw new Error('Erro ao buscar perfil do seller');
+      }
+
+      const profile = await profileResponse.json();
+      const sellerId = profile.id;
+
       // Buscar dados de integração em paralelo
       const [mpStatusResponse, storeResponse] = await Promise.all([
-        fetch('/api/seller/mercadopago/status', {
+        fetch(`/api/seller/mercadopago/status?sellerId=${sellerId}`, {
           headers: { 'Authorization': `Bearer ${accessToken}` },
         }),
         fetch('/api/seller/store/config', {
