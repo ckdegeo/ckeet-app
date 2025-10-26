@@ -12,6 +12,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verificar se é uma chamada interna (webhook) ou externa (customer)
+    const authHeader = request.headers.get('authorization');
+    const isInternalCall = !authHeader || !authHeader.startsWith('Bearer ');
+    
+    if (!isInternalCall) {
+      // Se é chamada externa, verificar autenticação do customer
+      const accessToken = authHeader.substring(7);
+      const payload = JSON.parse(atob(accessToken.split('.')[1]));
+      const customerId = payload.customer_id || payload.sub;
+      
+      if (!customerId) {
+        return NextResponse.json(
+          { error: 'Token inválido' },
+          { status: 401 }
+        );
+      }
+    }
+
     // Buscar order com todos os dados necessários
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -55,11 +73,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se já foi entregue
-    const existingPurchase = await prisma.purchase.findFirst({
+    const existingPurchases = await prisma.purchase.findMany({
       where: { orderId: order.id }
     });
 
-    if (existingPurchase) {
+    if (existingPurchases.length > 0) {
       return NextResponse.json(
         { error: 'Conteúdo já foi entregue' },
         { status: 400 }
@@ -71,65 +89,90 @@ export async function POST(request: NextRequest) {
     // Processar cada produto do pedido
     for (const orderItem of order.products) {
       const product = orderItem.product;
-      let deliveredContent = '';
+      let deliveredContent = null;
       let stockLineId = null;
+      let downloadUrl = null;
 
-      // Lógica de entrega baseada no tipo de estoque
+      // Determinar conteúdo baseado no tipo de estoque
       if (product.stockType === 'LINE') {
-        // Estoque por linha - usar primeira linha disponível
-        const availableStockLine = product.stockLines[0];
+        // Produto com estoque por linha - buscar linha disponível
+        const availableStockLine = await prisma.stockLine.findFirst({
+          where: {
+            productId: product.id,
+            isUsed: false,
+            isDeleted: false
+          } as { productId: string; isUsed: boolean; isDeleted: boolean },
+          orderBy: { createdAt: 'asc' } // FIFO - First In, First Out
+        });
         
-        if (!availableStockLine) {
+        if (availableStockLine) {
+          // SOFT DELETE: Marcar linha como usada e deletada (não pode ser reutilizada)
+          await prisma.stockLine.update({
+            where: { id: availableStockLine.id },
+            data: {
+              isUsed: true,
+              isDeleted: true, // Soft delete - linha vendida não pode ser reutilizada
+              usedAt: new Date(),
+              orderId: order.id
+            } as { isUsed: boolean; isDeleted: boolean; usedAt: Date; orderId: string }
+          });
+
+          deliveredContent = availableStockLine.content;
+          stockLineId = availableStockLine.id;
+        } else {
           return NextResponse.json(
-            { error: `Produto ${product.name} está fora de estoque` },
+            { error: `Estoque insuficiente para o produto: ${product.name}` },
             { status: 400 }
           );
         }
-
-        // Marcar linha como usada
-        await prisma.stockLine.update({
-          where: { id: availableStockLine.id },
-          data: {
-            isUsed: true,
-            usedAt: new Date(),
-            orderId: order.id
-          }
-        });
-
-        deliveredContent = availableStockLine.content;
-        stockLineId = availableStockLine.id;
-
       } else if (product.stockType === 'FIXED') {
-        // Estoque fixo - usar conteúdo fixo
-        deliveredContent = product.fixedContent || '';
-
+        // Produto com conteúdo fixo - sempre entrega o mesmo conteúdo
+        if (!product.fixedContent || product.fixedContent.trim() === '') {
+          return NextResponse.json(
+            { error: `Produto ${product.name} não tem conteúdo fixo configurado` },
+            { status: 400 }
+          );
+        }
+        deliveredContent = product.fixedContent;
       } else if (product.stockType === 'KEYAUTH') {
-        // KeyAuth - gerar chave temporária (implementar lógica específica)
-        deliveredContent = `KeyAuth: ${product.keyAuthPublicKey} (${product.keyAuthDays} dias)`;
+        // Produto KeyAuth - conteúdo será gerado pela integração (implementar depois)
+        // Por enquanto, retornar erro até implementarmos a integração
+        return NextResponse.json(
+          { error: `Produto KeyAuth ${product.name} - integração ainda não implementada` },
+          { status: 400 }
+        );
       }
 
-      // Criar registro de entrega
+      // Buscar deliverables do produto
+      if (product.deliverables && product.deliverables.length > 0) {
+        // Usar o primeiro deliverable como download principal
+        downloadUrl = product.deliverables[0].url;
+      }
+
+      // Criar purchase record
       const purchase = await prisma.purchase.create({
         data: {
           orderId: order.id,
           customerId: order.customerId!,
-          deliveredContent,
-          stockLineId,
-          downloadUrl: product.deliverables[0]?.url || null,
-          expiresAt: product.deliverables[0]?.url ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) : null // 7 dias
+          deliveredContent: deliveredContent,
+          stockLineId: stockLineId,
+          downloadUrl: downloadUrl,
+          expiresAt: null, // Sem expiração por padrão
+          isDownloaded: false,
+          downloadCount: 0
         }
       });
 
       deliveries.push({
-        productId: product.id,
+        purchaseId: purchase.id,
         productName: product.name,
-        deliveredContent,
-        downloadUrl: purchase.downloadUrl,
-        expiresAt: purchase.expiresAt
+        deliveredContent: deliveredContent,
+        downloadUrl: downloadUrl,
+        deliverables: product.deliverables
       });
     }
 
-    // Atualizar status do pedido para entregue
+    // Atualizar status do pedido para DELIVERED
     await prisma.order.update({
       where: { id: order.id },
       data: { status: 'DELIVERED' }
@@ -137,17 +180,14 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Conteúdo entregue com sucesso',
-      order: {
-        id: order.id,
-        orderNumber: order.orderNumber,
-        status: 'DELIVERED'
-      },
-      deliveries
+      message: 'Produtos entregues com sucesso',
+      deliveries: deliveries,
+      orderId: order.id,
+      orderNumber: order.orderNumber
     });
 
   } catch (error) {
-    console.error('Erro ao entregar conteúdo:', error);
+    console.error('Erro ao entregar produtos:', error);
     return NextResponse.json(
       { error: 'Erro interno do servidor' },
       { status: 500 }

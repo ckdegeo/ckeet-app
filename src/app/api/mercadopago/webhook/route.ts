@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${mpConfig.accessToken}` // Usar token do seller para autenticação interna
+            // Não precisa de autenticação para entrega interna via webhook
           },
           body: JSON.stringify({ orderId: transaction.orderId })
         });

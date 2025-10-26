@@ -267,6 +267,7 @@ model StockLine {
   isUsed    Boolean  @default(false) // Se já foi vendida/usada
   usedAt    DateTime? // Quando foi usada
   orderId   String?  // ID do pedido que usou esta linha
+  isDeleted Boolean  @default(false) // Soft delete - linha foi vendida e não pode ser reutilizada
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

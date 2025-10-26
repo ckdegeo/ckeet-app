@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { AuthService } from '@/lib/services/authService';
 import { MercadoPagoService } from '@/lib/services/mercadoPagoService';
 import { calculateSplitPayment, validatePaymentConfig } from '@/lib/config/payment';
 
@@ -112,13 +111,30 @@ export async function POST(request: NextRequest) {
       const availableStock = await prisma.stockLine.count({
         where: {
           productId: product.id,
-          isUsed: false
-        }
+          isUsed: false,
+          isDeleted: false
+        } as { productId: string; isUsed: boolean; isDeleted: boolean }
       });
       
       if (availableStock < quantity) {
         return NextResponse.json(
-          { error: 'Estoque insuficiente' },
+          { error: 'Produto não tem estoque' },
+          { status: 400 }
+        );
+      }
+    } else if (product.stockType === 'FIXED') {
+      // Para produtos FIXED, verificar se tem conteúdo configurado
+      if (!product.fixedContent || product.fixedContent.trim() === '') {
+        return NextResponse.json(
+          { error: 'Produto não tem conteúdo configurado' },
+          { status: 400 }
+        );
+      }
+    } else if (product.stockType === 'KEYAUTH') {
+      // Para produtos KEYAUTH, verificar se tem configurações
+      if (!product.keyAuthPublicKey || !product.keyAuthSellerKey) {
+        return NextResponse.json(
+          { error: 'Produto KeyAuth não está configurado corretamente' },
           { status: 400 }
         );
       }

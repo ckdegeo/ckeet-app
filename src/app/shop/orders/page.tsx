@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Store, Order, Purchase, Product } from '@/lib/types';
+import { Store } from '@/lib/types';
 import StoreNavbar from '../patterns/storeNavbar';
 import Footer from '../patterns/footer';
 import Table from '@/app/components/tables/table';
@@ -11,20 +11,6 @@ import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 import { useCache } from '@/lib/hooks/useCache';
 import NumberCard from '@/app/components/cards/numberCard';
 
-interface OrderWithDetails extends Order {
-  products: (OrderItem & { product: Product })[];
-  purchases: Purchase[];
-}
-
-interface OrderItem {
-  id: string;
-  quantity: number;
-  price: number;
-  orderId: string;
-  productId: string;
-  product: Product;
-}
-
 export default function OrdersPage() {
   const [store, setStore] = useState<Store | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -32,7 +18,7 @@ export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Cache para dados da loja
-  const { data: storeData, loading: storeLoading, error: storeError } = useCache(
+  const { data: storeData, loading: storeLoading } = useCache(
     async () => {
       const hostname = window.location.hostname;
       const subdomain = hostname.split('.')[0];
@@ -64,15 +50,15 @@ export default function OrdersPage() {
     }
   );
 
-  // Cache para pedidos
-  const { data: ordersData, loading: ordersLoading, error: ordersError, refresh: refreshOrders } = useCache(
+  // Cache para pedidos e purchases
+  const { data: ordersData, loading: ordersLoading, error: ordersError } = useCache(
     async () => {
       const accessToken = localStorage.getItem('customer_access_token');
       if (!accessToken) {
         throw new Error('Token de acesso não encontrado');
       }
 
-      const response = await fetch('/api/customer/orders', {
+      const response = await fetch('/api/customer/orders/list', {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
         },
@@ -85,7 +71,7 @@ export default function OrdersPage() {
       return await response.json();
     },
     {
-      key: 'customer_orders',
+      key: 'customer_orders_list',
       duration: 5 * 60 * 1000, // 5 minutos
       userId: (() => {
         try {
@@ -179,28 +165,70 @@ export default function OrdersPage() {
     }
   };
 
-  // Preparar dados para a tabela
-  const orders: OrderWithDetails[] = ordersData?.orders || [];
-  const tableData = orders.flatMap((order: OrderWithDetails) => 
-    order.purchases.map(purchase => ({
-      id: purchase.id,
-      orderNumber: order.orderNumber,
-      productName: order.products.find(p => p.orderId === order.id)?.product.name || 'Produto',
-      deliveredContent: purchase.deliveredContent,
-      downloadUrl: purchase.downloadUrl,
-      isDownloaded: purchase.isDownloaded,
-      downloadCount: purchase.downloadCount,
-      createdAt: order.createdAt,
-      status: order.status,
-      totalAmount: order.totalAmount,
-    }))
-  );
+  // Preparar dados para a tabela usando purchases
+  const purchases = ordersData?.purchases || [];
+  const stats = ordersData?.stats || {
+    totalOrders: 0,
+    totalPurchases: 0,
+    deliveredPurchases: 0,
+    pendingPurchases: 0,
+    totalDownloads: 0,
+    totalAmount: 0
+  };
+
+  const tableData = purchases.map((purchase: {
+    id: string;
+    orderNumber: string;
+    productName: string;
+    productDescription: string;
+    deliveredContent: string | null;
+    downloadUrl: string | null;
+    deliverables: { name: string; url: string }[];
+    isDownloaded: boolean;
+    downloadCount: number;
+    createdAt: string;
+    orderStatus: string;
+    paymentStatus: string | null;
+    totalAmount: number;
+    quantity: number;
+    productPrice: number;
+    storeName: string;
+    customerEmail: string;
+    customerName: string | null;
+    customerPhone: string | null;
+    paymentMethod: string | null;
+    latestTransaction: { id: string; status: string; amount: number } | null;
+  }) => ({
+    id: purchase.id,
+    orderNumber: purchase.orderNumber,
+    productName: purchase.productName,
+    productDescription: purchase.productDescription,
+    deliveredContent: purchase.deliveredContent,
+    downloadUrl: purchase.downloadUrl,
+    deliverables: purchase.deliverables || [],
+    isDownloaded: purchase.isDownloaded,
+    downloadCount: purchase.downloadCount,
+    createdAt: purchase.createdAt,
+    orderStatus: purchase.orderStatus,
+    paymentStatus: purchase.paymentStatus,
+    totalAmount: purchase.totalAmount,
+    quantity: purchase.quantity,
+    productPrice: purchase.productPrice,
+    storeName: purchase.storeName,
+    customerEmail: purchase.customerEmail,
+    customerName: purchase.customerName,
+    customerPhone: purchase.customerPhone,
+    paymentMethod: purchase.paymentMethod,
+    latestTransaction: purchase.latestTransaction
+  }));
 
   // Filtrar dados baseado na busca
-  const filteredData = tableData.filter(item => 
+  const filteredData = tableData.filter((item: typeof tableData[0]) => 
     item.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.status.toLowerCase().includes(searchTerm.toLowerCase())
+    item.orderStatus.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.paymentStatus?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.productDescription?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const columns = [
@@ -219,10 +247,13 @@ export default function OrdersPage() {
       key: 'deliveredContent' as keyof typeof tableData[0],
       label: 'Conteúdo',
       width: 'w-64',
-      render: (value: unknown) => value ? 'Entregue' : 'Pendente',
+      render: (value: unknown) => {
+        // Como não temos acesso ao item completo aqui, vamos usar uma lógica simples
+        return value ? 'Entregue' : 'Pendente';
+      },
     },
     {
-      key: 'status' as keyof typeof tableData[0],
+      key: 'orderStatus' as keyof typeof tableData[0],
       label: 'Status',
       width: 'w-32',
       render: (value: unknown) => {
@@ -236,6 +267,28 @@ export default function OrdersPage() {
         const status = statusMap[value as string] || { text: value as string, color: 'text-gray-600' };
         return status.text;
       },
+    },
+    {
+      key: 'paymentStatus' as keyof typeof tableData[0],
+      label: 'Pagamento',
+      width: 'w-32',
+      render: (value: unknown) => {
+        if (!value) return '-';
+        const statusMap: Record<string, { text: string; color: string }> = {
+          PENDING: { text: 'Pendente', color: 'text-yellow-600' },
+          PAID: { text: 'Pago', color: 'text-green-600' },
+          FAILED: { text: 'Falhou', color: 'text-red-600' },
+          REFUNDED: { text: 'Reembolsado', color: 'text-gray-600' },
+        };
+        const status = statusMap[value as string] || { text: value as string, color: 'text-gray-600' };
+        return status.text;
+      },
+    },
+    {
+      key: 'totalAmount' as keyof typeof tableData[0],
+      label: 'Valor',
+      width: 'w-24',
+      render: (value: unknown) => `R$ ${(value as number).toFixed(2)}`,
     },
     {
       key: 'createdAt' as keyof typeof tableData[0],
@@ -276,11 +329,14 @@ export default function OrdersPage() {
       onClick: (item: typeof tableData[0]) => {
         if (item.downloadUrl) {
           handleDownload(item.id, item.downloadUrl);
+        } else if (item.deliverables && item.deliverables.length > 0) {
+          // Se não tem downloadUrl mas tem deliverables, usar o primeiro
+          handleDownload(item.id, item.deliverables[0].url);
         } else {
           showErrorToast('Download não disponível');
         }
       },
-      show: (item: typeof tableData[0]) => !!item.downloadUrl,
+      show: (item: typeof tableData[0]) => !!(item.downloadUrl || (item.deliverables && item.deliverables.length > 0)),
     },
   ];
 
@@ -378,7 +434,7 @@ export default function OrdersPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <NumberCard
             title="Total de pedidos"
-            value={orders.length}
+            value={stats.totalOrders}
             icon={CheckCircle}
             background="transparent"
             className="shadow-sm border border-gray-100"
@@ -394,7 +450,7 @@ export default function OrdersPage() {
 
           <NumberCard
             title="Produtos entregues"
-            value={tableData.filter(item => item.deliveredContent).length}
+            value={stats.deliveredPurchases}
             icon={Download}
             background="transparent"
             className="shadow-sm border border-gray-100"
@@ -410,7 +466,7 @@ export default function OrdersPage() {
 
           <NumberCard
             title="Downloads realizados"
-            value={tableData.reduce((sum, item) => sum + (item.downloadCount || 0), 0)}
+            value={stats.totalDownloads}
             icon={Eye}
             background="transparent"
             className="shadow-sm border border-gray-100"
