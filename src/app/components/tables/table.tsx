@@ -152,7 +152,7 @@ export default function Table<T>({
                               <button
                                 key={actionIndex}
                                 onClick={() => action.onClick(item)}
-                                className="p-1.5 sm:p-2 rounded-full hover:bg-opacity-10 transition-colors"
+                                className="p-1.5 sm:p-2 rounded-full hover:bg-opacity-10 transition-colors cursor-pointer"
                                 style={{
                                   color: color === 'primary' ? primaryColor : 
                                          color === 'secondary' ? secondaryColor : 
@@ -207,7 +207,7 @@ export default function Table<T>({
             <button
               onClick={prevPage}
               disabled={currentPage === 1}
-              className="p-2 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               style={{ 
                 color: '#374151',
                 backgroundColor: 'transparent'
@@ -231,7 +231,7 @@ export default function Table<T>({
             <button
               onClick={nextPage}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               style={{ 
                 color: '#374151',
                 backgroundColor: 'transparent'

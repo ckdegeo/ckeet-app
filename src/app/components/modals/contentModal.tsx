@@ -127,7 +127,7 @@ export default function ContentModal({
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors cursor-pointer"
           >
             <X size={16} className="text-gray-600" />
           </button>
@@ -197,7 +197,7 @@ export default function ContentModal({
               />
               <button
                 onClick={copyContent}
-                className="w-12 h-12 rounded-full flex items-center justify-center transition-colors"
+                className="w-12 h-12 rounded-full flex items-center justify-center transition-colors cursor-pointer"
                 style={{ 
                   backgroundColor: secondaryColor,
                   color: 'white'
@@ -244,7 +244,7 @@ export default function ContentModal({
                     </div>
                     <button
                       onClick={() => handleDownload(orderData.downloadUrl!, 'entregavel')}
-                      className="px-4 py-2 rounded-full text-sm font-medium transition-colors"
+                      className="px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer"
                       style={{ 
                         backgroundColor: primaryColor,
                         color: 'white'
@@ -269,7 +269,7 @@ export default function ContentModal({
                     </div>
                     <button
                       onClick={() => handleDownload(deliverable.url, deliverable.name)}
-                      className="px-4 py-2 rounded-full text-sm font-medium transition-colors"
+                      className="px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer"
                       style={{ 
                         backgroundColor: primaryColor,
                         color: 'white'
@@ -301,7 +301,7 @@ export default function ContentModal({
           <div className="flex justify-end">
             <Button
               onClick={onClose}
-              className="px-6"
+              className="px-6 cursor-pointer"
               style={{ backgroundColor: secondaryColor }}
             >
               Fechar
