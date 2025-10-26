@@ -83,7 +83,7 @@ export default function OrdersPage() {
     },
     {
       key: 'store_data',
-      duration: 10 * 60 * 1000, // 10 minutos
+      duration: 2 * 60 * 1000, // Reduzido para 2 minutos para atualizar cores mais rapidamente
       userId: (() => {
         try {
           if (typeof window === 'undefined') return null;
@@ -157,11 +157,15 @@ export default function OrdersPage() {
       }
     };
 
-    // Listener para detectar mudanças no localStorage (novas compras)
+    // Listener para detectar mudanças no localStorage (novas compras e mudanças na loja)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'customer_access_token' || e.key?.includes('order')) {
-        // Invalidar cache quando há mudanças relacionadas a pedidos
+      if (e.key === 'customer_access_token' || e.key?.includes('order') || e.key?.includes('store')) {
+        // Invalidar cache quando há mudanças relacionadas a pedidos ou loja
         refreshOrders();
+        // Também invalidar cache da loja se houver mudanças relacionadas à loja
+        if (e.key?.includes('store')) {
+          window.location.reload(); // Recarregar para pegar novas cores
+        }
       }
     };
 
@@ -184,7 +188,17 @@ export default function OrdersPage() {
 
   useEffect(() => {
     if (ordersError) {
-      showErrorToast('Erro ao carregar pedidos');
+      // Só mostra erro se for um erro real de servidor (500) ou de autenticação (401/403)
+      // Não mostra erro para usuários novos sem pedidos (que é normal)
+      const errorMessage = ordersError || '';
+      const isRealError = errorMessage.includes('Erro interno do servidor') || 
+                         errorMessage.includes('Token de acesso é obrigatório') ||
+                         errorMessage.includes('Token inválido') ||
+                         errorMessage.includes('Customer não encontrado');
+      
+      if (isRealError) {
+        showErrorToast('Erro ao carregar pedidos');
+      }
     }
   }, [ordersError]);
 
