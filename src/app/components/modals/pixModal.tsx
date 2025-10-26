@@ -324,7 +324,7 @@ export default function PixModal({
               <div className="text-center">
                 <div className="bg-white border-2 border-gray-200 rounded-xl p-4 inline-block">
                   <img
-                    src={paymentData.qrCode}
+                    src={`data:image/png;base64,${paymentData.qrCode}`}
                     alt="QR Code PIX"
                     className="w-48 h-48 mx-auto"
                   />
