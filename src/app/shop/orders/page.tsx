@@ -241,12 +241,10 @@ export default function OrdersPage() {
     totalPurchases: 0,
     deliveredPurchases: 0,
     pendingPurchases: 0,
+    paidOrders: 0,
     totalDownloads: 0,
     totalAmount: 0
   };
-
-  // Calcular pedidos pagos (deliveredPurchases + pendingPurchases)
-  const paidOrders = stats.deliveredPurchases + stats.pendingPurchases;
 
   const tableData = purchases.map((purchase: {
     id: string;
@@ -541,7 +539,7 @@ export default function OrdersPage() {
 
           <NumberCard
             title="Pedidos pagos"
-            value={ordersLoading ? '...' : paidOrders}
+            value={ordersLoading ? '...' : stats.paidOrders}
             icon={Download}
             background="transparent"
             className={`shadow-sm border border-gray-100 ${ordersLoading ? 'opacity-75' : ''}`}

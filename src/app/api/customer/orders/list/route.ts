@@ -180,6 +180,7 @@ export async function GET(request: NextRequest) {
       totalPurchases: purchasesData.length,
       deliveredPurchases: purchasesData.filter(p => p.deliveredContent).length,
       pendingPurchases: purchasesData.filter(p => !p.deliveredContent && p.orderStatus === 'PAID').length,
+      paidOrders: purchasesData.filter(p => p.orderStatus === 'PAID').length, // Adicionar contagem de pedidos pagos
       totalDownloads: purchasesData.reduce((sum, p) => sum + p.downloadCount, 0),
       totalAmount: purchasesData.reduce((sum, p) => sum + (p.totalAmount || 0), 0)
     };
