@@ -15,8 +15,17 @@ export async function GET(request: NextRequest) {
     const accessToken = authHeader.substring(7);
     
     // Decodificar token para obter customer info
-    const payload = JSON.parse(atob(accessToken.split('.')[1]));
-    const customerId = payload.customer_id || payload.sub;
+    let customerId;
+    try {
+      const payload = JSON.parse(atob(accessToken.split('.')[1]));
+      customerId = payload.customer_id || payload.sub;
+    } catch (error) {
+      console.error('Erro ao decodificar token:', error);
+      return NextResponse.json(
+        { error: 'Token inválido' },
+        { status: 401 }
+      );
+    }
     
     if (!customerId) {
       return NextResponse.json(
