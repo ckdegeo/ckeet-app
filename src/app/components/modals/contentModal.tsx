@@ -138,7 +138,7 @@ export default function ContentModal({
           {/* Informações do Pedido */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-xl">
             <div>
-              <h3 className="font-medium text-[var(--foreground)] mb-2">Informações do Pedido</h3>
+              <h3 className="font-medium text-[var(--foreground)] mb-2">Pedido</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-[var(--on-background)]">Produto:</span>
