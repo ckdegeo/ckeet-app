@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { X, Copy, QrCode, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import Button from '@/app/components/buttons/button';
 import Input from '@/app/components/inputs/input';
+import { showErrorToast, showSuccessToast } from '@/lib/utils/toastUtils';
 
 interface PixModalProps {
   isOpen: boolean;
@@ -135,7 +136,9 @@ export default function PixModal({
 
     } catch (error) {
       console.error('❌ Erro ao gerar PIX:', error);
-      setError(error instanceof Error ? error.message : 'Erro desconhecido');
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      showErrorToast(errorMessage);
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -173,9 +176,11 @@ export default function PixModal({
       try {
         await navigator.clipboard.writeText(paymentData.qrCodeText);
         setCopied(true);
+        showSuccessToast('Código PIX copiado!');
         setTimeout(() => setCopied(false), 2000);
       } catch (error) {
         console.error('Erro ao copiar código PIX:', error);
+        showErrorToast('Erro ao copiar código PIX');
       }
     }
   };
@@ -223,7 +228,9 @@ export default function PixModal({
       }
     } catch (error) {
       console.error('❌ Erro ao verificar status:', error);
-      setError(error instanceof Error ? error.message : 'Erro ao verificar pagamento');
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao verificar pagamento';
+      showErrorToast(errorMessage);
+      setError(errorMessage);
     }
   };
 
@@ -307,15 +314,15 @@ export default function PixModal({
             </div>
           )}
 
-          {/* Erro */}
-          {error && (
+          {/* Erro - Agora exibido via toast */}
+          {/* {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
               <div className="flex items-center gap-2">
                 <AlertCircle size={16} className="text-red-600" />
                 <p className="text-sm text-red-800">{error}</p>
               </div>
             </div>
-          )}
+          )} */}
 
           {/* Dados do PIX */}
           {paymentData && !isLoading && (
