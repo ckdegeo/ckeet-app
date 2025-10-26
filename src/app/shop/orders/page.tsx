@@ -10,12 +10,62 @@ import { Download, Eye, Copy, CheckCircle, ArrowLeft } from 'lucide-react';
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 import { useCache } from '@/lib/hooks/useCache';
 import NumberCard from '@/app/components/cards/numberCard';
+import Badge from '@/app/components/ui/badge';
+import ContentModal from '@/app/components/modals/contentModal';
+
+interface Transaction {
+  id: string;
+  orderId: string;
+  paymentId: string;
+  status: string;
+  amount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface OrderItem {
+  id: string;
+  orderNumber: string;
+  orderId: string;
+  productId: string;
+  productName: string;
+  productDescription?: string;
+  productPrice: number;
+  quantity: number;
+  orderStatus: string;
+  paymentStatus: string;
+  deliveredContent: string;
+  downloadUrl?: string;
+  deliverables?: Array<{
+    id: string;
+    name: string;
+    url: string;
+  }>;
+  expiresAt?: string;
+  isDownloaded: boolean;
+  downloadCount: number;
+  storeName: string;
+  storeSubdomain: string;
+  storePrimaryColor?: string;
+  storeSecondaryColor?: string;
+  createdAt: string;
+  updatedAt: string;
+  transactions: Transaction[];
+  latestTransaction?: Transaction;
+  customerEmail: string;
+  customerName: string;
+  customerPhone: string;
+  totalAmount: number;
+  paymentMethod: string;
+}
 
 export default function OrdersPage() {
   const [store, setStore] = useState<Store | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState<string>();
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
+  const [isContentModalOpen, setIsContentModalOpen] = useState(false);
 
   // Cache para dados da loja
   const { data: storeData, loading: storeLoading } = useCache(
@@ -146,23 +196,9 @@ export default function OrdersPage() {
     }
   };
 
-  const handleViewContent = (content: string) => {
-    // Mostrar conteúdo em modal ou nova aba
-    const newWindow = window.open('', '_blank', 'width=600,height=400');
-    if (newWindow) {
-      newWindow.document.write(`
-        <html>
-          <head><title>Conteúdo do Produto</title></head>
-          <body style="font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5;">
-            <h2>Conteúdo do Produto</h2>
-            <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
-              <pre style="white-space: pre-wrap; word-wrap: break-word;">${content}</pre>
-            </div>
-            <button onclick="window.close()" style="margin-top: 20px; padding: 10px 20px; background: #bd253c; color: white; border: none; border-radius: 4px; cursor: pointer;">Fechar</button>
-          </body>
-        </html>
-      `);
-    }
+  const handleViewContent = (item: OrderItem) => {
+    setSelectedOrder(item);
+    setIsContentModalOpen(true);
   };
 
   // Preparar dados para a tabela usando purchases
@@ -233,67 +269,78 @@ export default function OrdersPage() {
 
   const columns = [
     {
-      key: 'orderNumber' as keyof typeof tableData[0],
+      key: 'orderNumber' as keyof OrderItem,
       label: 'Pedido',
-      width: 'w-32',
+      width: 'w-40',
       render: (value: unknown) => `#${value}`,
     },
     {
-      key: 'productName' as keyof typeof tableData[0],
+      key: 'productName' as keyof OrderItem,
       label: 'Produto',
       width: 'w-48',
     },
     {
-      key: 'deliveredContent' as keyof typeof tableData[0],
+      key: 'deliveredContent' as keyof OrderItem,
       label: 'Conteúdo',
-      width: 'w-64',
+      width: 'w-32',
       render: (value: unknown) => {
-        // Como não temos acesso ao item completo aqui, vamos usar uma lógica simples
         return value ? 'Entregue' : 'Pendente';
       },
     },
     {
-      key: 'orderStatus' as keyof typeof tableData[0],
+      key: 'orderStatus' as keyof OrderItem,
       label: 'Status',
-      width: 'w-32',
+      width: 'w-28',
       render: (value: unknown) => {
-        const statusMap: Record<string, { text: string; color: string }> = {
-          PENDING: { text: 'Pendente', color: 'text-yellow-600' },
-          PAID: { text: 'Pago', color: 'text-green-600' },
-          DELIVERED: { text: 'Entregue', color: 'text-blue-600' },
-          CANCELLED: { text: 'Cancelado', color: 'text-red-600' },
-          REFUNDED: { text: 'Reembolsado', color: 'text-gray-600' },
+        const statusMap: Record<string, string> = {
+          PENDING: 'Pendente',
+          PAID: 'Pago',
+          DELIVERED: 'Entregue',
+          CANCELLED: 'Cancelado',
+          REFUNDED: 'Reembolsado',
         };
-        const status = statusMap[value as string] || { text: value as string, color: 'text-gray-600' };
-        return status.text;
+        const statusText = statusMap[value as string] || (value as string);
+        return (
+          <Badge 
+            status={statusText} 
+            primaryColor={store?.primaryColor} 
+            secondaryColor={store?.secondaryColor} 
+          />
+        );
       },
     },
     {
-      key: 'paymentStatus' as keyof typeof tableData[0],
+      key: 'paymentMethod' as keyof OrderItem,
       label: 'Pagamento',
-      width: 'w-32',
+      width: 'w-28',
       render: (value: unknown) => {
-        if (!value) return '-';
-        const statusMap: Record<string, { text: string; color: string }> = {
-          PENDING: { text: 'Pendente', color: 'text-yellow-600' },
-          PAID: { text: 'Pago', color: 'text-green-600' },
-          FAILED: { text: 'Falhou', color: 'text-red-600' },
-          REFUNDED: { text: 'Reembolsado', color: 'text-gray-600' },
+        const methodMap: Record<string, string> = {
+          PIX: 'PIX',
+          CREDIT_CARD: 'Cartão de Crédito',
+          DEBIT_CARD: 'Cartão de Débito',
+          BOLETO: 'Boleto',
+          TRANSFER: 'Transferência',
         };
-        const status = statusMap[value as string] || { text: value as string, color: 'text-gray-600' };
-        return status.text;
+        const method = methodMap[value as string] || 'PIX';
+        return (
+          <Badge 
+            status={method} 
+            primaryColor={store?.primaryColor} 
+            secondaryColor={store?.secondaryColor} 
+          />
+        );
       },
     },
     {
-      key: 'totalAmount' as keyof typeof tableData[0],
+      key: 'totalAmount' as keyof OrderItem,
       label: 'Valor',
       width: 'w-24',
       render: (value: unknown) => `R$ ${(value as number).toFixed(2)}`,
     },
     {
-      key: 'createdAt' as keyof typeof tableData[0],
+      key: 'createdAt' as keyof OrderItem,
       label: 'Data',
-      width: 'w-32',
+      width: 'w-28',
       render: (value: unknown) => new Date(value as string).toLocaleDateString('pt-BR'),
     },
   ];
@@ -302,31 +349,31 @@ export default function OrdersPage() {
     {
       icon: Eye,
       label: 'Ver Conteúdo',
-      onClick: (item: typeof tableData[0]) => {
+      onClick: (item: OrderItem) => {
         if (item.deliveredContent) {
-          handleViewContent(item.deliveredContent);
+          handleViewContent(item);
         } else {
           showErrorToast('Conteúdo ainda não foi entregue');
         }
       },
-      show: (item: typeof tableData[0]) => !!item.deliveredContent,
+      show: (item: OrderItem) => !!item.deliveredContent,
     },
     {
       icon: Copy,
       label: 'Copiar Conteúdo',
-      onClick: (item: typeof tableData[0]) => {
+      onClick: (item: OrderItem) => {
         if (item.deliveredContent) {
           handleCopyContent(item.deliveredContent);
         } else {
           showErrorToast('Conteúdo ainda não foi entregue');
         }
       },
-      show: (item: typeof tableData[0]) => !!item.deliveredContent,
+      show: (item: OrderItem) => !!item.deliveredContent,
     },
     {
       icon: Download,
       label: 'Download',
-      onClick: (item: typeof tableData[0]) => {
+      onClick: (item: OrderItem) => {
         if (item.downloadUrl) {
           handleDownload(item.id, item.downloadUrl);
         } else if (item.deliverables && item.deliverables.length > 0) {
@@ -336,7 +383,7 @@ export default function OrdersPage() {
           showErrorToast('Download não disponível');
         }
       },
-      show: (item: typeof tableData[0]) => !!(item.downloadUrl || (item.deliverables && item.deliverables.length > 0)),
+      show: (item: OrderItem) => !!(item.downloadUrl || (item.deliverables && item.deliverables.length > 0)),
     },
   ];
 
@@ -521,6 +568,20 @@ export default function OrdersPage() {
 
       {/* Footer */}
       <Footer store={store} />
+
+      {/* Modal de Conteúdo */}
+      {selectedOrder && (
+        <ContentModal
+          isOpen={isContentModalOpen}
+          onClose={() => {
+            setIsContentModalOpen(false);
+            setSelectedOrder(null);
+          }}
+          orderData={selectedOrder}
+          primaryColor={store?.primaryColor}
+          secondaryColor={store?.secondaryColor}
+        />
+      )}
     </div>
   );
 }

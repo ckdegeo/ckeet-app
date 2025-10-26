@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, LucideIcon } from 'lucide-react';
 import '../tabs/tabs.css';
 
@@ -8,7 +8,7 @@ interface Column<T> {
   key: keyof T;
   label: string;
   width?: string;
-  render?: (value: unknown) => string;
+  render?: (value: unknown) => string | React.ReactElement;
 }
 
 interface Action<T> {
@@ -68,7 +68,7 @@ export default function Table<T>({
           backgroundColor: 'white'
         }}
       >
-        <table className="w-full table-fixed" style={{minWidth: '900px'}}>
+        <table className="w-full" style={{minWidth: '1400px', tableLayout: 'fixed'}}>
           {/* Cabeçalho */}
           <thead>
             <tr 
@@ -79,12 +79,13 @@ export default function Table<T>({
                 <th
                   key={index}
                   className={`
-                    px-6 py-4 text-left text-sm font-semibold
+                    px-4 py-4 text-left text-sm font-semibold
                     ${column.width ? column.width : ""}
                   `}
                   style={{ 
                     color: primaryColor,
-                    backgroundColor: `${primaryColor}05`
+                    backgroundColor: `${primaryColor}05`,
+                    width: column.width || 'auto'
                   }}
                 >
                   {column.label}
@@ -92,7 +93,7 @@ export default function Table<T>({
               ))}
               {actions && (
                 <th 
-                  className="px-6 py-4 text-right w-[140px]"
+                  className="px-4 py-4 text-right w-[140px]"
                   style={{ 
                     color: primaryColor,
                     backgroundColor: `${primaryColor}05`
@@ -127,14 +128,19 @@ export default function Table<T>({
                   {columns.map((column, colIndex) => (
                     <td
                       key={colIndex}
-                      className="px-6 py-4 text-sm whitespace-nowrap"
-                      style={{ color: '#374151' }}
+                      className="px-4 py-4 text-sm"
+                      style={{ 
+                        color: '#374151',
+                        width: column.width || 'auto',
+                        wordWrap: 'break-word',
+                        overflowWrap: 'break-word'
+                      }}
                     >
                       {column.render ? column.render(item[column.key]) : String(item[column.key])}
                     </td>
                   ))}
                   {actions && (
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-4 py-4 text-right">
                       <div className="flex items-center justify-end gap-1 sm:gap-2">
                         {actions
                           .filter(action => !action.show || action.show(item))
