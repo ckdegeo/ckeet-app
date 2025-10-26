@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, Suspense, useState } from 'react';
+import { useEffect, Suspense, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CreditCard, CheckCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -20,6 +20,9 @@ function IntegrationsContent() {
   
   // Estado para controlar se todos os dados estão prontos
   const [isDataReady, setIsDataReady] = useState(false);
+  
+  // Controle para evitar múltiplos toasts
+  const [hasShownSuccessToast, setHasShownSuccessToast] = useState(false);
 
   // Verificar parâmetros da URL para mostrar mensagens de erro e sucesso
   useEffect(() => {
@@ -32,19 +35,24 @@ function IntegrationsContent() {
       toast.error('Parâmetros inválidos na conexão');
     } else if (error === 'connection_failed') {
       toast.error('Falha na conexão com o Mercado Pago');
-    } else if (success === 'connected') {
+    } else if (success === 'connected' && !hasShownSuccessToast) {
       // Quando volta do OAuth com sucesso, limpar cache e recarregar dados
+      // Só mostrar toast uma vez para evitar flood
       toast.success('Conectado ao Mercado Pago com sucesso!');
+      setHasShownSuccessToast(true);
+      
       clearCache(); // Limpar cache do MercadoPago
       refreshIntegrationData(); // Recarregar dados de integração
+      
       // Resetar estado de loading para permitir nova verificação
       setIsDataReady(false);
+      
       // Aguardar um pouco para garantir que os dados foram atualizados
       setTimeout(() => {
         setIsDataReady(true);
       }, 1000);
     }
-  }, [searchParams, clearCache, refreshIntegrationData]);
+  }, [searchParams.get('success'), searchParams.get('error'), hasShownSuccessToast]);
 
   // Controlar quando todos os dados estão prontos
   useEffect(() => {
@@ -64,6 +72,8 @@ function IntegrationsContent() {
     
     if (mpStatus?.connected) {
       await disconnect();
+      // Resetar controle de toast para permitir novo toast após reconectar
+      setHasShownSuccessToast(false);
       // Limpar cache de dados de integração após desconectar
       refreshIntegrationData();
       // Aguardar um pouco para garantir que o cache foi limpo
