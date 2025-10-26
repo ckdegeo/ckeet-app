@@ -320,11 +320,17 @@ export class MercadoPagoService {
         },
       };
 
+      // Gerar idempotency key única para evitar duplicação
+      const idempotencyKey = `${params.externalReference}-${Date.now()}`;
+      
+      console.log('🔑 [MP DEBUG] Idempotency Key:', idempotencyKey);
+
       const response = await fetch(`${this.BASE_URL}/v1/payments`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${params.sellerAccessToken}`,
           'Content-Type': 'application/json',
+          'X-Idempotency-Key': idempotencyKey,
         },
         body: JSON.stringify(paymentData),
       });
