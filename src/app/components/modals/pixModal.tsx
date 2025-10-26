@@ -411,25 +411,14 @@ export default function PixModal({
             </div>
           )}
 
-          {/* Botão para gerar PIX */}
+          {/* Botão único para gerar PIX ou tentar novamente */}
           {!paymentData && !isLoading && (
             <Button
               onClick={generatePixPayment}
               className="w-full"
               style={{ backgroundColor: primaryColor }}
             >
-              Gerar pagamento PIX
-            </Button>
-          )}
-
-          {/* Botão para tentar novamente em caso de erro */}
-          {error && !isLoading && (
-            <Button
-              onClick={generatePixPayment}
-              className="w-full"
-              style={{ backgroundColor: primaryColor }}
-            >
-              Tentar novamente
+              {error ? 'Tentar novamente' : 'Gerar pagamento PIX'}
             </Button>
           )}
         </div>
