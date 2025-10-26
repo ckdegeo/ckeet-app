@@ -118,7 +118,7 @@ export default function ContentModal({
             </div>
             <div>
               <h2 className="text-xl font-semibold text-[var(--foreground)]">
-                Conteúdo do Produto
+                Conteúdo
               </h2>
               <p className="text-sm text-[var(--on-background)]">
                 Pedido {orderData.orderNumber}
@@ -185,7 +185,7 @@ export default function ContentModal({
           {/* Conteúdo Entregue */}
           <div className="space-y-3">
             <label className="text-sm font-medium text-[var(--foreground)]">
-              Conteúdo Entregue
+              Entregável
             </label>
             <div className="flex gap-2">
               <Input
@@ -213,7 +213,7 @@ export default function ContentModal({
           {orderData.productDescription && (
             <div className="space-y-3">
               <label className="text-sm font-medium text-[var(--foreground)]">
-                Descrição do Produto
+                Descrição
               </label>
               <div className="p-4 bg-gray-50 rounded-xl">
                 <p className="text-sm text-[var(--on-background)]">
@@ -227,7 +227,7 @@ export default function ContentModal({
           {(orderData.downloadUrl || (orderData.deliverables && orderData.deliverables.length > 0)) && (
             <div className="space-y-3">
               <label className="text-sm font-medium text-[var(--foreground)]">
-                Arquivos para Download
+                Download
               </label>
               <div className="space-y-2">
                 {/* Download URL principal */}
