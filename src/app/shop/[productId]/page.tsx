@@ -347,8 +347,8 @@ export default function ProductPage() {
                     <Shield className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">MercadoPago</h3>
-                    <p className="text-sm text-gray-600">Pagamento processado pelo MercadoPago</p>
+                    <h3 className="font-semibold text-gray-900">Mercado Pago</h3>
+                    <p className="text-sm text-gray-600">Pagamento seguro e confiável</p>
                   </div>
                 </div>
               </div>
