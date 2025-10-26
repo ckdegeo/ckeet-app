@@ -108,6 +108,23 @@ export async function POST(request: NextRequest) {
     }
     console.log('✅ Customer found:', customer.id);
 
+    // Atualizar metadados do usuário com customer_id e seller_id
+    const { error: updateError } = await supabase.auth.updateUser({
+      data: {
+        ...authData.user.user_metadata,
+        user_type: 'customer',
+        customer_id: customer.id,
+        seller_id: seller.id
+      }
+    });
+
+    if (updateError) {
+      console.error('❌ Erro ao atualizar metadados do usuário:', updateError);
+      // Continuar mesmo com erro, pois o customer existe
+    } else {
+      console.log('✅ Metadados do usuário atualizados com customer_id:', customer.id);
+    }
+
     // Sincronizar usuário com Prisma
     await AuthService.syncUser(authData.user);
 
