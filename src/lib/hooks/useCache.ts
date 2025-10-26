@@ -122,7 +122,8 @@ export function useCache<T>(
     error,
     refresh: () => fetchData(true),
     clearCache,
-    hasShownToast: hasShownToast.current
+    hasShownToast: hasShownToast.current,
+    invalidateCache: clearCache
   };
 }
 

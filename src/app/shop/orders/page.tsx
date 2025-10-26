@@ -6,7 +6,7 @@ import StoreNavbar from '../patterns/storeNavbar';
 import Footer from '../patterns/footer';
 import Table from '@/app/components/tables/table';
 import Search from '@/app/components/inputs/search';
-import { Download, Eye, Copy, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Download, Eye, Copy, CheckCircle, ArrowLeft, RefreshCw } from 'lucide-react';
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 import { useCache } from '@/lib/hooks/useCache';
 import NumberCard from '@/app/components/cards/numberCard';
@@ -101,7 +101,7 @@ export default function OrdersPage() {
   );
 
   // Cache para pedidos e purchases
-  const { data: ordersData, loading: ordersLoading, error: ordersError } = useCache(
+  const { data: ordersData, loading: ordersLoading, error: ordersError, refresh: refreshOrders } = useCache(
     async () => {
       const accessToken = localStorage.getItem('customer_access_token');
       if (!accessToken) {
@@ -122,7 +122,7 @@ export default function OrdersPage() {
     },
     {
       key: 'customer_orders_list',
-      duration: 5 * 60 * 1000, // 5 minutos
+      duration: 2 * 60 * 1000, // Reduzido para 2 minutos
       userId: (() => {
         try {
           if (typeof window === 'undefined') return null;
@@ -142,6 +142,39 @@ export default function OrdersPage() {
   useEffect(() => {
     checkAuthentication();
   }, []);
+
+  // Invalidação automática do cache quando a página ganha foco
+  useEffect(() => {
+    const handleFocus = () => {
+      // Refresh automático quando a página ganha foco (usuário volta da aba)
+      refreshOrders();
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Refresh quando a página fica visível novamente
+        refreshOrders();
+      }
+    };
+
+    // Listener para detectar mudanças no localStorage (novas compras)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'customer_access_token' || e.key?.includes('order')) {
+        // Invalidar cache quando há mudanças relacionadas a pedidos
+        refreshOrders();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [refreshOrders]);
 
   useEffect(() => {
     if (storeData) {
@@ -481,10 +514,10 @@ export default function OrdersPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <NumberCard
             title="Total de pedidos"
-            value={stats.totalOrders}
+            value={ordersLoading ? '...' : stats.totalOrders}
             icon={CheckCircle}
             background="transparent"
-            className="shadow-sm border border-gray-100"
+            className={`shadow-sm border border-gray-100 ${ordersLoading ? 'opacity-75' : ''}`}
             style={{
               '--primary': store.primaryColor || '#bd253c',
               '--secondary': store.secondaryColor || '#970b27',
@@ -497,10 +530,10 @@ export default function OrdersPage() {
 
           <NumberCard
             title="Produtos entregues"
-            value={stats.deliveredPurchases}
+            value={ordersLoading ? '...' : stats.deliveredPurchases}
             icon={Download}
             background="transparent"
-            className="shadow-sm border border-gray-100"
+            className={`shadow-sm border border-gray-100 ${ordersLoading ? 'opacity-75' : ''}`}
             style={{
               '--primary': store.secondaryColor || '#970b27',
               '--secondary': store.primaryColor || '#bd253c',
@@ -513,10 +546,10 @@ export default function OrdersPage() {
 
           <NumberCard
             title="Downloads realizados"
-            value={stats.totalDownloads}
+            value={ordersLoading ? '...' : stats.totalDownloads}
             icon={Eye}
             background="transparent"
-            className="shadow-sm border border-gray-100"
+            className={`shadow-sm border border-gray-100 ${ordersLoading ? 'opacity-75' : ''}`}
             style={{
               '--primary': store.primaryColor || '#bd253c',
               '--secondary': store.secondaryColor || '#970b27',
@@ -532,11 +565,26 @@ export default function OrdersPage() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-6 border-b border-gray-100">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">Produtos comprados</h2>
-                <p className="text-sm text-gray-600 mt-1">
-                  Clique nas ações para acessar seu conteúdo
-                </p>
+              <div className="flex items-center gap-3">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Produtos comprados</h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Clique nas ações para acessar seu conteúdo
+                  </p>
+                </div>
+                
+                {/* Botão de Refresh */}
+                <button
+                  onClick={refreshOrders}
+                  disabled={ordersLoading}
+                  className="p-2 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Atualizar lista de pedidos"
+                >
+                  <RefreshCw 
+                    size={18} 
+                    className={`text-gray-600 ${ordersLoading ? 'animate-spin' : ''}`} 
+                  />
+                </button>
               </div>
               
               {/* Componente de Busca */}
