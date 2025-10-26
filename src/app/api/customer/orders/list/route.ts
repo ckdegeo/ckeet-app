@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { createServerSupabaseClient } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,22 +15,24 @@ export async function GET(request: NextRequest) {
 
     const accessToken = authHeader.substring(7);
     
-    // Decodificar token para obter customer info
-    let customerId;
-    try {
-      const payload = JSON.parse(atob(accessToken.split('.')[1]));
-      customerId = payload.customer_id || payload.sub;
-    } catch (error) {
-      console.error('Erro ao decodificar token:', error);
+    // Validar token com Supabase
+    const supabase = createServerSupabaseClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    
+    if (authError || !user) {
+      console.error('❌ Erro de autenticação:', authError);
       return NextResponse.json(
-        { error: 'Token inválido' },
+        { error: 'Token inválido ou expirado' },
         { status: 401 }
       );
     }
+
+    // Obter customer_id dos metadados do usuário
+    const customerId = user.user_metadata?.customer_id;
     
     if (!customerId) {
       return NextResponse.json(
-        { error: 'Token inválido' },
+        { error: 'Customer ID não encontrado no token' },
         { status: 401 }
       );
     }
