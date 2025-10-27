@@ -4,7 +4,9 @@ import { MercadoPagoService } from '@/lib/services/mercadoPagoService';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔔 [WEBHOOK] Webhook recebido do Mercado Pago');
     const body = await request.json();
+    console.log('🔔 [WEBHOOK] Body recebido:', JSON.stringify(body, null, 2));
     
     // Validar assinatura do webhook (se configurada)
     const signature = request.headers.get('x-signature');
@@ -110,6 +112,8 @@ export async function POST(request: NextRequest) {
         
         if (!deliverResponse.ok) {
           console.error('⚠️ Erro ao entregar conteúdo automaticamente para order', transaction.orderId, deliverData);
+        } else {
+          console.log('✅ [WEBHOOK] Conteúdo entregue com sucesso!');
         }
       } catch (deliverError) {
         console.error(`❌ Erro ao entregar conteúdo:`, deliverError);
