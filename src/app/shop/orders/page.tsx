@@ -240,6 +240,43 @@ export default function OrdersPage() {
     }
   }, [storeData]);
 
+  // Polling para checar delivery de pagamentos aprovados
+  useEffect(() => {
+    const checkDelivery = async () => {
+      try {
+        const accessToken = localStorage.getItem('access_token');
+        if (!accessToken) return;
+
+        const response = await fetch('/api/customer/orders/check-delivery', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          cache: 'no-store'
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.delivered > 0) {
+            // Refresh orders para mostrar conteúdo entregue
+            await fetchOrders();
+          }
+        }
+      } catch (error) {
+        // Silenciar erro de polling
+      }
+    };
+
+    // Checar imediatamente
+    checkDelivery();
+
+    // Checar a cada 5 segundos
+    const interval = setInterval(checkDelivery, 5000);
+
+    return () => clearInterval(interval);
+  }, [fetchOrders]);
+
   useEffect(() => {
     if (ordersError) {
       // Só mostra erro se for um erro real de servidor (500) ou de autenticação (401/403)
