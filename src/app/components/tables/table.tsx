@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, LucideIcon } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import '../tabs/tabs.css';
 
 interface Column<T> {
@@ -39,7 +40,12 @@ export default function Table<T>({
   secondaryColor = '#970b27'
 }: TableProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
+  const pathname = usePathname();
   const totalPages = Math.ceil(data.length / itemsPerPage);
+  
+  // Detectar se está no ambiente seller para usar design system padrão
+  const isSellerEnv = pathname?.startsWith('/seller');
+  const useDefaultStyles = isSellerEnv;
   
   const paginatedData = data.slice(
     (currentPage - 1) * itemsPerPage,
@@ -59,11 +65,15 @@ export default function Table<T>({
   };
 
   return (
-          <div className="w-full flex flex-col gap-4">
+    <div className="w-full flex flex-col gap-4">
       {/* Container da tabela com scroll horizontal */}
       <div 
-        className="w-full overflow-x-auto rounded-2xl border hide-scrollbar relative isolate"
-        style={{
+        className={`w-full overflow-x-auto rounded-2xl border hide-scrollbar relative isolate ${
+          useDefaultStyles ? 'bg-[var(--surface)]' : ''
+        }`}
+        style={useDefaultStyles ? {
+          borderColor: 'var(--border)'
+        } : {
           borderColor: `${primaryColor}20`,
           backgroundColor: 'white'
         }}
@@ -73,7 +83,11 @@ export default function Table<T>({
           <thead>
             <tr 
               className="border-b"
-              style={{ borderColor: `${primaryColor}20` }}
+              style={useDefaultStyles ? {
+                borderColor: 'var(--border)'
+              } : {
+                borderColor: `${primaryColor}20`
+              }}
             >
               {columns.map((column, index) => (
                 <th
@@ -81,8 +95,11 @@ export default function Table<T>({
                   className={`
                     px-4 py-4 text-left text-sm font-semibold
                     ${column.width ? column.width : ""}
+                    ${useDefaultStyles ? 'text-[var(--foreground-secondary)] bg-[var(--surface)]' : ''}
                   `}
-                  style={{ 
+                  style={useDefaultStyles ? {
+                    width: column.width || 'auto'
+                  } : { 
                     color: primaryColor,
                     backgroundColor: `${primaryColor}05`,
                     width: column.width || 'auto'
@@ -93,8 +110,10 @@ export default function Table<T>({
               ))}
               {actions && (
                 <th 
-                  className="px-4 py-4 text-right w-[140px]"
-                  style={{ 
+                  className={`px-4 py-4 text-right w-[140px] ${
+                    useDefaultStyles ? 'text-[var(--foreground-secondary)] bg-[var(--surface)]' : ''
+                  }`}
+                  style={useDefaultStyles ? {} : { 
                     color: primaryColor,
                     backgroundColor: `${primaryColor}05`
                   }}
@@ -108,28 +127,42 @@ export default function Table<T>({
           {/* Corpo */}
           <tbody 
             className="divide-y"
-            style={{ borderColor: `${primaryColor}10` }}
+            style={useDefaultStyles ? {
+              borderColor: 'var(--border)'
+            } : {
+              borderColor: `${primaryColor}10`
+            }}
           >
             {paginatedData.length > 0 ? (
               paginatedData.map((item, rowIndex) => (
                 <tr
                   key={rowIndex}
-                  className="transition-colors"
-                  style={{
+                  className={`transition-colors ${
+                    useDefaultStyles ? 'hover:bg-[var(--surface-hover)]' : ''
+                  }`}
+                  style={useDefaultStyles ? {
+                    backgroundColor: rowIndex % 2 === 0 ? 'var(--background)' : 'var(--surface)'
+                  } : {
                     backgroundColor: rowIndex % 2 === 0 ? 'white' : `${primaryColor}02`
                   }}
-                  onMouseEnter={(e) => {
+                  onMouseEnter={useDefaultStyles ? undefined : (e) => {
                     e.currentTarget.style.backgroundColor = `${primaryColor}05`;
                   }}
-                  onMouseLeave={(e) => {
+                  onMouseLeave={useDefaultStyles ? undefined : (e) => {
                     e.currentTarget.style.backgroundColor = rowIndex % 2 === 0 ? 'white' : `${primaryColor}02`;
                   }}
                 >
                   {columns.map((column, colIndex) => (
                     <td
                       key={colIndex}
-                      className="px-4 py-4 text-sm"
-                      style={{ 
+                      className={`px-4 py-4 text-sm ${
+                        useDefaultStyles ? 'text-[var(--foreground)]' : ''
+                      }`}
+                      style={useDefaultStyles ? {
+                        width: column.width || 'auto',
+                        wordWrap: 'break-word',
+                        overflowWrap: 'break-word'
+                      } : { 
                         color: '#374151',
                         width: column.width || 'auto',
                         wordWrap: 'break-word',
@@ -148,6 +181,27 @@ export default function Table<T>({
                             const Icon = action.icon;
                             const color = action.color || "primary";
 
+                            if (useDefaultStyles) {
+                              // Design system padrão para seller
+                              return (
+                                <button
+                                  key={actionIndex}
+                                  onClick={() => action.onClick(item)}
+                                  className={`p-1.5 sm:p-2 rounded-full transition-colors cursor-pointer ${
+                                    color === 'primary' ? 'text-[var(--primary)] hover:bg-[var(--primary-hover)]' :
+                                    color === 'secondary' ? 'text-[var(--secondary)] hover:bg-[var(--secondary-hover)]' :
+                                    color === 'error' ? 'text-red-600 hover:bg-red-50' :
+                                    'text-[var(--primary)] hover:bg-[var(--primary-hover)]'
+                                  }`}
+                                  title={action.label}
+                                >
+                                  <Icon size={16} className="sm:w-5 sm:h-5" />
+                                  <span className="sr-only">{action.label}</span>
+                                </button>
+                              );
+                            }
+
+                            // Design personalizado para customer
                             return (
                               <button
                                 key={actionIndex}
@@ -183,8 +237,10 @@ export default function Table<T>({
               <tr>
                 <td
                   colSpan={actions ? columns.length + 1 : columns.length}
-                  className="px-6 py-8 text-center text-sm"
-                  style={{ color: '#6b7280' }}
+                  className={`px-6 py-8 text-center text-sm ${
+                    useDefaultStyles ? 'text-[var(--foreground-secondary)]' : ''
+                  }`}
+                  style={useDefaultStyles ? {} : { color: '#6b7280' }}
                 >
                   {emptyMessage}
                 </td>
@@ -198,8 +254,8 @@ export default function Table<T>({
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-2">
           <div 
-            className="text-sm"
-            style={{ color: '#374151' }}
+            className={`text-sm ${useDefaultStyles ? 'text-[var(--foreground)]' : ''}`}
+            style={useDefaultStyles ? {} : { color: '#374151' }}
           >
             Página {currentPage} de {totalPages}
           </div>
@@ -207,18 +263,20 @@ export default function Table<T>({
             <button
               onClick={prevPage}
               disabled={currentPage === 1}
-              className="p-2 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-              style={{ 
+              className={`p-2 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${
+                useDefaultStyles ? 'text-[var(--foreground)] hover:bg-[var(--surface-hover)] hover:text-[var(--primary)]' : ''
+              }`}
+              style={useDefaultStyles ? {} : { 
                 color: '#374151',
                 backgroundColor: 'transparent'
               }}
-              onMouseEnter={(e) => {
+              onMouseEnter={useDefaultStyles ? undefined : (e) => {
                 if (!e.currentTarget.disabled) {
                   e.currentTarget.style.backgroundColor = `${primaryColor}10`;
                   e.currentTarget.style.color = primaryColor;
                 }
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={useDefaultStyles ? undefined : (e) => {
                 if (!e.currentTarget.disabled) {
                   e.currentTarget.style.backgroundColor = 'transparent';
                   e.currentTarget.style.color = '#374151';
@@ -231,18 +289,20 @@ export default function Table<T>({
             <button
               onClick={nextPage}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-              style={{ 
+              className={`p-2 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${
+                useDefaultStyles ? 'text-[var(--foreground)] hover:bg-[var(--surface-hover)] hover:text-[var(--primary)]' : ''
+              }`}
+              style={useDefaultStyles ? {} : { 
                 color: '#374151',
                 backgroundColor: 'transparent'
               }}
-              onMouseEnter={(e) => {
+              onMouseEnter={useDefaultStyles ? undefined : (e) => {
                 if (!e.currentTarget.disabled) {
                   e.currentTarget.style.backgroundColor = `${primaryColor}10`;
                   e.currentTarget.style.color = primaryColor;
                 }
               }}
-              onMouseLeave={(e) => {
+              onMouseLeave={useDefaultStyles ? undefined : (e) => {
                 if (!e.currentTarget.disabled) {
                   e.currentTarget.style.backgroundColor = 'transparent';
                   e.currentTarget.style.color = '#374151';
