@@ -39,9 +39,15 @@ function DashboardContent() {
     setIsLoading(true);
     try {
       const accessToken = localStorage.getItem('access_token');
+      const userData = localStorage.getItem('user_data');
+      
+      console.log('🎫 [Dashboard Frontend] Token encontrado:', accessToken ? 'Sim' : 'Não');
+      console.log('👤 [Dashboard Frontend] User data:', userData ? JSON.parse(userData) : 'Não encontrado');
+      
       if (!accessToken) {
-        console.warn('Token não encontrado no localStorage');
-        setIsLoading(false);
+        console.warn('❌ [Dashboard Frontend] Token não encontrado no localStorage');
+        toast.error('Por favor, faça login novamente');
+        window.location.href = '/seller/auth/login';
         return;
       }
 
@@ -75,10 +81,14 @@ function DashboardContent() {
   }, [dateRange]);
 
   useEffect(() => {
+    // Limpar qualquer cache antigo ao montar o componente
+    console.log('🔄 [Dashboard] Componente montado - limpando cache se necessário');
+    
     fetchDashboardData();
     
     // Refresh automático a cada 30 segundos
     const interval = setInterval(() => {
+      console.log('🔄 [Dashboard] Refresh automático acionado');
       fetchDashboardData();
     }, 30000);
 
