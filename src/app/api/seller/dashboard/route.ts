@@ -128,9 +128,13 @@ export async function GET(request: NextRequest) {
       qtdVendas: metrics.qtd_vendas
     });
 
+    console.log('📦 Resultado de ordens por status:', JSON.stringify(orderStatusResult, null, 2));
+
     const totalOrders = orderStatusResult.reduce((acc, item) => acc + item.count, 0);
     const pendingOrders = orderStatusResult.find(o => o.status === 'PENDING')?.count || 0;
     const approvedOrders = orderStatusResult.find(o => o.status === 'PAID')?.count || 0;
+
+    console.log('📦 Contagem de ordens:', { totalOrders, pendingOrders, approvedOrders });
 
     // Formatar dados do gráfico
     const chartData = chartDataResult.map(item => ({
