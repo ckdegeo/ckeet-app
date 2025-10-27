@@ -76,6 +76,13 @@ function DashboardContent() {
 
   useEffect(() => {
     fetchDashboardData();
+    
+    // Refresh automático a cada 30 segundos
+    const interval = setInterval(() => {
+      fetchDashboardData();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, [fetchDashboardData]);
 
   const dataKeys = [

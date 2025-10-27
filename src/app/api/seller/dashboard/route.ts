@@ -57,22 +57,31 @@ export async function GET(request: NextRequest) {
       ? new Date(startDateParam) 
       : new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
 
+    console.log('🔍 Buscando dashboard para sellerId:', sellerId);
+    console.log('📅 Período:', startDate.toISOString(), 'até', endDate.toISOString());
+
     const store = await prisma.store.findUnique({
       where: { sellerId }
     });
 
     if (!store) {
+      console.error('❌ Loja não encontrada para sellerId:', sellerId);
       return NextResponse.json(
         { error: 'Loja não encontrada' },
         { status: 404 }
       );
     }
 
-    // Query única para métricas de transações
+    console.log('✅ Loja encontrada:', store.name, 'ID:', store.id);
+
+    // Query única para métricas de transações (COMPLETED + PENDING)
     const metricsResult = await prisma.$queryRaw<DashboardMetrics[]>`
       SELECT 
+        -- Faturamento Bruto: soma de COMPLETED
         COALESCE(SUM(CASE WHEN t.status = 'COMPLETED' AND t.type = 'SALE' THEN t.amount ELSE 0 END), 0)::float as faturamento_bruto,
+        -- Faturamento Líquido: soma de COMPLETED
         COALESCE(SUM(CASE WHEN t.status = 'COMPLETED' AND t.type = 'SALE' THEN t."sellerAmount" ELSE 0 END), 0)::float as faturamento_liquido,
+        -- Quantidade de Vendas: contagem de COMPLETED
         COUNT(CASE WHEN t.status = 'COMPLETED' AND t.type = 'SALE' THEN 1 END)::int as qtd_vendas
       FROM transactions t
       WHERE t."storeId" = ${store.id}
@@ -112,6 +121,12 @@ export async function GET(request: NextRequest) {
       faturamento_liquido: 0,
       qtd_vendas: 0
     };
+
+    console.log('📊 Métricas encontradas:', {
+      faturamentoBruto: metrics.faturamento_bruto,
+      faturamentoLiquido: metrics.faturamento_liquido,
+      qtdVendas: metrics.qtd_vendas
+    });
 
     const totalOrders = orderStatusResult.reduce((acc, item) => acc + item.count, 0);
     const pendingOrders = orderStatusResult.find(o => o.status === 'PENDING')?.count || 0;
