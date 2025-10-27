@@ -867,15 +867,13 @@ export default function ProductPage() {
                     </div>
 
                     {/* Tabela de Estoque */}
-                    <div className="max-h-96 overflow-y-auto">
-                      <Table
-                        data={stockLines}
-                        columns={stockColumns}
-                        actions={stockActions}
-                        itemsPerPage={50}
-                        emptyMessage="Nenhuma linha de estoque adicionada. Use o campo acima para adicionar."
-                      />
-                    </div>
+                    <Table
+                      data={stockLines}
+                      columns={stockColumns}
+                      actions={stockActions}
+                      itemsPerPage={50}
+                      emptyMessage="Nenhuma linha de estoque adicionada. Use o campo acima para adicionar."
+                    />
 
                     {/* Erro de linhas de estoque */}
                     {errors.stockLines && (
