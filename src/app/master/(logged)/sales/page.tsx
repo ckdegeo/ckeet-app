@@ -243,12 +243,12 @@ export default function Sales() {
     },
     {
       key: 'customerEmail' as keyof MasterSale,
-      label: 'Email do Cliente',
+      label: 'E-mail do Cliente',
       width: 'w-[180px]'
     },
     {
       key: 'paymentDate' as keyof MasterSale,
-      label: 'Data e Hora',
+      label: 'Data',
       width: 'w-[130px]',
       render: (value: unknown) => {
         const sale = sales.find(s => s.paymentDate === value);

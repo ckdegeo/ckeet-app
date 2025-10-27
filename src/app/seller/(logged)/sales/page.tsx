@@ -9,6 +9,8 @@ import NumberCard from '@/app/components/cards/numberCard';
 import { Clock, CheckCircle, BarChart2 } from 'lucide-react';
 import { AuthGuard } from '@/lib/components/AuthGuard';
 import toast from 'react-hot-toast';
+import Badge from '@/app/components/ui/badge';
+import ContentModal from '@/app/components/modals/contentModal';
 
 type PeriodOption = 'today' | 'week' | 'month' | 'year' | 'all';
 
@@ -16,7 +18,10 @@ type PeriodOption = 'today' | 'week' | 'month' | 'year' | 'all';
 interface Sale {
   id: string;
   orderNumber: string;
+  orderId: string;
   productName: string;
+  productId: string;
+  productDescription?: string;
   customerName: string;
   customerEmail: string;
   paymentDate: string;
@@ -24,6 +29,13 @@ interface Sale {
   paymentMethod: string;
   amount: number;
   createdAt: string;
+  deliveredContent?: string;
+  downloadUrl?: string;
+  deliverables?: Array<{
+    id: string;
+    name: string;
+    url: string;
+  }>;
 }
 
 function SalesContent() {
@@ -31,6 +43,8 @@ function SalesContent() {
   const [period, setPeriod] = useState<PeriodOption>('month');
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Calcular range de datas baseado no período selecionado
   const getDateRange = (period: PeriodOption): [Date, Date] => {
@@ -109,24 +123,41 @@ function SalesContent() {
         const salesData: Sale[] = ordersData.data?.map((order: {
           id: string;
           orderNumber: string;
-          products: Array<{ product: { name: string; imageUrl: string } }>;
+          products: Array<{ 
+            product: { name: string; imageUrl: string; description?: string };
+            productId: string;
+          }>;
           customer: { name: string; email: string } | null;
           status: string;
           paymentMethod: string | null;
           totalAmount: number;
           createdAt: string;
-        }) => ({
-          id: order.id,
-          orderNumber: order.orderNumber,
-          productName: order.products?.[0]?.product?.name || 'Produto não encontrado',
-          customerName: order.customer?.name || 'Cliente não encontrado',
-          customerEmail: order.customer?.email || 'Email não encontrado',
-          paymentDate: order.createdAt,
-          status: order.status,
-          paymentMethod: order.paymentMethod || 'N/A',
-          amount: order.totalAmount,
-          createdAt: order.createdAt
-        })) || [];
+          purchases: Array<{
+            deliveredContent?: string;
+            downloadUrl?: string;
+          }>;
+        }) => {
+          const firstProduct = order.products?.[0];
+          const firstPurchase = order.purchases?.[0];
+          
+          return {
+            id: order.id,
+            orderNumber: order.orderNumber,
+            orderId: order.id,
+            productName: firstProduct?.product?.name || 'Produto não encontrado',
+            productId: firstProduct?.productId || '',
+            productDescription: firstProduct?.product?.description,
+            customerName: order.customer?.name || 'Cliente não encontrado',
+            customerEmail: order.customer?.email || 'Email não encontrado',
+            paymentDate: order.createdAt,
+            status: order.status,
+            paymentMethod: order.paymentMethod || 'N/A',
+            amount: order.totalAmount,
+            createdAt: order.createdAt,
+            deliveredContent: firstPurchase?.deliveredContent,
+            downloadUrl: firstPurchase?.downloadUrl
+          };
+        }) || [];
 
         setSales(salesData);
       } else {
@@ -209,8 +240,9 @@ function SalesContent() {
   };
 
   // Handlers para ações
-  const handleViewSale = (_sale: Sale) => {
-    // Implementar modal de detalhes
+  const handleViewSale = (sale: Sale) => {
+    setSelectedSale(sale);
+    setIsModalOpen(true);
   };
 
   const handleRefund = (_sale: Sale) => {
@@ -236,12 +268,12 @@ function SalesContent() {
     },
     {
       key: 'customerEmail' as keyof Sale,
-      label: 'Email',
+      label: 'E-mail',
       width: 'w-[200px]'
     },
     {
       key: 'paymentDate' as keyof Sale,
-      label: 'Data e Hora',
+      label: 'Data',
       width: 'w-[140px]',
       render: (value: unknown) => formatDateTime(value as string)
     },
@@ -249,7 +281,7 @@ function SalesContent() {
       key: 'status' as keyof Sale,
       label: 'Status',
       width: 'w-[120px]',
-      render: (value: unknown) => formatStatus(value as string)
+      render: (value: unknown) => <Badge status={formatStatus(value as string)} />
     },
     {
       key: 'paymentMethod' as keyof Sale,
@@ -362,6 +394,33 @@ function SalesContent() {
         itemsPerPage={10}
         emptyMessage="Nenhuma venda encontrada"
       />
+
+      {/* Modal de detalhes */}
+      {selectedSale && isModalOpen && (
+        <ContentModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedSale(null);
+          }}
+          orderData={{
+            orderNumber: selectedSale.orderNumber,
+            productName: selectedSale.productName,
+            productDescription: selectedSale.productDescription,
+            productPrice: selectedSale.amount,
+            deliveredContent: selectedSale.deliveredContent || '',
+            downloadUrl: selectedSale.downloadUrl,
+            deliverables: selectedSale.deliverables || [],
+            orderStatus: selectedSale.status,
+            paymentStatus: selectedSale.status,
+            totalAmount: selectedSale.amount,
+            createdAt: selectedSale.createdAt,
+            storeName: 'Minha Loja',
+            storePrimaryColor: undefined,
+            storeSecondaryColor: undefined
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -83,9 +83,22 @@ export async function GET(request: NextRequest) {
         products: {
           include: {
             product: {
+              select:{
+                name: true,
+                imageUrl: true,
+                description: true
+              }
+            }
+          }
+        },
+        purchases: {
+          select: {
+            deliveredContent: true,
+            downloadUrl: true,
+            customer: {
               select: {
                 name: true,
-                imageUrl: true
+                email: true
               }
             }
           }
