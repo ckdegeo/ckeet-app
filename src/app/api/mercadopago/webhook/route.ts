@@ -2,10 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { MercadoPagoService } from '@/lib/services/mercadoPagoService';
 
+// Desabilitar cache para garantir logs em produção
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function POST(request: NextRequest) {
+  // Logs antes de qualquer coisa
+  console.log('🔔 [WEBHOOK] ========== WEBHOOK INICIADO ==========');
+  console.log('🔔 [WEBHOOK] Timestamp:', new Date().toISOString());
+  
   try {
-    console.log('🔔 [WEBHOOK] ========== WEBHOOK INICIADO ==========');
-    console.log('🔔 [WEBHOOK] Timestamp:', new Date().toISOString());
     const body = await request.json();
     console.log('🔔 [WEBHOOK] Body recebido:', JSON.stringify(body, null, 2));
     console.log('🔔 [WEBHOOK] Type:', body.type);
