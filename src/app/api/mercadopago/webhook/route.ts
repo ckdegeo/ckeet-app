@@ -64,10 +64,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Consultar status atualizado no Mercado Pago
-    const paymentStatus = await MercadoPagoService.getPaymentStatus({
-      paymentId,
-      accessToken: mpConfig.accessToken
-    });
+    let paymentStatus;
+    try {
+      paymentStatus = await MercadoPagoService.getPaymentStatus({
+        paymentId,
+        accessToken: mpConfig.accessToken
+      });
+    } catch (error) {
+      console.error('❌ [WEBHOOK] Erro ao consultar status no Mercado Pago:', error);
+      // Se falhar, usar o status da transação já existente
+      paymentStatus = { 
+        success: true, 
+        status: transaction.gatewayStatus || 'pending' 
+      };
+    }
 
     if (!paymentStatus.success) {
       return NextResponse.json({ success: true });
@@ -105,16 +115,7 @@ export async function POST(request: NextRequest) {
           include: {
             products: {
               include: {
-                product: {
-                  include: {
-                    stockLines: {
-                      where: { isUsed: false, isDeleted: false },
-                      orderBy: { createdAt: 'asc' },
-                      take: 1
-                    },
-                    deliverables: true
-                  }
-                }
+                product: true
               }
             }
           }
@@ -137,22 +138,31 @@ export async function POST(request: NextRequest) {
 
         // Processar cada produto do pedido
         for (const orderItem of order.products) {
-          const product = orderItem.product;
+          // Buscar produto completo com estoque e deliverables
+          const product = await prisma.product.findUnique({
+            where: { id: orderItem.productId },
+            include: {
+              stockLines: {
+                where: { isUsed: false, isDeleted: false },
+                orderBy: { createdAt: 'asc' },
+                take: 1
+              },
+              deliverables: true
+            }
+          });
+
+          if (!product) {
+            console.error(`⚠️ [WEBHOOK] Produto não encontrado: ${orderItem.productId}`);
+            continue;
+          }
           let deliveredContent = null;
           let stockLineId = null;
           let downloadUrl = null;
 
           // Determinar conteúdo baseado no tipo de estoque
           if (product.stockType === 'LINE') {
-            // Produto com estoque por linha - buscar linha disponível
-            const availableStockLine = await prisma.stockLine.findFirst({
-              where: {
-                productId: product.id,
-                isUsed: false,
-                isDeleted: false
-              },
-              orderBy: { createdAt: 'asc' }
-            });
+            // Produto com estoque por linha - usar linha já buscada no include
+            const availableStockLine = product.stockLines[0];
             
             if (availableStockLine) {
               // SOFT DELETE: Marcar linha como usada e deletada
