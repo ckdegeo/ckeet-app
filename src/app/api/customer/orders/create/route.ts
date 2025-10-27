@@ -169,24 +169,13 @@ export async function POST(request: NextRequest) {
     
     // Calcular split payment
     const split = calculateSplitPayment(totalAmount);
-    
-    // Debug: Log dos valores calculados
-    console.log('💰 [DEBUG] Valores calculados:', {
-      totalAmount,
-      platformAmount: split.platformAmount,
-      sellerAmount: split.sellerAmount,
-      commissionRate: split.commissionRate,
-      commissionFixedFee: split.commissionFixedFee
-    });
 
     // Validar application_fee para Mercado Pago
     if (split.platformAmount <= 0) {
-      console.log('⚠️ [DEBUG] Application fee inválida (<= 0), usando 0.01');
       split.platformAmount = 0.01; // Mínimo permitido pelo MP
     }
     
     if (split.platformAmount >= totalAmount) {
-      console.log('⚠️ [DEBUG] Application fee maior que total, ajustando');
       split.platformAmount = Math.max(0.01, totalAmount * 0.01); // 1% do total ou 0.01
     }
 

@@ -66,22 +66,16 @@ export async function GET(request: NextRequest) {
       : new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
     startDate.setHours(0, 0, 0, 0);
 
-    console.log('🔍 Buscando dashboard para sellerId:', sellerId);
-    console.log('📅 Período:', startDate.toISOString(), 'até', endDate.toISOString());
-
     const store = await prisma.store.findUnique({
       where: { sellerId }
     });
 
     if (!store) {
-      console.error('❌ Loja não encontrada para sellerId:', sellerId);
       return NextResponse.json(
         { error: 'Loja não encontrada' },
         { status: 404 }
       );
     }
-
-    console.log('✅ Loja encontrada:', store.name, 'ID:', store.id);
 
     // Query única para métricas de transações (COMPLETED + PENDING)
     const metricsResult = await prisma.$queryRaw<DashboardMetrics[]>`
@@ -131,19 +125,9 @@ export async function GET(request: NextRequest) {
       qtd_vendas: 0
     };
 
-    console.log('📊 Métricas encontradas:', {
-      faturamentoBruto: metrics.faturamento_bruto,
-      faturamentoLiquido: metrics.faturamento_liquido,
-      qtdVendas: metrics.qtd_vendas
-    });
-
-    console.log('📦 Resultado de ordens por status:', JSON.stringify(orderStatusResult, null, 2));
-
     const totalOrders = orderStatusResult.reduce((acc, item) => acc + item.count, 0);
     const pendingOrders = orderStatusResult.find(o => o.status === 'PENDING')?.count || 0;
     const approvedOrders = orderStatusResult.find(o => o.status === 'PAID')?.count || 0;
-
-    console.log('📦 Contagem de ordens:', { totalOrders, pendingOrders, approvedOrders });
 
     // Formatar dados do gráfico
     const chartData = chartDataResult.map(item => ({

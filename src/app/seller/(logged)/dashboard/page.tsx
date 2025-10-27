@@ -69,13 +69,8 @@ function DashboardContent() {
     setIsLoading(true);
     try {
       const accessToken = localStorage.getItem('access_token');
-      const userData = localStorage.getItem('user_data');
-      
-      console.log('🎫 [Dashboard Frontend] Token encontrado:', accessToken ? 'Sim' : 'Não');
-      console.log('👤 [Dashboard Frontend] User data:', userData ? JSON.parse(userData) : 'Não encontrado');
       
       if (!accessToken) {
-        console.warn('❌ [Dashboard Frontend] Token não encontrado no localStorage');
         toast.error('Por favor, faça login novamente');
         window.location.href = '/seller/auth/login';
         return;
@@ -106,10 +101,7 @@ function DashboardContent() {
       }
 
       const result = await response.json();
-      console.log('📦 [Dashboard Frontend] Dados recebidos da API:', result.data);
-      console.log('📦 [Dashboard Frontend] Ordens recebidas:', result.data.ordens);
       setDashboardData(result.data);
-      console.log('✅ [Dashboard Frontend] Estado atualizado com:', result.data);
     } catch (error) {
       console.error('Erro ao carregar dashboard:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar dados da dashboard';
@@ -120,19 +112,14 @@ function DashboardContent() {
   }, [period]);
 
   useEffect(() => {
-    // Limpar qualquer cache antigo ao montar o componente
-    console.log('🔄 [Dashboard] Componente montado - limpando cache se necessário');
-    
     fetchDashboardData();
     
     // Refresh automático a cada 30 segundos
     const interval = setInterval(() => {
-      console.log('🔄 [Dashboard] Refresh automático acionado');
       fetchDashboardData();
     }, 30000);
 
     return () => {
-      console.log('🧹 [Dashboard] Limpando intervalo de refresh');
       clearInterval(interval);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
