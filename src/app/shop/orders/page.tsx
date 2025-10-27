@@ -590,17 +590,14 @@ export default function OrdersPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Produtos comprados</h2>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Clique nas ações para acessar seu conteúdo
-                  </p>
+                  <h2 className="text-xl font-semibold text-gray-900">Comprados</h2>
                 </div>
                 
                 {/* Botão de Refresh */}
                 <button
                   onClick={refreshOrders}
                   disabled={ordersLoading}
-                  className="p-2 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="cursor-pointer p-2 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Atualizar lista de pedidos"
                 >
                   <RefreshCw 
