@@ -157,18 +157,17 @@ export default function OrderDetailsModal({
 
         {/* Content */}
         <div className="p-6 space-y-6">
-          {/* Status Badge */}
-          <div className="flex items-center justify-center">
-            <span className={`px-4 py-2 rounded-full text-sm font-medium ${statusConfig.bgColor} ${statusConfig.color} border border-current border-opacity-20`}>
-              {statusConfig.text}
-            </span>
-          </div>
-
           {/* Informações do Produto */}
           <div className="bg-gray-50 rounded-xl p-4 space-y-4">
-            <div className="flex items-center gap-2 text-gray-600">
-              <Package size={18} />
-              <h3 className="font-semibold text-[var(--foreground)]">Produto</h3>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-gray-600">
+                <Package size={18} />
+                <h3 className="font-semibold text-[var(--foreground)]">Produto</h3>
+              </div>
+              {/* Status Badge */}
+              <span className={`px-4 py-2 rounded-full text-sm font-medium ${statusConfig.bgColor} ${statusConfig.color} border border-current border-opacity-20`}>
+                {statusConfig.text}
+              </span>
             </div>
             <div className="space-y-2">
               <div>
