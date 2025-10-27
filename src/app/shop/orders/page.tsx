@@ -101,7 +101,54 @@ export default function OrdersPage() {
   );
 
   // Estados para orders (SEM cache para atualização instantânea)
-  const [ordersData, setOrdersData] = useState<any>(null);
+  interface PurchaseItemRaw {
+    id: string;
+    orderNumber: string;
+    orderId: string;
+    productId: string;
+    productName: string;
+    productDescription?: string;
+    productPrice: number;
+    quantity: number;
+    orderStatus: string;
+    paymentStatus?: string;
+    deliveredContent?: string;
+    downloadUrl?: string;
+    deliverables?: Array<{
+      name: string;
+      url: string;
+    }>;
+    expiresAt?: string;
+    isDownloaded: boolean;
+    downloadCount: number;
+    storeName: string;
+    storeSubdomain?: string;
+    storePrimaryColor?: string;
+    storeSecondaryColor?: string;
+    createdAt: string;
+    updatedAt: string;
+    transactions?: Transaction[];
+    latestTransaction?: Transaction;
+    customerEmail: string;
+    customerName?: string;
+    customerPhone?: string;
+    totalAmount: number;
+    paymentMethod?: string;
+  }
+
+  interface OrdersData {
+    purchases?: PurchaseItemRaw[];
+    stats?: {
+      totalOrders: number;
+      totalPurchases: number;
+      deliveredPurchases: number;
+      pendingPurchases: number;
+      paidOrders: number;
+      totalDownloads: number;
+      totalAmount: number;
+    };
+  }
+  const [ordersData, setOrdersData] = useState<OrdersData | null>(null);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [ordersError, setOrdersError] = useState<string | null>(null);
 
@@ -267,50 +314,40 @@ export default function OrdersPage() {
     totalAmount: 0
   };
 
-  const tableData = purchases.map((purchase: {
-    id: string;
-    orderNumber: string;
-    productName: string;
-    productDescription: string;
-    deliveredContent: string | null;
-    downloadUrl: string | null;
-    deliverables: { name: string; url: string }[];
-    isDownloaded: boolean;
-    downloadCount: number;
-    createdAt: string;
-    orderStatus: string;
-    paymentStatus: string | null;
-    totalAmount: number;
-    quantity: number;
-    productPrice: number;
-    storeName: string;
-    customerEmail: string;
-    customerName: string | null;
-    customerPhone: string | null;
-    paymentMethod: string | null;
-    latestTransaction: { id: string; status: string; amount: number } | null;
-  }) => ({
+  const tableData: OrderItem[] = purchases.map((purchase) => ({
     id: purchase.id,
     orderNumber: purchase.orderNumber,
+    orderId: purchase.orderId,
+    productId: purchase.productId,
     productName: purchase.productName,
     productDescription: purchase.productDescription,
-    deliveredContent: purchase.deliveredContent,
+    productPrice: purchase.productPrice,
+    quantity: purchase.quantity,
+    orderStatus: purchase.orderStatus,
+    paymentStatus: purchase.paymentStatus || '',
+    deliveredContent: purchase.deliveredContent || '',
     downloadUrl: purchase.downloadUrl,
-    deliverables: purchase.deliverables || [],
+    deliverables: purchase.deliverables?.map((d: { name: string; url: string }) => ({
+      id: '',
+      name: d.name,
+      url: d.url
+    })) || [],
+    expiresAt: purchase.expiresAt,
     isDownloaded: purchase.isDownloaded,
     downloadCount: purchase.downloadCount,
-    createdAt: purchase.createdAt,
-    orderStatus: purchase.orderStatus,
-    paymentStatus: purchase.paymentStatus,
-    totalAmount: purchase.totalAmount,
-    quantity: purchase.quantity,
-    productPrice: purchase.productPrice,
     storeName: purchase.storeName,
+    storeSubdomain: purchase.storeSubdomain || '',
+    storePrimaryColor: purchase.storePrimaryColor,
+    storeSecondaryColor: purchase.storeSecondaryColor,
+    createdAt: purchase.createdAt,
+    updatedAt: purchase.updatedAt,
+    transactions: purchase.transactions || [],
+    latestTransaction: purchase.latestTransaction,
     customerEmail: purchase.customerEmail,
-    customerName: purchase.customerName,
-    customerPhone: purchase.customerPhone,
-    paymentMethod: purchase.paymentMethod,
-    latestTransaction: purchase.latestTransaction
+    customerName: purchase.customerName || '',
+    customerPhone: purchase.customerPhone || '',
+    totalAmount: purchase.totalAmount,
+    paymentMethod: purchase.paymentMethod || ''
   }));
 
   // Filtrar dados baseado na busca
