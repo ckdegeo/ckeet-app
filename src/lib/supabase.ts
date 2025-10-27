@@ -17,3 +17,24 @@ export function createServerSupabaseClient() {
     process.env.SUPABASE_SERVICE_ROLE_KEY
   );
 }
+
+// Função para criar cliente Supabase com anon key e validar tokens de usuário
+export function createUserSupabaseClient(accessToken: string) {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    throw new Error('Variáveis de ambiente do Supabase não configuradas');
+  }
+  
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      global: {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+    }
+  );
+  
+  return supabase;
+}

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { MercadoPagoService } from '@/lib/services/mercadoPagoService';
 import { calculateSplitPayment, validatePaymentConfig } from '@/lib/config/payment';
-import { createServerSupabaseClient } from '@/lib/supabase';
+import { createUserSupabaseClient } from '@/lib/supabase';
 
 // Validar configurações de pagamento
 try {
@@ -33,9 +33,9 @@ export async function POST(request: NextRequest) {
 
     const accessToken = authHeader.substring(7);
     
-    // Validar token com Supabase
-    const supabase = createServerSupabaseClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    // Validar token com Supabase usando cliente com anon key
+    const supabase = createUserSupabaseClient(accessToken);
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
     if (authError || !user) {
       console.error('❌ Erro de autenticação:', authError);
