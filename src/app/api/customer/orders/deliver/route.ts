@@ -13,6 +13,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('📦 [DELIVER] Iniciando entrega para orderId:', orderId);
+
     // Verificar se é uma chamada interna (webhook) ou externa (customer)
     const authHeader = request.headers.get('authorization');
     const isInternalCall = !authHeader || !authHeader.startsWith('Bearer ');
