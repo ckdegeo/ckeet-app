@@ -10,7 +10,7 @@ import {
 import ValueCard from '@/app/components/cards/valueCard';
 import NumberCard from '@/app/components/cards/numberCard';
 import AreaChartCard from '@/app/components/cards/areaChart';
-import DatePicker from '@/app/components/selectors/datePicker';
+import Selector from '@/app/components/selectors/selector';
 import { AuthGuard } from '@/lib/components/AuthGuard';
 import toast from 'react-hot-toast';
 
@@ -27,13 +27,43 @@ interface DashboardData {
   change: number;
 }
 
+type PeriodOption = 'today' | 'week' | 'month' | 'year' | 'all';
+
 function DashboardContent() {
-  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
-    new Date(new Date().setMonth(new Date().getMonth() - 1)),
-    new Date()
-  ]);
+  const [period, setPeriod] = useState<PeriodOption>('month');
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Calcular range de datas baseado no período selecionado
+  const getDateRange = (period: PeriodOption): [Date, Date] => {
+    let startDate = new Date();
+
+    switch (period) {
+      case 'today':
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case 'week':
+        startDate.setDate(startDate.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case 'month':
+        startDate.setMonth(startDate.getMonth() - 1);
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case 'year':
+        startDate.setFullYear(startDate.getFullYear() - 1);
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case 'all':
+        startDate = new Date('1900-01-01');
+        break;
+    }
+
+    const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
+
+    return [startDate, endDate];
+  };
 
   const fetchDashboardData = React.useCallback(async () => {
     setIsLoading(true);
@@ -51,18 +81,24 @@ function DashboardContent() {
         return;
       }
 
-      const startDate = dateRange[0]?.toISOString().split('T')[0];
-      const endDate = dateRange[1]?.toISOString().split('T')[0];
+      const [startDate, endDate] = getDateRange(period);
+      const startDateStr = startDate.toISOString().split('T')[0];
+      const endDateStr = endDate.toISOString().split('T')[0];
       
       const params = new URLSearchParams();
-      if (startDate) params.append('startDate', startDate);
-      if (endDate) params.append('endDate', endDate);
+      params.append('startDate', startDateStr);
+      params.append('endDate', endDateStr);
+      // Adicionar timestamp para bypass de cache
+      params.append('_t', Date.now().toString());
 
-      const response = await fetch(`/api/seller/dashboard?${params.toString()}`, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
+        const response = await fetch(`/api/seller/dashboard?${params.toString()}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Cache-Control': 'no-cache'
+          },
+          cache: 'no-store'
+        });
 
       if (!response.ok) {
         const error = await response.json();
@@ -70,7 +106,10 @@ function DashboardContent() {
       }
 
       const result = await response.json();
+      console.log('📦 [Dashboard Frontend] Dados recebidos da API:', result.data);
+      console.log('📦 [Dashboard Frontend] Ordens recebidas:', result.data.ordens);
       setDashboardData(result.data);
+      console.log('✅ [Dashboard Frontend] Estado atualizado com:', result.data);
     } catch (error) {
       console.error('Erro ao carregar dashboard:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar dados da dashboard';
@@ -78,7 +117,7 @@ function DashboardContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [dateRange]);
+  }, [period]);
 
   useEffect(() => {
     // Limpar qualquer cache antigo ao montar o componente
@@ -92,8 +131,12 @@ function DashboardContent() {
       fetchDashboardData();
     }, 30000);
 
-    return () => clearInterval(interval);
-  }, [fetchDashboardData]);
+    return () => {
+      console.log('🧹 [Dashboard] Limpando intervalo de refresh');
+      clearInterval(interval);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period]);
 
   const dataKeys = [
     {
@@ -111,10 +154,16 @@ function DashboardContent() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Dashboard</h1>
           <div className="w-full md:w-72">
-            <DatePicker
-              startDate={dateRange[0]}
-              endDate={dateRange[1]}
-              onChange={setDateRange}
+            <Selector
+              value={period}
+              onChange={(value) => setPeriod(value as PeriodOption)}
+              options={[
+                { value: 'today', label: 'Hoje' },
+                { value: 'week', label: 'Últimos 7 dias' },
+                { value: 'month', label: 'Último mês' },
+                { value: 'year', label: 'Último ano' },
+                { value: 'all', label: 'Todo período' }
+              ]}
             />
           </div>
         </div>
@@ -133,10 +182,16 @@ function DashboardContent() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h1 className="text-2xl font-bold text-[var(--foreground)]">Dashboard</h1>
           <div className="w-full md:w-72">
-            <DatePicker
-              startDate={dateRange[0]}
-              endDate={dateRange[1]}
-              onChange={setDateRange}
+            <Selector
+              value={period}
+              onChange={(value) => setPeriod(value as PeriodOption)}
+              options={[
+                { value: 'today', label: 'Hoje' },
+                { value: 'week', label: 'Últimos 7 dias' },
+                { value: 'month', label: 'Último mês' },
+                { value: 'year', label: 'Último ano' },
+                { value: 'all', label: 'Todo período' }
+              ]}
             />
           </div>
         </div>
@@ -153,10 +208,16 @@ function DashboardContent() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-[var(--foreground)]">Dashboard</h1>
         <div className="w-full md:w-72">
-          <DatePicker
-            startDate={dateRange[0]}
-            endDate={dateRange[1]}
-            onChange={setDateRange}
+          <Selector
+            value={period}
+            onChange={(value) => setPeriod(value as PeriodOption)}
+            options={[
+              { value: 'today', label: 'Hoje' },
+              { value: 'week', label: 'Últimos 7 dias' },
+              { value: 'month', label: 'Último mês' },
+              { value: 'year', label: 'Último ano' },
+              { value: 'all', label: 'Todo período' }
+            ]}
           />
         </div>
       </div>

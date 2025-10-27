@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createUserSupabaseClient } from '@/lib/supabase';
 
+// Forçar revalidação a cada requisição (sem cache)
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface DashboardMetrics {
   faturamento_bruto: number;
   faturamento_liquido: number;
@@ -52,10 +56,15 @@ export async function GET(request: NextRequest) {
     const startDateParam = url.searchParams.get('startDate');
     const endDateParam = url.searchParams.get('endDate');
 
+    // End date deve ser o FIM do dia (23:59:59)
     const endDate = endDateParam ? new Date(endDateParam) : new Date();
+    endDate.setHours(23, 59, 59, 999);
+    
+    // Start date deve ser o início do dia (00:00:00)
     const startDate = startDateParam 
       ? new Date(startDateParam) 
       : new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+    startDate.setHours(0, 0, 0, 0);
 
     console.log('🔍 Buscando dashboard para sellerId:', sellerId);
     console.log('📅 Período:', startDate.toISOString(), 'até', endDate.toISOString());
@@ -174,6 +183,12 @@ export async function GET(request: NextRequest) {
         },
         chart: chartData,
         change: Math.round(liquidChange * 10) / 10
+      }
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+        'Pragma': 'no-cache',
+        'Expires': '0'
       }
     });
 
