@@ -244,9 +244,14 @@ export default function OrdersPage() {
   useEffect(() => {
     const checkDelivery = async () => {
       try {
+        console.log('🔍 [POLLING] Verificando se há conteúdo para entregar...');
         const accessToken = localStorage.getItem('access_token');
-        if (!accessToken) return;
+        if (!accessToken) {
+          console.log('⚠️ [POLLING] Sem access_token');
+          return;
+        }
 
+        console.log('📡 [POLLING] Chamando /api/customer/orders/check-delivery');
         const response = await fetch('/api/customer/orders/check-delivery', {
           method: 'GET',
           headers: {
@@ -256,15 +261,19 @@ export default function OrdersPage() {
           cache: 'no-store'
         });
 
+        console.log('📊 [POLLING] Response status:', response.status);
+
         if (response.ok) {
           const data = await response.json();
+          console.log('✅ [POLLING] Data recebida:', data);
           if (data.success && data.delivered > 0) {
+            console.log('🎉 [POLLING] Conteúdo entregue! Atualizando página...');
             // Refresh orders para mostrar conteúdo entregue
             await fetchOrders();
           }
         }
       } catch (error) {
-        // Silenciar erro de polling
+        console.error('❌ [POLLING] Erro:', error);
       }
     };
 
