@@ -382,10 +382,8 @@ export default function ProductPage() {
           productImage={product.imageUrl}
           primaryColor={store.primaryColor}
           secondaryColor={store.secondaryColor}
-          onPaymentSuccess={(paymentData) => {
-            console.log('Pagamento realizado:', paymentData);
+          onPaymentSuccess={() => {
             setIsPixModalOpen(false);
-            // Redirecionar para página de pedidos ou mostrar sucesso
             router.push('/shop/orders');
           }}
         />

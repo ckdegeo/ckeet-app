@@ -52,25 +52,17 @@ export default function ShopPage() {
     const accessToken = localStorage.getItem('customer_access_token');
     const userData = localStorage.getItem('customer_user_data');
     
-    console.log('🔍 Checking authentication:', { 
-      hasToken: !!accessToken, 
-      hasUserData: !!userData,
-      currentAuth: isAuthenticated 
-    });
-    
     if (accessToken && userData) {
       try {
         const user = JSON.parse(userData);
-        console.log('✅ User data found:', user);
         setIsAuthenticated(true);
         setUserName(user.name);
       } catch (error) {
-        console.error('❌ Erro ao parsear dados do usuário:', error);
+        console.error('Erro ao parsear dados do usuário:', error);
         setIsAuthenticated(false);
         setUserName(undefined);
       }
     } else {
-      console.log('❌ No auth data found');
       setIsAuthenticated(false);
       setUserName(undefined);
     }
