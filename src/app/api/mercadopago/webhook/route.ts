@@ -96,16 +96,20 @@ export async function POST(request: NextRequest) {
 
       // Entregar conteúdo automaticamente
       try {
+        console.log('📦 [WEBHOOK] Chamando deliver para order:', transaction.orderId);
         const deliverResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/customer/orders/deliver`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            // Não precisa de autenticação para entrega interna via webhook
           },
           body: JSON.stringify({ orderId: transaction.orderId })
         });
 
-        if (deliverResponse.ok) {
+        const deliverData = await deliverResponse.json();
+        console.log('📦 [WEBHOOK] Response do deliver:', deliverData);
+        
+        if (!deliverResponse.ok) {
+          console.error('⚠️ Erro ao entregar conteúdo automaticamente para order', transaction.orderId, deliverData);
         }
       } catch (deliverError) {
         console.error(`❌ Erro ao entregar conteúdo:`, deliverError);

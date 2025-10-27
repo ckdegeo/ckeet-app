@@ -93,14 +93,9 @@ export async function GET(request: NextRequest) {
         },
         purchases: {
           select: {
+            id: true,
             deliveredContent: true,
-            downloadUrl: true,
-            customer: {
-              select: {
-                name: true,
-                email: true
-              }
-            }
+            downloadUrl: true
           }
         }
       },

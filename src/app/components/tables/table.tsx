@@ -65,10 +65,10 @@ export default function Table<T>({
   };
 
   return (
-    <div className="w-full flex flex-col gap-4">
+    <div className="w-full h-full flex flex-col gap-4">
       {/* Container da tabela com scroll horizontal */}
       <div 
-        className={`w-full overflow-x-auto rounded-2xl border hide-scrollbar relative isolate ${
+        className={`w-full overflow-auto rounded-2xl border hide-scrollbar relative isolate min-h-[300px] md:min-h-[400px] ${
           useDefaultStyles ? 'bg-[var(--surface)]' : ''
         }`}
         style={useDefaultStyles ? {
@@ -250,7 +250,7 @@ export default function Table<T>({
         </table>
       </div>
 
-      {/* Paginação */}
+      {/* Paginação - fora do scroll */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-2">
           <div 

@@ -10,7 +10,7 @@ import { Clock, CheckCircle, BarChart2 } from 'lucide-react';
 import { AuthGuard } from '@/lib/components/AuthGuard';
 import toast from 'react-hot-toast';
 import Badge from '@/app/components/ui/badge';
-import ContentModal from '@/app/components/modals/contentModal';
+import OrderDetailsModal from '@/app/components/modals/orderDetailsModal';
 
 type PeriodOption = 'today' | 'week' | 'month' | 'year' | 'all';
 
@@ -210,7 +210,6 @@ function SalesContent() {
     const statusMap: Record<string, string> = {
       'PENDING': 'Pendente',
       'PAID': 'Pago',
-      'DELIVERED': 'Entregue',
       'CANCELLED': 'Cancelado',
       'REFUNDED': 'Reembolsado',
       'COMPLETED': 'Completo',
@@ -323,9 +322,9 @@ function SalesContent() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="h-full flex flex-col gap-6">
       {/* Cabeçalho */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 flex-shrink-0">
         <div>
           <h1 className="text-2xl font-bold text-[var(--foreground)]">
             Vendas
@@ -387,37 +386,35 @@ function SalesContent() {
       </div>
 
       {/* Tabela de vendas */}
-      <Table
-        data={filteredSales}
-        columns={columns}
-        actions={actions}
-        itemsPerPage={10}
-        emptyMessage="Nenhuma venda encontrada"
-      />
+      <div className="flex-1 min-h-0 md:min-h-[500px]">
+        <Table
+          data={filteredSales}
+          columns={columns}
+          actions={actions}
+          itemsPerPage={10}
+          emptyMessage="Nenhuma venda encontrada"
+        />
+      </div>
 
       {/* Modal de detalhes */}
       {selectedSale && isModalOpen && (
-        <ContentModal
+        <OrderDetailsModal
           isOpen={isModalOpen}
           onClose={() => {
             setIsModalOpen(false);
             setSelectedSale(null);
           }}
           orderData={{
+            orderId: selectedSale.orderId,
             orderNumber: selectedSale.orderNumber,
             productName: selectedSale.productName,
             productDescription: selectedSale.productDescription,
-            productPrice: selectedSale.amount,
-            deliveredContent: selectedSale.deliveredContent || '',
-            downloadUrl: selectedSale.downloadUrl,
-            deliverables: selectedSale.deliverables || [],
-            orderStatus: selectedSale.status,
-            paymentStatus: selectedSale.status,
-            totalAmount: selectedSale.amount,
-            createdAt: selectedSale.createdAt,
-            storeName: 'Minha Loja',
-            storePrimaryColor: undefined,
-            storeSecondaryColor: undefined
+            customerName: selectedSale.customerName,
+            customerEmail: selectedSale.customerEmail,
+            status: selectedSale.status,
+            paymentMethod: selectedSale.paymentMethod,
+            amount: selectedSale.amount,
+            createdAt: selectedSale.createdAt
           }}
         />
       )}
