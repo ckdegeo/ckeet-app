@@ -78,9 +78,50 @@ export default function PixModal({
     
     try {
       // Buscar token de acesso do customer
-      const accessToken = localStorage.getItem('customer_access_token');
+      let accessToken = localStorage.getItem('customer_access_token');
+      const tokenExpiresAt = localStorage.getItem('customer_expires_at');
+      
       if (!accessToken) {
         throw new Error('Usuário não autenticado. Faça login para continuar.');
+      }
+
+      // Verificar se o token está expirado
+      if (tokenExpiresAt) {
+        const expirationTime = parseInt(tokenExpiresAt);
+        const currentTime = Math.floor(Date.now() / 1000);
+        
+        if (currentTime >= expirationTime) {
+          // Token expirado, tentar renovar
+          const refreshToken = localStorage.getItem('customer_refresh_token');
+          if (!refreshToken) {
+            throw new Error('Sessão expirada. Faça login novamente.');
+          }
+
+          try {
+            const refreshResponse = await fetch('/api/customer/auth/refresh', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ refresh_token: refreshToken }),
+            });
+
+            if (!refreshResponse.ok) {
+              throw new Error('Erro ao renovar sessão');
+            }
+
+            const refreshData = await refreshResponse.json();
+            
+            // Atualizar tokens no localStorage
+            localStorage.setItem('customer_access_token', refreshData.tokens.access_token);
+            localStorage.setItem('customer_refresh_token', refreshData.tokens.refresh_token);
+            localStorage.setItem('customer_expires_at', refreshData.tokens.expires_at.toString());
+            
+            accessToken = refreshData.tokens.access_token;
+          } catch (refreshError) {
+            throw new Error('Sessão expirada. Faça login novamente.');
+          }
+        }
       }
 
       // Criar pedido e gerar PIX
@@ -122,9 +163,9 @@ export default function PixModal({
       setOrderNumber(orderData.order.orderNumber);
       
       // Calcular tempo restante (30 minutos)
-      const expiresAt = new Date(orderData.pix.expiresAt);
+      const pixExpiresAt = new Date(orderData.pix.expiresAt);
       const now = new Date();
-      const timeDiff = Math.max(0, Math.floor((expiresAt.getTime() - now.getTime()) / 1000));
+      const timeDiff = Math.max(0, Math.floor((pixExpiresAt.getTime() - now.getTime()) / 1000));
       setTimeLeft(timeDiff);
       
       console.log('✅ PIX gerado com sucesso:', {
