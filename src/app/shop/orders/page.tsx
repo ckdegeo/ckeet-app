@@ -100,44 +100,51 @@ export default function OrdersPage() {
     }
   );
 
-  // Cache para pedidos e purchases
-  const { data: ordersData, loading: ordersLoading, error: ordersError, refresh: refreshOrders } = useCache(
-    async () => {
+  // Estados para orders (SEM cache para atualização instantânea)
+  const [ordersData, setOrdersData] = useState<any>(null);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
+
+  // Função para buscar orders
+  const fetchOrders = async () => {
+    try {
+      setOrdersLoading(true);
       const accessToken = localStorage.getItem('customer_access_token');
       if (!accessToken) {
         throw new Error('Token de acesso não encontrado');
       }
 
-      const response = await fetch('/api/customer/orders/list', {
+      const response = await fetch('/api/customer/orders/list?_t=' + Date.now(), {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
         },
+        cache: 'no-store'
       });
 
       if (!response.ok) {
         throw new Error('Erro ao buscar pedidos');
       }
 
-      return await response.json();
-    },
-    {
-      key: 'customer_orders_list',
-      duration: 2 * 60 * 1000, // Reduzido para 2 minutos
-      userId: (() => {
-        try {
-          if (typeof window === 'undefined') return null;
-          const token = localStorage.getItem('customer_access_token');
-          if (token) {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            return payload.userId || payload.sub || null;
-          }
-        } catch (error) {
-          console.error('Erro ao obter userId do token:', error);
-        }
-        return null;
-      })(),
+      const data = await response.json();
+      setOrdersData(data);
+      setOrdersError(null);
+    } catch (error) {
+      console.error('Erro ao buscar pedidos:', error);
+      setOrdersError(error instanceof Error ? error.message : 'Erro desconhecido');
+    } finally {
+      setOrdersLoading(false);
     }
-  );
+  };
+
+  // Buscar orders ao montar o componente
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  // Fallback para refreshOrders (caso seja usado em outros lugares)
+  const refreshOrders = () => {
+    fetchOrders();
+  };
 
   useEffect(() => {
     checkAuthentication();
