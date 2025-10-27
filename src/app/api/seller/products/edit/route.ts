@@ -139,6 +139,9 @@ export async function PUT(request: NextRequest) {
           }
         },
         stockLines: {
+          where: {
+            isDeleted: false
+          },
           select: {
             id: true,
             content: true,
