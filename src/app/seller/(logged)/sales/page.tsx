@@ -303,7 +303,7 @@ function SalesContent() {
         {/* Cards de estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <NumberCard
-           title="Ordens Pendentes"
+           title="Pendentes"
            value={ordensPendentes}
            icon={Clock}
             change={0}
@@ -311,7 +311,7 @@ function SalesContent() {
          />
          
          <NumberCard
-           title="Ordens Aprovadas"
+           title="Aprovadas"
            value={ordensAprovadas}
            icon={CheckCircle}
             change={0}
@@ -319,7 +319,7 @@ function SalesContent() {
          />
 
          <NumberCard
-           title="Taxa de Conversão"
+           title="Taxa de conversão"
            value={`${taxaConversao.toFixed(1)}%`}
            icon={BarChart2}
             change={0}
