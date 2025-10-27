@@ -1,137 +1,171 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Eye, RotateCcw } from 'lucide-react';
 import Table from '@/app/components/tables/table';
-import DatePicker from '@/app/components/selectors/datePicker';
+import Selector from '@/app/components/selectors/selector';
 import Search from '@/app/components/inputs/search';
 import NumberCard from '@/app/components/cards/numberCard';
 import { Clock, CheckCircle, BarChart2 } from 'lucide-react';
+import { AuthGuard } from '@/lib/components/AuthGuard';
+import toast from 'react-hot-toast';
+
+type PeriodOption = 'today' | 'week' | 'month' | 'year' | 'all';
 
 // Interface para os dados de vendas
 interface Sale {
   id: string;
+  orderNumber: string;
   productName: string;
   customerName: string;
   customerEmail: string;
   paymentDate: string;
-  paymentTime: string;
-  status: 'completed' | 'pending' | 'cancelled' | 'refunded';
-  paymentMethod: 'credit_card' | 'debit_card' | 'pix' | 'boleto' | 'transfer';
+  status: string;
+  paymentMethod: string;
   amount: number;
+  createdAt: string;
 }
 
-// Dados de exemplo
-const sampleSales: Sale[] = [
-  {
-    id: '001',
-    productName: 'Smartphone XYZ',
-    customerName: 'João Silva',
-    customerEmail: 'joao.silva@email.com',
-    paymentDate: '2024-01-15',
-    paymentTime: '14:30',
-    status: 'completed',
-    paymentMethod: 'credit_card',
-    amount: 1299.90
-  },
-  {
-    id: '002',
-    productName: 'Fone de Ouvido Bluetooth',
-    customerName: 'Maria Santos',
-    customerEmail: 'maria.santos@email.com',
-    paymentDate: '2024-01-15',
-    paymentTime: '16:45',
-    status: 'pending',
-    paymentMethod: 'pix',
-    amount: 199.90
-  },
-  {
-    id: '003',
-    productName: 'Smartwatch',
-    customerName: 'Pedro Oliveira',
-    customerEmail: 'pedro.oliveira@email.com',
-    paymentDate: '2024-01-14',
-    paymentTime: '10:15',
-    status: 'completed',
-    paymentMethod: 'debit_card',
-    amount: 499.90
-  },
-  {
-    id: '004',
-    productName: 'Camiseta Básica',
-    customerName: 'Ana Costa',
-    customerEmail: 'ana.costa@email.com',
-    paymentDate: '2024-01-14',
-    paymentTime: '09:20',
-    status: 'cancelled',
-    paymentMethod: 'boleto',
-    amount: 49.90
-  },
-  {
-    id: '005',
-    productName: 'Calça Jeans',
-    customerName: 'Carlos Ferreira',
-    customerEmail: 'carlos.ferreira@email.com',
-    paymentDate: '2024-01-13',
-    paymentTime: '18:30',
-    status: 'refunded',
-    paymentMethod: 'credit_card',
-    amount: 129.90
-  },
-  {
-    id: '006',
-    productName: 'Smartphone XYZ',
-    customerName: 'Lucia Mendes',
-    customerEmail: 'lucia.mendes@email.com',
-    paymentDate: '2024-01-13',
-    paymentTime: '11:45',
-    status: 'completed',
-    paymentMethod: 'transfer',
-    amount: 1299.90
-  },
-  {
-    id: '007',
-    productName: 'Fone de Ouvido Bluetooth',
-    customerName: 'Roberto Lima',
-    customerEmail: 'roberto.lima@email.com',
-    paymentDate: '2024-01-12',
-    paymentTime: '15:10',
-    status: 'pending',
-    paymentMethod: 'pix',
-    amount: 199.90
-  }
-];
-
-// Interface para os dados do dashboard
-interface DashboardData {
-  ordens: {
-    pendentes: number;
-    aprovadas: number;
-  };
-}
-
-export default function Sales() {
-  const [sales, setSales] = useState<Sale[]>(sampleSales);
-  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
+function SalesContent() {
+  const [sales, setSales] = useState<Sale[]>([]);
+  const [period, setPeriod] = useState<PeriodOption>('month');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Calcula os dados do dashboard baseado nas vendas
-  const totalOrdens = sales.length;
-  const ordensAprovadas = sales.filter(sale => sale.status === 'completed').length;
-  const ordensPendentes = sales.filter(sale => sale.status === 'pending').length;
-  const taxaConversao = (ordensAprovadas / totalOrdens) * 100;
+  // Calcular range de datas baseado no período selecionado
+  const getDateRange = (period: PeriodOption): [Date, Date] => {
+    let startDate = new Date();
 
-  const dashboardData: DashboardData = {
-    ordens: {
-      pendentes: ordensPendentes,
-      aprovadas: ordensAprovadas,
+    switch (period) {
+      case 'today':
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case 'week':
+        startDate.setDate(startDate.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case 'month':
+        startDate.setMonth(startDate.getMonth() - 1);
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case 'year':
+        startDate.setFullYear(startDate.getFullYear() - 1);
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case 'all':
+        startDate = new Date('1900-01-01');
+        break;
+    }
+
+    const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
+
+    return [startDate, endDate];
+  };
+
+  const fetchSales = async () => {
+    setIsLoading(true);
+    try {
+      const accessToken = localStorage.getItem('access_token');
+      
+      if (!accessToken) {
+        toast.error('Por favor, faça login novamente');
+        window.location.href = '/seller/auth/login';
+        return;
+      }
+
+      const [startDate, endDate] = getDateRange(period);
+      const startDateStr = startDate.toISOString().split('T')[0];
+      const endDateStr = endDate.toISOString().split('T')[0];
+      
+      const params = new URLSearchParams();
+      params.append('startDate', startDateStr);
+      params.append('endDate', endDateStr);
+
+      const response = await fetch(`/api/seller/dashboard?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Cache-Control': 'no-cache'
+        },
+        cache: 'no-store'
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao carregar vendas');
+      }
+
+      // Buscar ordens com detalhes dos produtos e clientes
+      const ordersResponse = await fetch(`/api/seller/orders?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+
+      if (ordersResponse.ok) {
+        const ordersData = await ordersResponse.json();
+        
+        // Transformar orders em sales
+        const salesData: Sale[] = ordersData.data?.map((order: {
+          id: string;
+          orderNumber: string;
+          products: Array<{ product: { name: string; imageUrl: string } }>;
+          customer: { name: string; email: string } | null;
+          status: string;
+          paymentMethod: string | null;
+          totalAmount: number;
+          createdAt: string;
+        }) => ({
+          id: order.id,
+          orderNumber: order.orderNumber,
+          productName: order.products?.[0]?.product?.name || 'Produto não encontrado',
+          customerName: order.customer?.name || 'Cliente não encontrado',
+          customerEmail: order.customer?.email || 'Email não encontrado',
+          paymentDate: order.createdAt,
+          status: order.status,
+          paymentMethod: order.paymentMethod || 'N/A',
+          amount: order.totalAmount,
+          createdAt: order.createdAt
+        })) || [];
+
+        setSales(salesData);
+      } else {
+        setSales([]);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar vendas:', error);
+      toast.error('Erro ao carregar vendas');
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchSales();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [period]);
+
+  // Filtrar vendas por termo de busca
+  const filteredSales = sales.filter(sale => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      sale.productName.toLowerCase().includes(searchLower) ||
+      sale.customerName.toLowerCase().includes(searchLower) ||
+      sale.customerEmail.toLowerCase().includes(searchLower) ||
+      sale.orderNumber.toLowerCase().includes(searchLower)
+    );
+  });
+
+  // Calcular estatísticas
+  const totalOrdens = sales.length;
+  const ordensAprovadas = sales.filter(sale => sale.status === 'PAID').length;
+  const ordensPendentes = sales.filter(sale => sale.status === 'PENDING').length;
+  const taxaConversao = totalOrdens > 0 ? (ordensAprovadas / totalOrdens) * 100 : 0;
+
   // Função para formatar data e hora
-  const formatDateTime = (date: string, time: string) => {
-    const dateObj = new Date(date + 'T' + time);
-    return dateObj.toLocaleString('pt-BR', {
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -141,26 +175,29 @@ export default function Sales() {
   };
 
   // Função para formatar status
-  const formatStatus = (status: Sale['status']) => {
-    const statusMap = {
-      completed: 'Concluído',
-      pending: 'Pendente',
-      cancelled: 'Cancelado',
-      refunded: 'Reembolsado'
+  const formatStatus = (status: string) => {
+    const statusMap: Record<string, string> = {
+      'PENDING': 'Pendente',
+      'PAID': 'Pago',
+      'DELIVERED': 'Entregue',
+      'CANCELLED': 'Cancelado',
+      'REFUNDED': 'Reembolsado',
+      'COMPLETED': 'Completo',
+      'FAILED': 'Falhou'
     };
-    return statusMap[status];
+    return statusMap[status] || status;
   };
 
   // Função para formatar forma de pagamento
-  const formatPaymentMethod = (method: Sale['paymentMethod']) => {
-    const methodMap = {
-      credit_card: 'Cartão de Crédito',
-      debit_card: 'Cartão de Débito',
-      pix: 'PIX',
-      boleto: 'Boleto',
-      transfer: 'Transferência'
+  const formatPaymentMethod = (method: string) => {
+    const methodMap: Record<string, string> = {
+      'CREDIT_CARD': 'Cartão de Crédito',
+      'DEBIT_CARD': 'Cartão de Débito',
+      'PIX': 'PIX',
+      'BOLETO': 'Boleto',
+      'TRANSFER': 'Transferência'
     };
-    return methodMap[method];
+    return methodMap[method] || method;
   };
 
   // Função para formatar valor
@@ -172,25 +209,21 @@ export default function Sales() {
   };
 
   // Handlers para ações
-  const handleViewSale = (sale: Sale) => {
-    console.log('Visualizar venda:', sale);
-    // Implementar modal ou página de detalhes da venda
+  const handleViewSale = (_sale: Sale) => {
+    // Implementar modal de detalhes
   };
 
-  const handleRefund = (sale: Sale) => {
-    console.log('Processar reembolso:', sale);
+  const handleRefund = (_sale: Sale) => {
     // Implementar lógica de reembolso
-    setSales(prevSales => 
-      prevSales.map(s => 
-        s.id === sale.id 
-          ? { ...s, status: 'refunded' as const }
-          : s
-      )
-    );
   };
 
   // Configuração das colunas
   const columns = [
+    {
+      key: 'orderNumber' as keyof Sale,
+      label: 'Nº Pedido',
+      width: 'w-[150px]'
+    },
     {
       key: 'productName' as keyof Sale,
       label: 'Produto',
@@ -210,22 +243,19 @@ export default function Sales() {
       key: 'paymentDate' as keyof Sale,
       label: 'Data e Hora',
       width: 'w-[140px]',
-      render: (value: unknown) => {
-        const sale = sales.find(s => s.paymentDate === value);
-        return sale ? formatDateTime(sale.paymentDate, sale.paymentTime) : String(value);
-      }
+      render: (value: unknown) => formatDateTime(value as string)
     },
     {
       key: 'status' as keyof Sale,
       label: 'Status',
       width: 'w-[120px]',
-      render: (value: unknown) => formatStatus(value as Sale['status'])
+      render: (value: unknown) => formatStatus(value as string)
     },
     {
       key: 'paymentMethod' as keyof Sale,
-      label: 'Forma de Pagamento',
+      label: 'Pagamento',
       width: 'w-[160px]',
-      render: (value: unknown) => formatPaymentMethod(value as Sale['paymentMethod'])
+      render: (value: unknown) => formatPaymentMethod(value as string)
     },
     {
       key: 'amount' as keyof Sale,
@@ -248,9 +278,17 @@ export default function Sales() {
       label: 'Processar reembolso',
       onClick: handleRefund,
       color: 'error',
-      show: (sale: Sale) => sale.status === 'completed'
+      show: (sale: Sale) => sale.status === 'PAID'
     }
   ];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -262,21 +300,21 @@ export default function Sales() {
           </h1>
         </div>
 
-        {/* Segunda linha de cards */}
+        {/* Cards de estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <NumberCard
            title="Ordens Pendentes"
            value={ordensPendentes}
            icon={Clock}
-           change={ordensPendentes - 2} // Exemplo: comparação com período anterior
-           changeType="decrease"
+            change={0}
+            changeType="increase"
          />
          
          <NumberCard
            title="Ordens Aprovadas"
            value={ordensAprovadas}
            icon={CheckCircle}
-           change={ordensAprovadas - 5} // Exemplo: comparação com período anterior
+            change={0}
            changeType="increase"
          />
 
@@ -284,20 +322,25 @@ export default function Sales() {
            title="Taxa de Conversão"
            value={`${taxaConversao.toFixed(1)}%`}
            icon={BarChart2}
-           change={1.5} // Exemplo: comparação com período anterior
+            change={0}
            changeType="increase"
            background="colored"
          />
       </div>
-
         
         {/* Filtros */}
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="w-full sm:w-auto sm:min-w-[280px]">
-            <DatePicker
-              startDate={dateRange[0]}
-              endDate={dateRange[1]}
-              onChange={setDateRange}
+            <Selector
+              value={period}
+              onChange={(value) => setPeriod(value as PeriodOption)}
+              options={[
+                { value: 'today', label: 'Hoje' },
+                { value: 'week', label: 'Últimos 7 dias' },
+                { value: 'month', label: 'Último mês' },
+                { value: 'year', label: 'Último ano' },
+                { value: 'all', label: 'Todo período' }
+              ]}
             />
           </div>
           
@@ -313,12 +356,20 @@ export default function Sales() {
 
       {/* Tabela de vendas */}
       <Table
-        data={sales}
+        data={filteredSales}
         columns={columns}
         actions={actions}
         itemsPerPage={10}
         emptyMessage="Nenhuma venda encontrada"
       />
     </div>
+  );
+}
+
+export default function Sales() {
+  return (
+    <AuthGuard>
+      <SalesContent />
+    </AuthGuard>
   );
 }
