@@ -47,10 +47,19 @@ export async function GET(request: NextRequest) {
     });
 
     if (!seller || !seller.store) {
-      return NextResponse.json(
-        { error: 'Loja não encontrada' },
-        { status: 404 }
-      );
+      return NextResponse.json({
+        store: {
+          id: null,
+          name: '',
+          contactEmail: seller?.email || '',
+          logoUrl: '',
+          homeBannerUrl: '',
+          storeBannerUrl: '',
+          primaryColor: '#bd253c',
+          secondaryColor: '#970b27',
+          subdomain: '',
+        }
+      });
     }
 
     const storeData = {
