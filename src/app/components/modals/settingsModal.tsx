@@ -334,7 +334,7 @@ export default function SettingsModal({
                 <div className="space-y-6">
                   <div className="flex flex-col gap-1.5 w-full">
                     <label className="text-sm font-medium text-[var(--foreground)]">
-                      Senha Atual
+                      Senha atual
                     </label>
                     <input 
                       type="password" 
@@ -361,7 +361,7 @@ export default function SettingsModal({
                   
                   <div className="flex flex-col gap-1.5 w-full">
                     <label className="text-sm font-medium text-[var(--foreground)]">
-                      Nova Senha
+                      Nova senha
                     </label>
                     <input 
                       type="password" 
@@ -388,7 +388,7 @@ export default function SettingsModal({
                   
                   <div className="flex flex-col gap-1.5 w-full">
                     <label className="text-sm font-medium text-[var(--foreground)]">
-                      Confirmar Nova Senha
+                      Confirmar nova senha
                     </label>
                     <input 
                       type="password" 
