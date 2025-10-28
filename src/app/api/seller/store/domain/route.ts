@@ -103,60 +103,37 @@ export async function POST(request: NextRequest) {
 
     // Criar domínio na Vercel
     const domainName = `${subdomain}.ckeet.store`;
-    console.log(`Criando domínio na Vercel: ${domainName}`);
     
     try {
-      // Verificar se as variáveis de ambiente estão configuradas
       const vercelToken = process.env.VERCEL_TOKEN;
       const vercelProjectId = process.env.VERCEL_PROJECT_ID;
       
-      if (!vercelToken) {
-        console.error('VERCEL_TOKEN não configurado');
-        throw new Error('Token da Vercel não configurado');
-      }
-      
-      if (!vercelProjectId) {
-        console.error('VERCEL_PROJECT_ID não configurado');
-        throw new Error('ID do projeto Vercel não configurado');
-      }
-      
-      console.log('Configurações Vercel OK, criando domínio...');
-      console.log('Token:', vercelToken.substring(0, 10) + '...');
-      console.log('Project ID:', vercelProjectId);
-      
-      // Chamar API da Vercel para criar domínio
-      const vercelResponse = await fetch(`https://api.vercel.com/v10/projects/${vercelProjectId}/domains`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${vercelToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: domainName,
-          redirect: null,
-          redirectStatusCode: null,
-        }),
-      });
+      if (vercelToken && vercelProjectId) {
+        const vercelResponse = await fetch(`https://api.vercel.com/v10/projects/${vercelProjectId}/domains`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${vercelToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: domainName,
+            redirect: null,
+            redirectStatusCode: null,
+          }),
+        });
 
-      const vercelData = await vercelResponse.json();
-      console.log('Resposta da Vercel:', vercelData);
+        const vercelData = await vercelResponse.json();
 
-      if (!vercelResponse.ok) {
-        console.error('Erro ao criar domínio na Vercel:', vercelData);
-        
-        // Se o domínio já existe na Vercel, continuar
-        if (vercelResponse.status === 409 || vercelData.error?.code === 'domain_already_exists') {
-          console.log('Domínio já existe na Vercel, continuando...');
-        } else {
-          throw new Error(`Erro ao criar domínio na Vercel: ${vercelData.error?.message || 'Erro desconhecido'}`);
+        if (!vercelResponse.ok) {
+          // Se o domínio já existe na Vercel, continuar
+          if (vercelResponse.status !== 409 && vercelData.error?.code !== 'domain_already_exists') {
+            console.error('Erro ao criar domínio na Vercel:', vercelData.error?.message);
+          }
         }
-      } else {
-        console.log('Domínio criado com sucesso na Vercel!');
       }
     } catch (vercelError) {
-      console.error('Erro ao criar domínio na Vercel:', vercelError);
       // Não falhar a operação, apenas logar o erro
-      console.log('Continuando sem criar domínio na Vercel...');
+      console.error('Erro ao criar domínio na Vercel:', vercelError);
     }
 
     // Atualizar ou criar loja com o novo subdomínio

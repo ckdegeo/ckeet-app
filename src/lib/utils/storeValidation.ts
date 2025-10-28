@@ -61,8 +61,12 @@ export function validateStoreCompletion(store: StoreData | null): StoreCompletio
   const completedFields = REQUIRED_FIELDS.length - missingFields.length;
   const completionPercentage = Math.round((completedFields / REQUIRED_FIELDS.length) * 100);
 
+  // Se a loja tem um subdomínio válido, considere como "at least initializable"
+  // Isso permite que o seller acesse a página de configuração após criar o domínio
+  const hasSubdomain = Boolean(store.subdomain && store.subdomain.trim() !== '');
+  
   return {
-    isComplete: missingFields.length === 0,
+    isComplete: hasSubdomain && missingFields.length === 0, // Loja completa = tem subdomínio + todos os campos preenchidos
     missingFields,
     completionPercentage
   };

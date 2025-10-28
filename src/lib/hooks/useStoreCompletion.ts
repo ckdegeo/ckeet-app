@@ -34,8 +34,9 @@ export function useStoreCompletion() {
         const data = await response.json();
         setStoreStatus(data);
         
-        // Se a loja não está completa e não estamos na página de configuração
-        if (!data.isComplete && !window.location.pathname.includes('/seller/store')) {
+        // Não bloquear acesso se a loja já tem subdomínio (foi criada)
+        // Permitir que o seller complete a configuração na página /seller/store
+        if (!data.isComplete && data.completionPercentage > 0 && !window.location.pathname.includes('/seller/store')) {
           showErrorToast('Complete a configuração da sua loja para acessar outras funcionalidades');
           router.push('/seller/store?incomplete=true');
         }
