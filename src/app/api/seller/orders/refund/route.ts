@@ -35,7 +35,10 @@ export async function POST(request: NextRequest) {
     // Buscar order e última transação MP
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      include: { transactions: { orderBy: { createdAt: 'desc' }, take: 1 } }
+      include: { 
+        transactions: { orderBy: { createdAt: 'desc' }, take: 1 },
+        store: { include: { seller: true } }
+      }
     });
     if (!order) {
       return NextResponse.json({ error: 'Pedido não encontrado' }, { status: 404 });
@@ -50,8 +53,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Pagamento não encontrado para reembolso' }, { status: 400 });
     }
 
+    // Obter sellerId correto
+    const sellerId = order.store?.seller?.id;
+    if (!sellerId) {
+      return NextResponse.json({ error: 'Seller não encontrado para este pedido' }, { status: 404 });
+    }
+
     // Executar reembolso no MP
-    const result = await MercadoPagoService.refundPayment(tx.mpPaymentId, order.storeId);
+    const result = await MercadoPagoService.refundPayment(tx.mpPaymentId, sellerId);
     if (!result.success) {
       return NextResponse.json({ error: result.error || 'Falha ao reembolsar' }, { status: 502 });
     }
