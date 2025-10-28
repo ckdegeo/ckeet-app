@@ -39,11 +39,9 @@ export default function LoginPage() {
       if (response.ok) {
         const data = await response.json();
         setStore(data.store);
-      } else {
-        console.error('Loja não encontrada para subdomain:', currentSubdomain);
       }
     } catch (error) {
-      console.error('Erro ao carregar dados da loja:', error);
+      // Erro ao carregar dados da loja
     } finally {
       setLoadingStore(false);
     }
@@ -53,7 +51,6 @@ export default function LoginPage() {
     e.preventDefault();
 
     if (!subdomain) {
-      console.error('Subdomain não definido');
       return;
     }
 
