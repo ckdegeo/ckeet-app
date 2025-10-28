@@ -16,7 +16,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [isResendModalOpen, setIsResendModalOpen] = useState(false);
   const router = useRouter();
-  
+
   const { isLoading, errors, login } = useSellerLogin();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,7 +28,7 @@ export default function Login() {
     };
 
     const success = await login(formData);
-    
+
     if (success) {
       // Redirecionar para dashboard
       router.push('/seller/dashboard');
@@ -42,9 +42,9 @@ export default function Login() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: emailToResend }),
       });
-      
+
       const result = await response.json();
-      
+
       if (response.ok) {
         showSuccessToast('Email de confirmação reenviado! Verifique sua caixa de entrada.');
       } else {
@@ -57,41 +57,41 @@ export default function Login() {
 
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row">
-      {/* Lado Esquerdo - Imagem/Banner */}
-      <div className="hidden md:flex md:w-1/2 bg-[var(--primary)] items-center justify-center p-8">
-        <div className="max-w-md text-[var(--on-primary)]">
-          <h1 className="text-4xl font-bold mb-4">
-            Ckeet
-          </h1>
-          <p className="text-lg opacity-90">
-            Gerencie sua loja online de forma simples e eficiente
-          </p>
-        </div>
+      {/* Lado Esquerdo - Banner */}
+      <div className="hidden md:flex md:w-1/2 relative border-r border-gray-200">
+        <Image
+          src="/init_banner.png"
+          alt="Ckeet - Sua lojinha virtual em minutos"
+          fill
+          priority
+          className="object-cover"
+        />
       </div>
 
       {/* Lado Direito - Formulário */}
       <div className="w-full md:w-1/2 flex items-center justify-center p-4 md:p-8">
         <div className="w-full max-w-md space-y-8">
-          {/* Logo */}
-          <div className="flex flex-col items-center gap-4 mb-8">
+          {/* Logo e Login */}
+          <div className="flex items-center justify-between mb-8">
             <Image
               src="/logo.png"
               alt="Ckeet Logo"
-              width={120}
-              height={120}
+              width={100}
+              height={100}
               priority
               className="h-auto"
             />
-            <h2 className="text-2xl font-semibold text-[var(--foreground)]">
+            <h2 className="text-md font-semibold text-[var(--foreground)]">
               Login
             </h2>
           </div>
 
+          <hr className="border-gray-200 my-4" />
 
           {/* Formulário */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <Input
-              label="Email"
+              label="E-mail"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -112,50 +112,50 @@ export default function Login() {
               disabled={isLoading}
             />
 
-                   <div className="flex items-center justify-between">
-                     <label className="flex items-center gap-2">
-                       <input
-                         type="checkbox"
-                         className="w-4 h-4 rounded border-[var(--on-background)] text-[var(--primary)]"
-                       />
-                       <span className="text-sm text-[var(--foreground)]">
-                         Lembrar-me
-                       </span>
-                     </label>
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 rounded border-[var(--on-background)] text-[var(--primary)]"
+                />
+                <span className="text-sm text-[var(--foreground)]">
+                  Lembrar-me
+                </span>
+              </label>
 
-                     <a
-                       href="#"
-                       className="text-sm text-[var(--primary)] hover:opacity-90"
-                     >
-                       Esqueceu a senha?
-                     </a>
-                   </div>
+              <a
+                href="#"
+                className="text-sm text-[var(--primary)] hover:opacity-90"
+              >
+                Esqueceu a senha?
+              </a>
+            </div>
+            
+            <hr className="border-gray-200 my-4" />
 
-                   {/* Botão para reenviar confirmação */}
-                   <div className="text-center">
-                     <button
-                       type="button"
-                       onClick={() => setIsResendModalOpen(true)}
-                       className="text-sm text-[var(--primary)] hover:opacity-90 underline"
-                     >
-                       Não recebeu o email de confirmação?
-                     </button>
-                   </div>
-
-            <Button className="w-full" disabled={isLoading} type="submit">
+            <Button className="w-full mb-2" disabled={isLoading} type="submit">
               {isLoading ? 'Entrando...' : 'Entrar'}
             </Button>
 
-            <p className="text-center text-sm text-[var(--on-background)]">
-              Não tem uma conta?{" "}
-              <Link
-                href="/seller/auth/register"
-                className="text-[var(--primary)] hover:opacity-90"
-              >
-                Cadastre-se
+            <div className="text-center">
+              <Link href="/seller/auth/register">
+                <Button variant="outline" className="w-full">
+                  Cadastre-se
+                </Button>
               </Link>
-            </p>
+            </div>
           </form>
+       
+          {/* Botão para reenviar confirmação */}
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => setIsResendModalOpen(true)}
+              className="cursor-pointer font-light text-sm text-[var(--primary)] hover:opacity-90"
+            >
+              Não recebeu o email de confirmação?
+            </button>
+          </div>
         </div>
       </div>
 

@@ -83,35 +83,36 @@ export default function Register() {
 
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row">
-      {/* Lado Esquerdo - Imagem/Banner */}
-      <div className="hidden md:flex md:w-1/2 bg-[var(--primary)] items-center justify-center p-8">
-        <div className="max-w-md text-[var(--on-primary)]">
-          <h1 className="text-4xl font-bold mb-4">
-            Ckeet
-          </h1>
-          <p className="text-lg opacity-90">
-            Gerencie sua loja online de forma simples e eficiente
-          </p>
-        </div>
+      {/* Lado Esquerdo - Banner */}
+      <div className="hidden md:flex md:w-1/2 relative border-r border-gray-200">
+        <Image
+          src="/init_banner.png"
+          alt="Ckeet - Sua lojinha virtual em minutos"
+          fill
+          priority
+          className="object-cover"
+        />
       </div>
 
       {/* Lado Direito - Formulário */}
       <div className="w-full md:w-1/2 flex items-center justify-center p-4 md:p-8">
         <div className="w-full max-w-md space-y-8">
-          {/* Logo */}
-          <div className="flex flex-col items-center gap-4 mb-8">
+          {/* Logo e Cadastro */}
+          <div className="flex items-center justify-between mb-8">
             <Image
               src="/logo.png"
               alt="Ckeet Logo"
-              width={120}
-              height={120}
+              width={100}
+              height={100}
               priority
               className="h-auto"
             />
-            <h2 className="text-2xl font-semibold text-[var(--foreground)]">
+            <h2 className="text-md font-semibold text-[var(--foreground)]">
               Cadastro
             </h2>
           </div>
+
+          <hr className="border-gray-200 my-4" />
 
 
           {/* Formulário */}
@@ -128,7 +129,7 @@ export default function Register() {
             />
 
             <Input
-              label="Email"
+              label="E-mail"
               type="email"
               value={email}
               onChange={handleEmailChange}
@@ -180,22 +181,20 @@ export default function Register() {
             />
 
             <Button 
-              className="w-full" 
+              className="w-full mb-2" 
               disabled={isLoading || success}
               type="submit"
             >
               {isLoading ? 'Criando conta...' : success ? '✅ Conta criada!' : 'Cadastrar'}
             </Button>
 
-            <p className="text-center text-sm text-[var(--on-background)]">
-              Já tem uma conta?{" "}
-              <Link
-                href="/seller/auth/login"
-                className="text-[var(--primary)] hover:opacity-90"
-              >
-                Faça login
+            <div className="text-center">
+              <Link href="/seller/auth/login">
+                <Button variant="outline" className="w-full">
+                  Faça login
+                </Button>
               </Link>
-            </p>
+            </div>
           </form>
         </div>
       </div>

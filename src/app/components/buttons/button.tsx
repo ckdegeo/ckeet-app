@@ -5,7 +5,7 @@ import { ButtonHTMLAttributes } from "react";
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
   className?: string;
-  variant?: "default" | "primary" | "secondary" | "error";
+  variant?: "default" | "primary" | "secondary" | "error" | "outline";
 }
 
 export default function Button({
@@ -22,6 +22,8 @@ export default function Button({
         return "bg-gray-100 text-gray-700 hover:bg-gray-200";
       case "error":
         return "bg-red-500 text-white hover:bg-red-600";
+      case "outline":
+        return "bg-transparent border-2 border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-[var(--on-primary)]";
       default:
         return "bg-[var(--primary)] text-[var(--on-primary)] hover:opacity-90";
     }
