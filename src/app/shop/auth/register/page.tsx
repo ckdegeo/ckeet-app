@@ -126,29 +126,38 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row">
-      {/* Lado Esquerdo - Imagem/Banner */}
-      <div
-        className="hidden md:flex md:w-1/2 items-center justify-center p-8 relative"
-        style={{ backgroundColor: store?.primaryColor || '#bd253c' }}
-      >
+      {/* Lado Esquerdo - Banner */}
+      <div className="hidden md:flex md:w-1/2 relative border-r border-gray-200">
         {store?.homeBannerUrl ? (
-          <div className="w-full h-full relative">
-            <img
-              src={store.homeBannerUrl}
-              alt="Banner da loja"
-              className="w-full h-full object-cover rounded-lg"
-            />
+          <img
+            src={store.homeBannerUrl}
+            alt="Banner da loja"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div 
+            className="w-full h-full flex items-center justify-center"
+            style={{ backgroundColor: store?.primaryColor || '#bd253c' }}
+          >
+            <div className="max-w-md text-white text-center">
+              <h1 className="text-4xl font-bold mb-4">
+                {store?.name || 'Ckeet'}
+              </h1>
+              <p className="text-lg opacity-90">
+                {store?.description || 'Sua lojinha virtual em minutos'}
+              </p>
+            </div>
           </div>
-        ) : null }
+        )}
       </div>
 
       {/* Lado Direito - Formulário */}
       <div className="w-full md:w-1/2 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          {/* Logo */}
-          <div className="flex flex-col items-center gap-4 mb-8">
+          {/* Logo e Cadastro */}
+          <div className="flex items-center justify-between mb-8">
             {store?.logoUrl ? (
-              <div className="w-24 h-24 bg-white rounded-lg p-2 flex items-center justify-center">
+              <div className="w-20 h-20 bg-white rounded-lg p-2 flex items-center justify-center">
                 <img
                   src={store.logoUrl}
                   alt={store.name}
@@ -159,16 +168,18 @@ export default function RegisterPage() {
               <Image
                 src="/logo.png"
                 alt="Ckeet Logo"
-                width={120}
-                height={120}
+                width={100}
+                height={100}
                 priority
                 className="h-auto"
               />
             )}
-            <h2 className="text-2xl font-semibold text-[var(--foreground)]">
+            <h2 className="text-md font-semibold text-[var(--foreground)]">
               Cadastro de cliente
             </h2>
           </div>
+
+          <hr className="border-gray-200 my-4" />
 
           {/* Formulário */}
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -255,7 +266,7 @@ export default function RegisterPage() {
             <Button
               type="submit"
               variant="primary"
-              className="w-full"
+              className="w-full mb-2"
               disabled={isLoading}
               style={{
                 backgroundColor: store?.secondaryColor || '#970b27',
@@ -266,31 +277,18 @@ export default function RegisterPage() {
 
             {/* Link para Login */}
             <div className="text-center">
-              <p 
-                className="text-[var(--foreground)] opacity-70"
-                style={{
-                  '--primary': store?.primaryColor || '#bd253c',
-                  '--secondary': store?.secondaryColor || '#970b27',
-                  '--background': '#ffffff',
-                  '--foreground': '#111827',
-                  '--on-background': '#6b7280'
-                } as React.CSSProperties}
-              >
-                Já tem uma conta?{' '}
-                <Link
-                  href="/shop/auth/login"
-                  className="text-[var(--primary)] hover:underline font-medium"
+              <Link href="/shop/auth/login">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
                   style={{
-                    '--primary': store?.primaryColor || '#bd253c',
-                    '--secondary': store?.secondaryColor || '#970b27',
-                    '--background': '#ffffff',
-                    '--foreground': '#111827',
-                    '--on-background': '#6b7280'
-                  } as React.CSSProperties}
+                    borderColor: store?.primaryColor || '#bd253c',
+                    color: store?.primaryColor || '#bd253c'
+                  }}
                 >
                   Faça login
-                </Link>
-              </p>
+                </Button>
+              </Link>
             </div>
           </form>
         </div>
