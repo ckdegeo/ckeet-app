@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Store } from '@/lib/types';
 import StoreNavbar from '../patterns/storeNavbar';
 import Footer from '../patterns/footer';
@@ -240,51 +240,46 @@ export default function OrdersPage() {
     }
   }, [storeData]);
 
-  // Polling para checar delivery de pagamentos aprovados
-  useEffect(() => {
-    const checkDelivery = async () => {
-      try {
-        console.log('🔍 [POLLING] Verificando se há conteúdo para entregar...');
-        const accessToken = localStorage.getItem('customer_access_token');
-        if (!accessToken) {
-          console.log('⚠️ [POLLING] Sem customer_access_token');
-          return;
-        }
-
-        console.log('📡 [POLLING] Chamando /api/customer/orders/check-delivery');
-        const response = await fetch('/api/customer/orders/check-delivery', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json'
-          },
-          cache: 'no-store'
-        });
-
-        console.log('📊 [POLLING] Response status:', response.status);
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log('✅ [POLLING] Data recebida:', data);
-          if (data.success && data.delivered > 0) {
-            console.log('🎉 [POLLING] Conteúdo entregue! Atualizando página...');
-            // Refresh orders para mostrar conteúdo entregue
-            await fetchOrders();
-          }
-        }
-      } catch (error) {
-        console.error('❌ [POLLING] Erro:', error);
+  // Função para verificar entrega de conteúdo
+  const checkDelivery = useCallback(async () => {
+    try {
+      console.log('🔍 [POLLING] Verificando se há conteúdo para entregar...');
+      const accessToken = localStorage.getItem('customer_access_token');
+      if (!accessToken) {
+        console.log('⚠️ [POLLING] Sem customer_access_token');
+        return;
       }
-    };
 
-    // Checar imediatamente
-    checkDelivery();
+      console.log('📡 [POLLING] Chamando /api/customer/orders/check-delivery');
+      const response = await fetch('/api/customer/orders/check-delivery', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        cache: 'no-store'
+      });
 
-    // Checar a cada 5 segundos
-    const interval = setInterval(checkDelivery, 5000);
+      console.log('📊 [POLLING] Response status:', response.status);
 
-    return () => clearInterval(interval);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ [POLLING] Data recebida:', data);
+        if (data.success && data.delivered > 0) {
+          console.log('🎉 [POLLING] Conteúdo entregue! Atualizando página...');
+          // Refresh orders para mostrar conteúdo entregue
+          await fetchOrders();
+        }
+      }
+    } catch (error) {
+      console.error('❌ [POLLING] Erro:', error);
+    }
   }, [fetchOrders]);
+
+  // Checar apenas uma vez ao carregar a página
+  useEffect(() => {
+    checkDelivery();
+  }, [checkDelivery]);
 
   useEffect(() => {
     if (ordersError) {
@@ -685,7 +680,10 @@ export default function OrdersPage() {
                 
                 {/* Botão de Refresh */}
                 <button
-                  onClick={refreshOrders}
+                  onClick={() => {
+                    refreshOrders();
+                    checkDelivery();
+                  }}
                   disabled={ordersLoading}
                   className="cursor-pointer p-2 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Atualizar lista de pedidos"
