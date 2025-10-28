@@ -527,12 +527,14 @@ export class MercadoPagoService {
           'Content-Type': 'application/json',
           'X-Idempotency-Key': idempotencyKey,
         },
-        body: JSON.stringify({}) // reembolso total
+        body: JSON.stringify({
+          amount: null // Reembolso total - null significa reembolso completo
+        })
       });
 
       if (!response.ok) {
-        const text = await response.text();
-        return { success: false, error: `Erro ao solicitar reembolso: ${text}` };
+        const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido' }));
+        return { success: false, error: `Erro ao solicitar reembolso: ${errorData.message || response.statusText}` };
       }
 
       return { success: true, status: 'refunded' };
