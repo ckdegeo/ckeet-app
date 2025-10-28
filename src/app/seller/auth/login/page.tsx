@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Input from "@/app/components/inputs/input";
 import Button from "@/app/components/buttons/button";
+import ResendConfirmationModal from "@/app/components/modals/resendConfirmationModal";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSellerLogin } from "@/lib/hooks/useSellerLogin";
@@ -13,6 +14,7 @@ import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isResendModalOpen, setIsResendModalOpen] = useState(false);
   const router = useRouter();
   
   const { isLoading, errors, login } = useSellerLogin();
@@ -30,6 +32,26 @@ export default function Login() {
     if (success) {
       // Redirecionar para dashboard
       router.push('/seller/dashboard');
+    }
+  };
+
+  const handleResendConfirmation = async (emailToResend: string) => {
+    try {
+      const response = await fetch('/api/seller/auth/resend-confirmation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailToResend }),
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok) {
+        showSuccessToast('Email de confirmação reenviado! Verifique sua caixa de entrada.');
+      } else {
+        showErrorToast(result.error || 'Erro ao reenviar email');
+      }
+    } catch (error) {
+      showErrorToast('Erro ao reenviar email');
     }
   };
 
@@ -113,33 +135,10 @@ export default function Login() {
                    <div className="text-center">
                      <button
                        type="button"
-                       onClick={async () => {
-                         if (!email) {
-                           showErrorToast('Digite seu email primeiro');
-                           return;
-                         }
-                         
-                         try {
-                           const response = await fetch('/api/seller/auth/resend-confirmation', {
-                             method: 'POST',
-                             headers: { 'Content-Type': 'application/json' },
-                             body: JSON.stringify({ email }),
-                           });
-                           
-                           const result = await response.json();
-                           
-                           if (response.ok) {
-                             showSuccessToast('Email de confirmação reenviado! Verifique sua caixa de entrada.');
-                           } else {
-                             showErrorToast(result.error || 'Erro ao reenviar email');
-                           }
-                         } catch (error) {
-                           showErrorToast('Erro ao reenviar email');
-                         }
-                       }}
+                       onClick={() => setIsResendModalOpen(true)}
                        className="text-sm text-[var(--primary)] hover:opacity-90 underline"
                      >
-                       Não recebeu o email de confirmação? Clique aqui
+                       Não recebeu o email de confirmação?
                      </button>
                    </div>
 
@@ -159,6 +158,14 @@ export default function Login() {
           </form>
         </div>
       </div>
+
+      {/* Modal de Reenvio de Confirmação */}
+      <ResendConfirmationModal
+        isOpen={isResendModalOpen}
+        onClose={() => setIsResendModalOpen(false)}
+        onResend={handleResendConfirmation}
+        initialEmail={email}
+      />
     </div>
   );
 }
