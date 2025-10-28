@@ -251,7 +251,13 @@ export default function ProductPage() {
       price: value
     }));
     
-    if (errors.price) {
+    // Validação em tempo real para preço mínimo
+    if (value > 0 && value < 5) {
+      setErrors(prev => ({
+        ...prev,
+        price: 'Preço mínimo é R$ 5,00'
+      }));
+    } else if (errors.price) {
       setErrors(prev => ({
         ...prev,
         price: undefined
@@ -305,6 +311,9 @@ export default function ProductPage() {
     if (productData.price <= 0) {
       newErrors.price = 'Preço deve ser maior que zero';
       errorMessages.push('❌ Preço válido (maior que R$ 0,00)');
+    } else if (productData.price < 5) {
+      newErrors.price = 'Preço mínimo é R$ 5,00';
+      errorMessages.push('❌ Preço mínimo de R$ 5,00');
     }
 
     // Verificar se há pelo menos uma imagem (URL ou objeto com URL)
@@ -838,18 +847,21 @@ export default function ProductPage() {
 
       {/* Alerta de erros de validação */}
       {Object.keys(errors).length > 0 && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <div className="bg-[var(--surface)] border border-[var(--error)]/30 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 dark:bg-red-800 flex items-center justify-center">
-              <span className="text-red-600 dark:text-red-200 font-bold text-sm">!</span>
+            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--error)]/10 flex items-center justify-center">
+              <span className="text-[var(--error)] font-bold text-sm">!</span>
             </div>
             <div className="flex-1">
-              <h3 className="text-sm font-semibold text-red-800 dark:text-red-200 mb-2">
+              <h3 className="text-sm font-semibold text-[var(--foreground)] mb-2">
                 {Object.keys(errors).length} {Object.keys(errors).length === 1 ? 'campo precisa' : 'campos precisam'} ser preenchido{Object.keys(errors).length === 1 ? '' : 's'}:
               </h3>
-              <ul className="text-sm text-red-700 dark:text-red-300 space-y-1">
+              <ul className="text-sm text-[var(--on-background)] space-y-1">
                 {Object.entries(errors).map(([field, error]) => (
-                  <li key={field}>• {error}</li>
+                  <li key={field} className="flex items-start gap-2">
+                    <span className="text-[var(--error)] mt-0.5">•</span>
+                    <span>{error}</span>
+                  </li>
                 ))}
               </ul>
             </div>
