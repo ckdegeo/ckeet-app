@@ -140,10 +140,46 @@ export async function GET(request: NextRequest) {
               deliveredContent = product.fixedContent;
             }
           } else if (product.stockType === 'KEYAUTH') {
-            // KeyAuth: chave só é gerada após pagamento aprovado (no webhook)
-            // Aqui apenas verificamos se já foi entregue
-            console.log(`⚠️ [CHECK-DELIVERY] Produto KeyAuth ${product.name} - aguardando pagamento para gerar chave`);
-            continue;
+            // Verificar se já existe purchase para este produto (evitar gerar múltiplas keys)
+            const existingPurchase = await prisma.purchase.findFirst({
+              where: {
+                orderId: order.id,
+                // Verificar se há purchase com conteúdo KeyAuth para este pedido
+                deliveredContent: {
+                  not: null
+                }
+              }
+            });
+
+            if (existingPurchase) {
+              console.log(`⚠️ [CHECK-DELIVERY] KeyAuth já entregue para pedido ${order.orderNumber}`);
+              continue;
+            }
+
+            // Gerar chave via KeyAuth API apenas uma vez
+            if (!product.keyAuthSellerKey || !product.keyAuthDays) {
+              console.log(`⚠️ [CHECK-DELIVERY] Produto ${product.name} sem configuração KeyAuth`);
+              continue;
+            }
+
+            try {
+              console.log(`🔑 [CHECK-DELIVERY] Gerando chave KeyAuth para ${product.name} (pedido ${order.orderNumber})`);
+              const url = `https://keyauth.win/api/seller/?sellerkey=${encodeURIComponent(product.keyAuthSellerKey)}&type=add&expiry=${encodeURIComponent(String(product.keyAuthDays))}&mask=******-******-******-******-******-******&level=1&amount=1&format=text`;
+              const res = await fetch(url, { method: 'GET' });
+              const text = await res.text();
+              const generatedKey = text.trim();
+
+              if (!res.ok || !generatedKey) {
+                console.log(`❌ [CHECK-DELIVERY] Falha ao gerar chave KeyAuth para ${product.name}`);
+                continue;
+              }
+
+              deliveredContent = generatedKey;
+              console.log(`✅ [CHECK-DELIVERY] Chave KeyAuth gerada com sucesso: ${generatedKey.substring(0, 10)}...`);
+            } catch (err) {
+              console.log(`❌ [CHECK-DELIVERY] Erro ao gerar chave KeyAuth para ${product.name}:`, err);
+              continue;
+            }
           }
 
           // Buscar deliverables
