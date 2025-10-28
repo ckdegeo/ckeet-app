@@ -276,6 +276,12 @@ export async function POST(request: NextRequest) {
             console.log('⚠️ [WEBHOOK] Nenhum deliverable encontrado');
           }
 
+          // Só criar purchase se tiver conteúdo ou download para entregar
+          if (!deliveredContent && !downloadUrl) {
+            console.log(`⚠️ [WEBHOOK] Produto ${product.name} sem conteúdo disponível para entrega`);
+            continue;
+          }
+
           // Criar purchase record
           console.log('📝 [WEBHOOK] Criando purchase...');
           console.log('📝 [WEBHOOK] Dados do purchase:', {

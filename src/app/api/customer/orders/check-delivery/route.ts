@@ -130,6 +130,12 @@ export async function GET(request: NextRequest) {
             downloadUrl = product.deliverables[0].url;
           }
 
+          // Só criar purchase se tiver conteúdo ou download para entregar
+          if (!deliveredContent && !downloadUrl) {
+            console.log(`⚠️ [CHECK-DELIVERY] Produto ${product.name} sem conteúdo disponível para entrega`);
+            continue;
+          }
+
           // Criar purchase
           const purchase = await prisma.purchase.create({
             data: {
