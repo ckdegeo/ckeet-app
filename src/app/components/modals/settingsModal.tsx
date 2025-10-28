@@ -69,11 +69,19 @@ export default function SettingsModal({
   const handleSaveProfile = async () => {
     setIsLoading(true);
     try {
+      // Obter token de acesso do localStorage
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) {
+        showErrorToast('Sessão expirada. Faça login novamente.');
+        return;
+      }
+
       // Fazer chamada para a API para atualizar o nome
       const response = await fetch('/api/seller/profile/update-name', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ name }),
       });
@@ -81,6 +89,11 @@ export default function SettingsModal({
       const result = await response.json();
 
       if (!response.ok) {
+        // Tratar erros específicos
+        if (response.status === 401) {
+          showErrorToast('Sessão expirada. Faça login novamente.');
+          return;
+        }
         throw new Error(result.error || 'Falha ao atualizar o nome.');
       }
 
@@ -99,10 +112,18 @@ export default function SettingsModal({
   const handleChangePassword = async () => {
     setIsPasswordLoading(true);
     try {
+      // Obter token de acesso do localStorage
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) {
+        showErrorToast('Sessão expirada. Faça login novamente.');
+        return;
+      }
+
       const response = await fetch('/api/seller/profile/change-password', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           currentPassword,
@@ -114,6 +135,15 @@ export default function SettingsModal({
       const result = await response.json();
 
       if (!response.ok) {
+        // Tratar erros específicos
+        if (response.status === 401) {
+          showErrorToast('Sessão expirada. Faça login novamente.');
+          return;
+        }
+        if (response.status === 429) {
+          showErrorToast('Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.');
+          return;
+        }
         throw new Error(result.error || 'Falha ao alterar senha.');
       }
 
