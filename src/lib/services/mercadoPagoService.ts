@@ -510,6 +510,38 @@ export class MercadoPagoService {
   }
 
   /**
+   * Solicita reembolso total de um pagamento
+   */
+  static async refundPayment(paymentId: string, sellerId: string): Promise<{ success: boolean; status?: string; error?: string }> {
+    const config = await this.getSellerCredentials(sellerId);
+    if (!config?.accessToken) {
+      return { success: false, error: 'Seller não conectado ao Mercado Pago' };
+    }
+
+    try {
+      const idempotencyKey = `refund-${paymentId}-${Date.now()}`;
+      const response = await fetch(`${this.BASE_URL}/v1/payments/${paymentId}/refunds`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${config.accessToken}`,
+          'Content-Type': 'application/json',
+          'X-Idempotency-Key': idempotencyKey,
+        },
+        body: JSON.stringify({}) // reembolso total
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        return { success: false, error: `Erro ao solicitar reembolso: ${text}` };
+      }
+
+      return { success: true, status: 'refunded' };
+    } catch (error) {
+      return { success: false, error: 'Erro interno ao solicitar reembolso' };
+    }
+  }
+
+  /**
    * Desconecta seller do Mercado Pago
    */
   static async disconnectSeller(sellerId: string): Promise<void> {

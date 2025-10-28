@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Eye, RotateCcw } from 'lucide-react';
+import RefundConfirmationModal from '@/app/components/modals/refundConfirmationModal';
 import Table from '@/app/components/tables/table';
 import Selector from '@/app/components/selectors/selector';
 import Search from '@/app/components/inputs/search';
@@ -45,6 +46,8 @@ function SalesContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
+  const [refundSale, setRefundSale] = useState<Sale | null>(null);
 
   // Calcular range de datas baseado no período selecionado
   const getDateRange = (period: PeriodOption): [Date, Date] => {
@@ -243,8 +246,38 @@ function SalesContent() {
     setIsModalOpen(true);
   };
 
-  const handleRefund = (_sale: Sale) => {
-    // Implementar lógica de reembolso
+  const handleRefund = (sale: Sale) => {
+    setRefundSale(sale);
+    setIsRefundModalOpen(true);
+  };
+
+  const confirmRefund = async (password: string) => {
+    if (!refundSale) return;
+    try {
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) {
+        toast.error('Sessão expirada. Faça login novamente.');
+        return;
+      }
+      const res = await fetch('/api/seller/orders/refund', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ orderId: refundSale.orderId, password })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Falha ao processar reembolso');
+      }
+      toast.success('Reembolso solicitado com sucesso');
+      setIsRefundModalOpen(false);
+      setRefundSale(null);
+      fetchSales();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao processar reembolso');
+    }
   };
 
   // Configuração das colunas
@@ -415,6 +448,17 @@ function SalesContent() {
             amount: selectedSale.amount,
             createdAt: selectedSale.createdAt
           }}
+        />
+      )}
+
+      {/* Modal de reembolso */}
+      {refundSale && isRefundModalOpen && (
+        <RefundConfirmationModal
+          isOpen={isRefundModalOpen}
+          onClose={() => { setIsRefundModalOpen(false); setRefundSale(null); }}
+          onConfirm={confirmRefund}
+          orderNumber={refundSale.orderNumber}
+          amount={refundSale.amount}
         />
       )}
     </div>
