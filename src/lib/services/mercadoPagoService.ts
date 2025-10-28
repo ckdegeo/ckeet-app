@@ -519,8 +519,7 @@ export class MercadoPagoService {
     }
 
     try {
-      // Primeiro, verificar o status do pagamento
-      console.log('🔍 [REFUND] Verificando status do pagamento:', paymentId);
+      // Verificar se o pagamento está aprovado antes de tentar reembolsar
       const paymentStatusResponse = await fetch(`${this.BASE_URL}/v1/payments/${paymentId}`, {
         method: 'GET',
         headers: {
@@ -531,15 +530,6 @@ export class MercadoPagoService {
 
       if (paymentStatusResponse.ok) {
         const paymentData = await paymentStatusResponse.json();
-        console.log('📊 [REFUND] Status do pagamento:', {
-          id: paymentData.id,
-          status: paymentData.status,
-          status_detail: paymentData.status_detail,
-          transaction_amount: paymentData.transaction_amount,
-          available_balance: paymentData.available_balance
-        });
-
-        // Verificar se o pagamento está aprovado
         if (paymentData.status !== 'approved') {
           return { success: false, error: `Pagamento não está aprovado. Status atual: ${paymentData.status}` };
         }
@@ -561,17 +551,10 @@ export class MercadoPagoService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido' }));
-        console.log('❌ [REFUND] Erro detalhado MP:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorData,
-          paymentId,
-          sellerId
-        });
         
         // Tratar erros específicos do MP
         if (errorData.message?.includes('hasn\'t enough available money')) {
-          return { success: false, error: 'Saldo insuficiente para reembolso. Verifique se o pagamento já foi liberado pelo Mercado Pago.' };
+          return { success: false, error: 'Valor ainda não liberado pelo Mercado Pago. O MP retém os valores por alguns dias antes de liberar para reembolsos. Aguarde a liberação automática.' };
         }
         
         return { success: false, error: `Erro ao solicitar reembolso: ${errorData.message || response.statusText}` };
