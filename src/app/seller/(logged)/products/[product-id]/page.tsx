@@ -841,7 +841,7 @@ export default function ProductPage() {
           title={isSaving ? 'Salvando produto...' : 'Clique para salvar (validação será feita)'}
         >
           <Save size={18} />
-          {isSaving ? 'Salvando...' : 'Salvar Produto'}
+          {isSaving ? 'Salvando...' : 'Salvar produto'}
         </Button>
       </div>
 
@@ -1203,7 +1203,7 @@ export default function ProductPage() {
             title={isSaving ? 'Salvando produto...' : 'Clique para salvar (validação será feita)'}
           >
             <Save size={18} />
-            {isSaving ? 'Salvando...' : 'Salvar Produto'}
+            {isSaving ? 'Salvando...' : 'Salvar produto'}
           </Button>
         </div>
       </div>
