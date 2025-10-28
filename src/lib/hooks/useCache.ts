@@ -210,7 +210,7 @@ export function useCategoriesCache() {
     },
     {
       key: 'categories_products',
-      duration: 3 * 60 * 1000, // 3 minutos para categorias e produtos
+      duration: 30 * 1000, // 30 segundos para atualização rápida de estoque
       userId: (() => {
         try {
           // Verificar se estamos no lado do cliente

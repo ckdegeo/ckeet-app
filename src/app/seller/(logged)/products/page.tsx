@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/app/components/buttons/button';
-import { Plus, Save } from 'lucide-react';
+import { Plus, Save, RefreshCw } from 'lucide-react';
 import CategorySection from '@/app/components/categories/CategorySection';
 import CategoryModal from '@/app/components/modals/categoryModal';
 import DeleteCategoryModal from '@/app/components/modals/deleteCategoryModal';
@@ -33,7 +33,8 @@ export default function Products() {
     createCategory, 
     editCategory, 
     deleteCategory,
-    saveCategoriesOrder
+    saveCategoriesOrder,
+    fetchCategories
   } = useCategories();
 
   // Estado para controlar modais
@@ -380,6 +381,30 @@ export default function Products() {
         </div>
         
         <div className="flex items-center gap-3 flex-wrap">
+          <Button 
+            onClick={() => {
+              invalidateProductCategoryCaches((() => {
+                try {
+                  const token = localStorage.getItem('access_token');
+                  if (token) {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    return payload.userId || payload.sub || null;
+                  }
+                } catch (error) {
+                  console.error('Erro ao obter userId:', error);
+                }
+                return null;
+              })());
+              fetchCategories();
+              showSuccessToast('Atualizando produtos...');
+            }}
+            variant="secondary"
+            className="flex items-center gap-2 px-4 py-2 min-h-[44px] cursor-pointer"
+            disabled={isLoading}
+          >
+            <RefreshCw size={18} className={isLoading ? 'animate-spin' : ''} />
+            Atualizar
+          </Button>
           {(hasOrderChanges || hasProductOrderChanges) && (
             <>
               <Button 
