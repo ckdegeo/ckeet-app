@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase';
 import { AuthService } from '@/lib/services/authService';
 import { checkRateLimit, getRateLimitIdentifier } from '@/lib/utils/rateLimit';
+import { validateEmail } from '@/lib/utils/validation';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -51,11 +52,11 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServerSupabaseClient();
 
-    // Validar formato do email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    // Validar domínio do email
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
       return NextResponse.json(
-        { error: 'Email inválido' },
+        { error: emailValidation.error },
         { status: 400 }
       );
     }

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { validateEmail, validateCPF } from '@/lib/utils/validation';
 
 // Schema para registro de seller
 export const sellerRegisterSchema = z.object({
@@ -11,13 +12,24 @@ export const sellerRegisterSchema = z.object({
   email: z
     .string()
     .email('Email inválido')
-    .max(255, 'Email deve ter no máximo 255 caracteres'),
+    .max(255, 'Email deve ter no máximo 255 caracteres')
+    .refine((email) => {
+      const validation = validateEmail(email);
+      return validation.isValid;
+    }, {
+      message: 'Domínio de email não permitido. Use apenas: Gmail, Outlook, Hotmail, Live, Yahoo ou iCloud'
+    }),
   
   cpf: z
     .string()
     .min(11, 'CPF deve ter 11 dígitos')
     .max(14, 'CPF inválido')
-    .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$|^\d{11}$/, 'CPF inválido'),
+    .refine((cpf) => {
+      const validation = validateCPF(cpf);
+      return validation.isValid;
+    }, {
+      message: 'CPF inválido'
+    }),
   
   phone: z
     .string()
@@ -48,7 +60,13 @@ export const customerRegisterSchema = z.object({
   email: z
     .string()
     .email('Email inválido')
-    .max(255, 'Email deve ter no máximo 255 caracteres'),
+    .max(255, 'Email deve ter no máximo 255 caracteres')
+    .refine((email) => {
+      const validation = validateEmail(email);
+      return validation.isValid;
+    }, {
+      message: 'Domínio de email não permitido. Use apenas: Gmail, Outlook, Hotmail, Live, Yahoo ou iCloud'
+    }),
   
   phone: z
     .string()

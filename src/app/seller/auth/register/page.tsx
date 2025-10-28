@@ -8,7 +8,7 @@ import Button from "@/app/components/buttons/button";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSellerRegister } from "@/lib/hooks/useSellerRegister";
-import { sellerRegisterSchema, type SellerRegisterData } from "@/lib/validations/authSchemas";
+import { type SellerRegisterData } from "@/lib/validations/authSchemas";
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -106,9 +106,14 @@ export default function Register() {
               label="CPF"
               type="text"
               value={cpf}
-              onChange={(e) => setCpf(e.target.value.replace(/\D/g, ''))}
+              onChange={(e) => {
+                const cleanValue = e.target.value.replace(/\D/g, '');
+                if (cleanValue.length <= 11) {
+                  setCpf(cleanValue);
+                }
+              }}
               placeholder="Digite seu CPF"
-              maxLength={11}
+              maxLength={14}
               required
               error={errors?.cpf}
               disabled={isLoading || success}

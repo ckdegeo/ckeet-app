@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase';
 import { AuthService } from '@/lib/services/authService';
 import { checkRateLimit, getRateLimitIdentifier } from '@/lib/utils/rateLimit';
+import { validateEmail, validateCPF } from '@/lib/utils/validation';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -33,6 +34,7 @@ export async function POST(request: NextRequest) {
         }
       );
     }
+    
     const { 
       email, 
       password, 
@@ -49,22 +51,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createServerSupabaseClient();
-
-    // Validar formato do email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    // Validar domínio do email
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
       return NextResponse.json(
-        { error: 'Email inválido' },
+        { error: emailValidation.error },
         { status: 400 }
       );
     }
 
-    // Validar formato do CPF
-    const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$|^\d{11}$/;
-    if (!cpfRegex.test(cpf)) {
+    // Validar CPF
+    const cpfValidation = validateCPF(cpf);
+    if (!cpfValidation.isValid) {
       return NextResponse.json(
-        { error: 'CPF inválido' },
+        { error: cpfValidation.error },
         { status: 400 }
       );
     }
@@ -76,6 +76,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const supabase = createServerSupabaseClient();
 
     // Verificar se email já existe
     const existingSeller = await AuthService.getSellerByEmail(email);
