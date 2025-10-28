@@ -3,6 +3,10 @@ import { prisma } from '@/lib/prisma';
 import { MercadoPagoService } from '@/lib/services/mercadoPagoService';
 import { calculateSplitPayment, validatePaymentConfig } from '@/lib/config/payment';
 import { createUserSupabaseClient } from '@/lib/supabase';
+import { checkRateLimit, getRateLimitIdentifier } from '@/lib/utils/rateLimit';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 // Validar configurações de pagamento
 try {
@@ -13,6 +17,32 @@ try {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 5 pagamentos por IP a cada 10 minutos
+    const identifier = getRateLimitIdentifier(request);
+    const rateLimit = checkRateLimit(`pix-create:${identifier}`, {
+      maxRequests: 5,
+      windowMs: 10 * 60 * 1000, // 10 minutos
+    });
+
+    if (!rateLimit.allowed) {
+      const retryAfter = Math.ceil((rateLimit.resetAt - Date.now()) / 1000);
+      return NextResponse.json(
+        {
+          error: 'Muitas tentativas de pagamento. Aguarde alguns minutos antes de tentar novamente.',
+          retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': retryAfter.toString(),
+            'X-RateLimit-Limit': '5',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(rateLimit.resetAt).toISOString(),
+          },
+        }
+      );
+    }
+
     const { productId, quantity = 1 } = await request.json();
 
     if (!productId) {

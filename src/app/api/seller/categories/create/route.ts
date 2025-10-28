@@ -1,9 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase';
 import { prisma } from '@/lib/prisma';
+import { checkRateLimit, getRateLimitIdentifier } from '@/lib/utils/rateLimit';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 10 categorias por IP a cada 5 minutos
+    const identifier = getRateLimitIdentifier(request);
+    const rateLimit = checkRateLimit(`category-create:${identifier}`, {
+      maxRequests: 10,
+      windowMs: 5 * 60 * 1000, // 5 minutos
+    });
+
+    if (!rateLimit.allowed) {
+      const retryAfter = Math.ceil((rateLimit.resetAt - Date.now()) / 1000);
+      return NextResponse.json(
+        {
+          error: 'Muitas tentativas de criação de categoria. Aguarde alguns minutos.',
+          retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': retryAfter.toString(),
+            'X-RateLimit-Limit': '10',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(rateLimit.resetAt).toISOString(),
+          },
+        }
+      );
+    }
     const accessToken = request.headers.get('authorization')?.replace('Bearer ', '');
     
     if (!accessToken) {

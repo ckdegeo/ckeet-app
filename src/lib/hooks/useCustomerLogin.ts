@@ -51,7 +51,9 @@ export function useCustomerLogin(): UseCustomerLoginReturn {
           errorMessage = 'Seu email ainda não foi confirmado. Verifique sua caixa de entrada e clique no link de confirmação.';
         }
         
-        showToastWithAutoClose('error', errorMessage, 4000);
+        // Se for erro de rate limit (429), mostrar toast mais longo
+        const duration = response.status === 429 ? 8000 : 4000;
+        showToastWithAutoClose('error', errorMessage, duration);
         return false;
       }
 

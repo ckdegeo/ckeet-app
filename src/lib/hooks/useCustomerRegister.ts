@@ -42,7 +42,10 @@ export function useCustomerRegister(): UseCustomerRegisterReturn {
         }
 
         // Erro geral
-        showToastWithAutoClose('error', result.error || 'Erro ao criar conta', 4000);
+        const errorMessage = result.error || 'Erro ao criar conta';
+        // Se for erro de rate limit (429), mostrar toast mais longo
+        const duration = response.status === 429 ? 8000 : 4000;
+        showToastWithAutoClose('error', errorMessage, duration);
         return false;
       }
 

@@ -2,9 +2,38 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAccessToken } from '@/lib/utils/authUtils';
 import { AuthService } from '@/lib/services/authService';
+import { checkRateLimit, getRateLimitIdentifier } from '@/lib/utils/rateLimit';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 15 produtos por IP a cada 10 minutos
+    const identifier = getRateLimitIdentifier(request);
+    const rateLimit = checkRateLimit(`product-create:${identifier}`, {
+      maxRequests: 15,
+      windowMs: 10 * 60 * 1000, // 10 minutos
+    });
+
+    if (!rateLimit.allowed) {
+      const retryAfter = Math.ceil((rateLimit.resetAt - Date.now()) / 1000);
+      return NextResponse.json(
+        {
+          error: 'Muitas tentativas de criação de produto. Aguarde alguns minutos.',
+          retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': retryAfter.toString(),
+            'X-RateLimit-Limit': '15',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(rateLimit.resetAt).toISOString(),
+          },
+        }
+      );
+    }
     // Verificar autenticação
     const accessToken = getAccessToken(request);
     if (!accessToken) {

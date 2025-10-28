@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { checkRateLimit, getRateLimitIdentifier } from '@/lib/utils/rateLimit';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   try {
@@ -112,6 +116,32 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 20 linhas de estoque por IP a cada 5 minutos
+    const identifier = getRateLimitIdentifier(request);
+    const rateLimit = checkRateLimit(`stock-line-create:${identifier}`, {
+      maxRequests: 20,
+      windowMs: 5 * 60 * 1000, // 5 minutos
+    });
+
+    if (!rateLimit.allowed) {
+      const retryAfter = Math.ceil((rateLimit.resetAt - Date.now()) / 1000);
+      return NextResponse.json(
+        {
+          error: 'Muitas tentativas de criação de linha de estoque. Aguarde alguns minutos.',
+          retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': retryAfter.toString(),
+            'X-RateLimit-Limit': '20',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(rateLimit.resetAt).toISOString(),
+          },
+        }
+      );
+    }
+
     const { productId, content } = await request.json();
 
     if (!productId || !content) {
