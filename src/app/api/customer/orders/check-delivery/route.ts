@@ -140,6 +140,12 @@ export async function GET(request: NextRequest) {
               deliveredContent = product.fixedContent;
             }
           } else if (product.stockType === 'KEYAUTH') {
+            // VERIFICAÇÃO CRÍTICA: Só gerar key se pedido estiver realmente PAGO
+            if (order.status !== 'PAID' || order.paymentStatus !== 'PAID') {
+              console.log(`⚠️ [CHECK-DELIVERY] Pedido ${order.orderNumber} não está pago (status: ${order.status}, payment: ${order.paymentStatus}) - pulando KeyAuth`);
+              continue;
+            }
+
             // Verificar se já existe purchase para este produto (evitar gerar múltiplas keys)
             const existingPurchase = await prisma.purchase.findFirst({
               where: {
