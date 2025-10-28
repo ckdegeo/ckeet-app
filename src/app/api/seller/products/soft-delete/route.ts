@@ -37,17 +37,6 @@ export async function DELETE(request: NextRequest) {
       where: {
         id,
         storeId: store.id
-      },
-      include: {
-        orderItems: {
-          where: {
-            order: {
-              status: {
-                in: ['PENDING', 'PAID']
-              }
-            }
-          }
-        }
       }
     });
 
@@ -55,10 +44,10 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Produto não encontrado' }, { status: 404 });
     }
 
-    // Verificar se o produto tem pedidos ativos
-    if (product.orderItems.length > 0) {
+    // Verificar se o produto já está inativo
+    if (!product.isActive) {
       return NextResponse.json({ 
-        error: 'Não é possível excluir produto com pedidos ativos' 
+        error: 'Produto já foi removido da loja' 
       }, { status: 409 });
     }
 
@@ -72,7 +61,7 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Produto excluído com sucesso'
+      message: 'Produto removido da loja com sucesso'
     });
 
   } catch (error) {
