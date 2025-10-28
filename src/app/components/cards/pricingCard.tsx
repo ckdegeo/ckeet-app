@@ -74,9 +74,9 @@ export default function PricingCard({
       <Button 
         onClick={onSelectPlan}
         variant={popular ? "primary" : "secondary"}
-        className="w-full"
+        className="w-full rounded-full"
       >
-        {price === "Grátis" ? "Começar Grátis" : "Escolher Plano"}
+        {name === "Grátis" ? "Começar Grátis" : "Escolher Plano"}
       </Button>
     </div>
   );

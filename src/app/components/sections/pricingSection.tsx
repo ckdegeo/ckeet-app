@@ -21,50 +21,55 @@ interface PricingSectionProps {
 
 const defaultPlans: PricingPlan[] = [
   {
-    name: "Starter",
-    price: "Grátis",
-    description: "Perfeito para começar",
+    name: "Grátis",
+    price: "5.99%",
+    period: "+ R$ 0,50",
+    description: "Taxa por venda",
     features: [
-      "Até 10 produtos",
-      "Pagamentos PIX",
-      "Dashboard básico",
-      "Suporte por email"
+      "5.99% da venda + R$ 0,50",
+      "Produtos ilimitados",
+      "Dashboard completo",
+      "Gestão de clientes e vendas",
+      "PIX integrado"
     ],
     popular: false
   },
   {
-    name: "Professional",
-    price: "R$ 29",
+    name: "Business",
+    price: "R$ 39,90",
     period: "/mês",
-    description: "Para negócios em crescimento",
+    description: "Taxa reduzida para mais lucro",
     features: [
+      "3.99% da venda + R$ 0,30",
       "Produtos ilimitados",
-      "Todos os métodos de pagamento",
-      "Analytics avançado",
-      "Domínio personalizado",
-      "Suporte prioritário"
+      "Dashboard completo",
+      "Gestão de clientes e vendas",
+      "PIX integrado",
+      "Prioridade no suporte"
     ],
     popular: true
   },
   {
     name: "Enterprise",
-    price: "R$ 99",
+    price: "R$ 89,90",
     period: "/mês",
-    description: "Para grandes operações",
+    description: "Taxa mínima, máximo lucro",
     features: [
-      "Tudo do Professional",
-      "API personalizada",
-      "Integração avançada",
-      "Manager dedicado",
-      "SLA garantido"
+      "1.99% da venda + R$ 0,10",
+      "Produtos ilimitados",
+      "Dashboard completo",
+      "Gestão de clientes e vendas",
+      "PIX integrado",
+      "Suporte prioritário dedicado",
+      "Relatórios avançados"
     ],
     popular: false
   }
 ];
 
 export default function PricingSection({
-  title = "Planos que se adaptam ao seu negócio",
-  subtitle = "Escolha o plano ideal para o tamanho da sua operação",
+  title = "Se quiser diminuir as taxas, nós temos planos para você",
+  subtitle = "Quanto mais você cresce, menos taxas você paga",
   plans = defaultPlans,
   onSelectPlan,
   className = "",
