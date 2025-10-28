@@ -183,10 +183,71 @@ export default function CategorySection({
   return (
     <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-2xl overflow-hidden mb-6">
       {/* Cabeçalho da categoria */}
-      <div className="flex items-center justify-between p-4 border-b border-[var(--on-background)]">
-        <div className="flex items-center gap-4">
-          {/* Botões de reordenação da categoria */}
-          <div className="flex gap-1">
+      <div className="p-4 border-b border-[var(--on-background)]">
+        {/* Layout desktop */}
+        <div className="hidden sm:flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {/* Botões de reordenação da categoria */}
+            <div className="flex gap-1">
+              <IconOnlyButton
+                icon={ChevronUp}
+                onClick={() => onMoveCategoryUp(id)}
+                variant="surface"
+                className="w-6 h-6 p-1"
+                disabled={order === 0}
+              />
+              <IconOnlyButton
+                icon={ChevronDown}
+                onClick={() => onMoveCategoryDown(id)}
+                variant="surface"
+                className="w-6 h-6 p-1"
+                disabled={order === totalCategories - 1}
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-[var(--foreground)]">{name}</h2>
+              <span className="text-sm text-[var(--on-background)] bg-[var(--background)] px-2 py-1 rounded-full">
+                {products.length} {products.length === 1 ? 'produto' : 'produtos'}
+              </span>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleAddProduct}
+              className="flex items-center gap-2 bg-[var(--primary)] text-[var(--on-primary)] hover:bg-[var(--primary-variant)]"
+            >
+              <Plus size={16} />
+              Adicionar Produto
+            </Button>
+            
+            <IconOnlyButton
+              icon={Edit2}
+              onClick={handleEditCategory}
+              variant="primary"
+            />
+            
+            <IconOnlyButton
+              icon={Trash2}
+              onClick={handleDeleteCategory}
+              variant="error"
+            />
+          </div>
+        </div>
+
+        {/* Layout mobile */}
+        <div className="sm:hidden space-y-3">
+          {/* Linha 1: Título e contador */}
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">{name}</h2>
+            <span className="text-sm text-[var(--on-background)] bg-[var(--background)] px-2 py-1 rounded-full">
+              {products.length} {products.length === 1 ? 'produto' : 'produtos'}
+            </span>
+          </div>
+          
+          {/* Linha 2: Botões de reordenação */}
+          <div className="flex justify-center gap-1">
             <IconOnlyButton
               icon={ChevronUp}
               onClick={() => onMoveCategoryUp(id)}
@@ -203,34 +264,30 @@ export default function CategorySection({
             />
           </div>
           
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-semibold text-[var(--foreground)]">{name}</h2>
-            <span className="text-sm text-[var(--on-background)] bg-[var(--background)] px-2 py-1 rounded-full">
-              {products.length} {products.length === 1 ? 'produto' : 'produtos'}
-            </span>
+          {/* Linha 3: Botões de ação */}
+          <div className="flex items-center justify-center gap-2">
+            <Button
+              onClick={handleAddProduct}
+              className="flex items-center gap-2 bg-[var(--primary)] text-[var(--on-primary)] hover:bg-[var(--primary-variant)] text-sm px-3 py-2"
+            >
+              <Plus size={14} />
+              Adicionar Produto
+            </Button>
+            
+            <IconOnlyButton
+              icon={Edit2}
+              onClick={handleEditCategory}
+              variant="primary"
+              className="w-8 h-8"
+            />
+            
+            <IconOnlyButton
+              icon={Trash2}
+              onClick={handleDeleteCategory}
+              variant="error"
+              className="w-8 h-8"
+            />
           </div>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={handleAddProduct}
-            className="flex items-center gap-2 bg-[var(--primary)] text-[var(--on-primary)] hover:bg-[var(--primary-variant)]"
-          >
-            <Plus size={16} />
-            Adicionar Produto
-          </Button>
-          
-          <IconOnlyButton
-            icon={Edit2}
-            onClick={handleEditCategory}
-            variant="primary"
-          />
-          
-          <IconOnlyButton
-            icon={Trash2}
-            onClick={handleDeleteCategory}
-            variant="error"
-          />
         </div>
       </div>
       
@@ -249,7 +306,7 @@ export default function CategorySection({
                   items={displayProducts.map(p => p.id)} 
                   strategy={horizontalListSortingStrategy}
                 >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                     {displayProducts.map(product => (
                       <SortableProductCard
                         key={product.id}
@@ -262,7 +319,7 @@ export default function CategorySection({
                 </SortableContext>
               </DndContext>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                 {displayProducts.map(product => (
                   <ProductCard
                     key={product.id}

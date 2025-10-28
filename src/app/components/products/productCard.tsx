@@ -84,10 +84,12 @@ export default function ProductCard({
       overflow-hidden
       transition-all
       hover:shadow-md
+      min-w-0
+      w-full
       ${className}
     `}>
       {/* Imagem do produto */}
-      <div className="relative w-full h-48 bg-gray-100 flex items-center justify-center">
+      <div className="relative w-full h-40 sm:h-48 bg-gray-100 flex items-center justify-center">
         {imageUrl && (imageUrl.startsWith('http') || imageUrl.startsWith('/')) ? (
           <Image
             src={imageUrl}
