@@ -263,8 +263,30 @@ export async function POST(request: NextRequest) {
               continue;
             }
           } else if (product.stockType === 'KEYAUTH') {
-            console.error(`❌ [WEBHOOK] Produto KeyAuth ${product.name} - integração ainda não implementada`);
-            continue;
+            console.log('📦 [WEBHOOK] Tipo KEYAUTH - gerando chave...');
+            if (!product.keyAuthSellerKey || !product.keyAuthDays) {
+              console.error(`❌ [WEBHOOK] Produto ${product.name} sem configuração KeyAuth`);
+              continue;
+            }
+
+            try {
+              const url = `https://keyauth.win/api/seller/?sellerkey=${encodeURIComponent(product.keyAuthSellerKey)}&type=add&expiry=${encodeURIComponent(String(product.keyAuthDays))}&mask=******-******-******-******-******-******&level=1&amount=1&format=text`;
+              console.log('🔗 [WEBHOOK] Chamando KeyAuth API...');
+              const res = await fetch(url, { method: 'GET' });
+              const text = await res.text();
+              const generatedKey = text.trim();
+
+              if (!res.ok || !generatedKey) {
+                console.error('❌ [WEBHOOK] Falha ao gerar chave KeyAuth:', { status: res.status, response: text });
+                continue;
+              }
+
+              deliveredContent = generatedKey;
+              console.log('✅ [WEBHOOK] Chave KeyAuth gerada com sucesso');
+            } catch (err) {
+              console.error('❌ [WEBHOOK] Erro ao gerar chave KeyAuth:', err);
+              continue;
+            }
           }
 
           // Buscar deliverables do produto
