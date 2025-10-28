@@ -242,8 +242,10 @@ export default function SettingsModal({
             {activeTab === "profile" && (
               <div className="space-y-6">
                 <h3 className="text-base md:text-lg font-semibold text-[var(--foreground)]">
-                  Informações do Perfil
+                  Perfil
                 </h3>
+
+                <hr className="border-gray-200 my-4" />	
                 
                 <div className="space-y-4 md:space-y-6">
                   <div className="flex flex-col gap-1.5 w-full">
@@ -273,7 +275,7 @@ export default function SettingsModal({
                   
                   <div className="flex flex-col gap-1.5 w-full">
                     <label className="text-sm font-medium text-[var(--foreground)]">
-                      Email
+                      E-mail
                     </label>
                     <input 
                       type="email" 
@@ -330,7 +332,8 @@ export default function SettingsModal({
                 <h3 className="text-lg font-semibold text-[var(--foreground)]">
                   Segurança
                 </h3>
-                
+                <hr className="border-gray-200 my-4" />
+
                 <div className="space-y-6">
                   <div className="flex flex-col gap-1.5 w-full">
                     <label className="text-sm font-medium text-[var(--foreground)]">
@@ -425,7 +428,7 @@ export default function SettingsModal({
             disabled={isLoading || isPasswordLoading}
             className="text-sm md:text-base"
           >
-            {isLoading ? 'Salvando...' : isPasswordLoading ? 'Alterando senha...' : 'Salvar Alterações'}
+            {isLoading ? 'Salvando...' : isPasswordLoading ? 'Alterando senha...' : 'Salvar alterações'}
           </Button>
         </div>
       </div>
