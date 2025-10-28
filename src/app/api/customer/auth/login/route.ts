@@ -108,6 +108,15 @@ export async function POST(request: NextRequest) {
     }
     console.log('✅ Customer found:', customer.id);
 
+    // Verificar se o customer está banido
+    if (customer.status === 'BANNED') {
+      console.log('❌ Customer is banned:', customer.id);
+      return NextResponse.json(
+        { error: 'Sua conta foi suspensa. Entre em contato com o suporte da loja.' },
+        { status: 403 }
+      );
+    }
+
     // Atualizar metadados do usuário com customer_id e seller_id
     const { error: updateError } = await supabase.auth.updateUser({
       data: {

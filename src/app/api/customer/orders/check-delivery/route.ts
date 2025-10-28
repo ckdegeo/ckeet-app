@@ -35,6 +35,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Verificar se o customer existe e não está banido
+    const customer = await prisma.customer.findUnique({
+      where: { id: customerId }
+    });
+
+    if (!customer) {
+      return NextResponse.json(
+        { error: 'Customer não encontrado' },
+        { status: 404 }
+      );
+    }
+
+    if (customer.status === 'BANNED') {
+      return NextResponse.json(
+        { error: 'Sua conta foi suspensa.' },
+        { status: 403 }
+      );
+    }
+
     // Buscar orders pagas que não têm purchase
     const paidOrdersWithoutDelivery = await prisma.order.findMany({
       where: {

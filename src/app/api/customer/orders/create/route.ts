@@ -67,6 +67,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verificar se o customer está banido
+    if (customer.status === 'BANNED') {
+      return NextResponse.json(
+        { error: 'Sua conta foi suspensa. Não é possível realizar pedidos.' },
+        { status: 403 }
+      );
+    }
+
     // Buscar produto com dados da loja
     const product = await prisma.product.findUnique({
       where: { id: productId },

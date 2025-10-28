@@ -52,6 +52,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Verificar se o customer está banido
+    if (customer.status === 'BANNED') {
+      return NextResponse.json(
+        { error: 'Sua conta foi suspensa. Não é possível acessar pedidos.' },
+        { status: 403 }
+      );
+    }
+
     // Buscar todos os pedidos do customer com dados completos
     const orders = await prisma.order.findMany({
       where: { 
