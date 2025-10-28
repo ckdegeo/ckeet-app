@@ -22,6 +22,13 @@ export default function SettingsModal({
   const [mounted, setMounted] = useState(false);
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Estados para troca de senha
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+  
   const { user, refresh } = useAuth();
 
   // Carregar dados do usuário quando o modal abrir
@@ -52,6 +59,14 @@ export default function SettingsModal({
   const handleSave = async () => {
     if (!user) return;
     
+    if (activeTab === "profile") {
+      await handleSaveProfile();
+    } else if (activeTab === "security") {
+      await handleChangePassword();
+    }
+  };
+
+  const handleSaveProfile = async () => {
     setIsLoading(true);
     try {
       // Fazer chamada para a API para atualizar o nome
@@ -78,6 +93,44 @@ export default function SettingsModal({
       showErrorToast(error instanceof Error ? error.message : 'Erro ao atualizar o nome');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    setIsPasswordLoading(true);
+    try {
+      const response = await fetch('/api/seller/profile/change-password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+          confirmPassword,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Falha ao alterar senha.');
+      }
+
+      showSuccessToast(result.message || 'Senha alterada com sucesso!');
+      
+      // Limpar campos de senha
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      
+      // Fechar modal após salvar
+      onClose();
+    } catch (error) {
+      console.error('Erro ao alterar senha:', error);
+      showErrorToast(error instanceof Error ? error.message : 'Erro ao alterar senha');
+    } finally {
+      setIsPasswordLoading(false);
     }
   };
 
@@ -285,7 +338,10 @@ export default function SettingsModal({
                     </label>
                     <input 
                       type="password" 
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder="Digite sua senha atual"
+                      disabled={isPasswordLoading}
                       className="
                         w-full
                         px-3 py-2 md:px-4 md:py-3
@@ -309,7 +365,10 @@ export default function SettingsModal({
                     </label>
                     <input 
                       type="password" 
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Digite a nova senha"
+                      disabled={isPasswordLoading}
                       className="
                         w-full
                         px-3 py-2 md:px-4 md:py-3
@@ -333,7 +392,10 @@ export default function SettingsModal({
                     </label>
                     <input 
                       type="password" 
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Confirme a nova senha"
+                      disabled={isPasswordLoading}
                       className="
                         w-full
                         px-3 py-2 md:px-4 md:py-3
@@ -360,10 +422,10 @@ export default function SettingsModal({
         <div className="flex items-center justify-end gap-3 p-4 md:p-6 border-t border-gray-200">
           <Button 
             onClick={handleSave}
-            disabled={isLoading}
+            disabled={isLoading || isPasswordLoading}
             className="text-sm md:text-base"
           >
-            {isLoading ? 'Salvando...' : 'Salvar Alterações'}
+            {isLoading ? 'Salvando...' : isPasswordLoading ? 'Alterando senha...' : 'Salvar Alterações'}
           </Button>
         </div>
       </div>
