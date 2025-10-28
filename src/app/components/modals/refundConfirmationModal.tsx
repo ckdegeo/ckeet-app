@@ -71,8 +71,20 @@ export default function RefundConfirmationModal({
 
         {/* Content */}
         <div className="px-6 pb-6">
-          <div className="text-sm text-[var(--foreground-secondary)] mb-4">
-            Tem certeza que deseja reembolsar o pedido <span className="font-semibold">{orderNumber}</span> no valor de <span className="font-semibold">R$ {amount.toFixed(2)}</span>?
+          <div className="text-sm text-[var(--foreground-secondary)] mb-6">
+            <div className="mb-3">
+              Tem certeza que deseja reembolsar este pedido?
+            </div>
+            <div className="bg-[var(--surface-secondary)] rounded-lg p-4 space-y-2">
+              <div className="flex justify-between">
+                <span className="text-[var(--foreground-secondary)]">Pedido:</span>
+                <span className="font-semibold text-[var(--foreground)]">{orderNumber}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[var(--foreground-secondary)]">Valor:</span>
+                <span className="font-semibold text-[var(--foreground)]">R$ {amount.toFixed(2)}</span>
+              </div>
+            </div>
           </div>
           <Input
             label="Senha da conta"
