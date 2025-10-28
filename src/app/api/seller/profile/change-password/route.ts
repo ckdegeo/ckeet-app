@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createUserSupabaseClient } from '@/lib/supabase';
 import { getAccessToken } from '@/lib/utils/authUtils';
-import { AuthService } from '@/lib/services/authService';
 import { checkRateLimit, getRateLimitIdentifier } from '@/lib/utils/rateLimit';
 
 export async function PUT(request: NextRequest) {
@@ -38,8 +37,11 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Token de acesso não fornecido' }, { status: 401 });
     }
 
-    const seller = await AuthService.verifyToken(accessToken);
-    if (!seller) {
+    // Verificar se o token é válido obtendo o usuário
+    const supabase = createUserSupabaseClient(accessToken);
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
@@ -69,15 +71,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Verificar se a senha atual está correta
-    const supabase = createUserSupabaseClient(accessToken);
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 401 });
-    }
-
-    // Verificar senha atual fazendo login
+    // Verificar se a senha atual está correta fazendo login
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: user.email!,
       password: currentPassword,
@@ -90,8 +84,18 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Atualizar senha usando o método do AuthService
-    await AuthService.updatePassword(accessToken, newPassword);
+    // Atualizar senha diretamente usando o Supabase client
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (updateError) {
+      console.error('Erro ao atualizar senha no Supabase:', updateError);
+      return NextResponse.json(
+        { error: `Erro ao atualizar senha: ${updateError.message}` },
+        { status: 400 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
@@ -100,6 +104,7 @@ export async function PUT(request: NextRequest) {
 
   } catch (error) {
     console.error('Erro ao alterar senha:', error);
+    
     return NextResponse.json(
       { error: 'Erro interno do servidor' },
       { status: 500 }

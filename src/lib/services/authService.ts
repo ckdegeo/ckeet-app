@@ -1,5 +1,5 @@
 import { prisma } from '../prisma';
-import { createServerSupabaseClient } from '../supabase';
+import { createServerSupabaseClient, createUserSupabaseClient } from '../supabase';
 import { Store } from '../types';
 
 // ===========================================
@@ -314,13 +314,23 @@ export class AuthService {
 
   // Atualizar senha
   static async updatePassword(accessToken: string, newPassword: string) {
-    const supabase = createServerSupabaseClient();
+    const supabase = createUserSupabaseClient(accessToken);
+    
+    // Primeiro, obter o usuário atual para verificar se a sessão está válida
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('Sessão inválida. Faça login novamente.');
+    }
+
+    // Atualizar a senha usando o método correto
     const { error } = await supabase.auth.updateUser({
       password: newPassword,
     });
 
     if (error) {
-      throw new Error('Erro ao atualizar senha');
+      console.error('Erro ao atualizar senha no Supabase:', error);
+      throw new Error(`Erro ao atualizar senha: ${error.message}`);
     }
 
     return { success: true };
