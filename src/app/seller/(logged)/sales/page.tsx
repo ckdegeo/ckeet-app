@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Eye, RotateCcw } from 'lucide-react';
+import { Eye, RotateCcw, Clock, CheckCircle, BarChart2 } from 'lucide-react';
 import RefundConfirmationModal from '@/app/components/modals/refundConfirmationModal';
 import Table from '@/app/components/tables/table';
 import Selector from '@/app/components/selectors/selector';
 import Search from '@/app/components/inputs/search';
 import NumberCard from '@/app/components/cards/numberCard';
-import { Clock, CheckCircle, BarChart2 } from 'lucide-react';
+import ValueCard from '@/app/components/cards/valueCard';
 import { AuthGuard } from '@/lib/components/AuthGuard';
 import toast from 'react-hot-toast';
 import Badge from '@/app/components/ui/badge';
@@ -194,6 +194,9 @@ function SalesContent() {
   const ordensAprovadas = sales.filter(sale => sale.status === 'PAID').length;
   const ordensPendentes = sales.filter(sale => sale.status === 'PENDING').length;
   const taxaConversao = totalOrdens > 0 ? (ordensAprovadas / totalOrdens) * 100 : 0;
+  const valorReembolsos = sales
+    .filter(sale => sale.status === 'REFUNDED')
+    .reduce((total, sale) => total + sale.amount, 0);
 
   // Função para formatar data e hora
   const formatDateTime = (dateString: string) => {
@@ -364,7 +367,7 @@ function SalesContent() {
         </div>
 
         {/* Cards de estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <NumberCard
            title="Pendentes"
            value={ordensPendentes}
@@ -379,6 +382,13 @@ function SalesContent() {
            icon={CheckCircle}
             change={0}
            changeType="increase"
+         />
+
+         <ValueCard
+           title="Reembolsos"
+           value={valorReembolsos}
+           currency="BRL"
+           icon={RotateCcw}
          />
 
          <NumberCard
