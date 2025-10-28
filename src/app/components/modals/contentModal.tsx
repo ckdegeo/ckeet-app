@@ -62,20 +62,55 @@ export default function ContentModal({
   // Download do entregável
   const handleDownload = async (url: string, filename?: string) => {
     try {
-      const response = await fetch(url);
+      // Verificar se a URL é válida
+      if (!url || url.trim() === '') {
+        throw new Error('URL de download não fornecida');
+      }
+
+      // Se for uma URL externa, abrir em nova aba
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        // Para URLs externas, abrir em nova aba
+        const newWindow = window.open(url, '_blank');
+        if (!newWindow) {
+          throw new Error('Não foi possível abrir o download. Verifique se o bloqueador de pop-ups está desabilitado.');
+        }
+        showSuccessToast('Download aberto em nova aba!');
+        return;
+      }
+
+      // Para URLs relativas ou internas, fazer fetch
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/octet-stream',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
+      }
+
       const blob = await response.blob();
+      
+      // Verificar se o blob tem conteúdo
+      if (blob.size === 0) {
+        throw new Error('Arquivo vazio ou não encontrado');
+      }
+
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = downloadUrl;
       link.download = filename || 'entregavel';
+      link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(downloadUrl);
+      
       showSuccessToast('Download iniciado!');
     } catch (error) {
-      console.error('Erro ao fazer download:', error);
-      showErrorToast('Erro ao fazer download');
+      console.error('➤➤ Erro ao fazer download:', error);
+      showErrorToast(`Erro ao fazer download: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   };
 
