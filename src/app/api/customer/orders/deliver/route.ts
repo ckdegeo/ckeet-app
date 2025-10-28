@@ -151,12 +151,34 @@ export async function POST(request: NextRequest) {
         }
         deliveredContent = product.fixedContent;
       } else if (product.stockType === 'KEYAUTH') {
-        // Produto KeyAuth - conteúdo será gerado pela integração (implementar depois)
-        // Por enquanto, retornar erro até implementarmos a integração
-        return NextResponse.json(
-          { error: `Produto KeyAuth ${product.name} - integração ainda não implementada` },
-          { status: 400 }
-        );
+        // Produto KeyAuth - gerar chave via API
+        if (!product.keyAuthSellerKey || !product.keyAuthDays) {
+          return NextResponse.json(
+            { error: `Produto ${product.name} sem configuração KeyAuth` },
+            { status: 400 }
+          );
+        }
+
+        try {
+          const url = `https://keyauth.win/api/seller/?sellerkey=${encodeURIComponent(product.keyAuthSellerKey)}&type=add&expiry=${encodeURIComponent(String(product.keyAuthDays))}&mask=******-******-******-******-******-******&level=1&amount=1&format=text`;
+          const res = await fetch(url, { method: 'GET' });
+          const text = await res.text();
+          const generatedKey = text.trim();
+
+          if (!res.ok || !generatedKey) {
+            return NextResponse.json(
+              { error: `Falha ao gerar chave KeyAuth para ${product.name}` },
+              { status: 500 }
+            );
+          }
+
+          deliveredContent = generatedKey;
+        } catch (err) {
+          return NextResponse.json(
+            { error: `Erro ao gerar chave KeyAuth para ${product.name}` },
+            { status: 500 }
+          );
+        }
       }
 
       // Buscar deliverables do produto

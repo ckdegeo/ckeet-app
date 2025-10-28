@@ -140,29 +140,10 @@ export async function GET(request: NextRequest) {
               deliveredContent = product.fixedContent;
             }
           } else if (product.stockType === 'KEYAUTH') {
-            // Gerar chave via KeyAuth API
-            if (!product.keyAuthSellerKey || !product.keyAuthDays) {
-              console.log(`⚠️ [CHECK-DELIVERY] Produto ${product.name} sem configuração KeyAuth`);
-              continue;
-            }
-
-            try {
-              const url = `https://keyauth.win/api/seller/?sellerkey=${encodeURIComponent(product.keyAuthSellerKey)}&type=add&expiry=${encodeURIComponent(String(product.keyAuthDays))}&mask=******-******-******-******-******-******&level=1&amount=1&format=text`;
-              const res = await fetch(url, { method: 'GET' });
-              const text = await res.text();
-              const generatedKey = text.trim();
-
-              if (!res.ok || !generatedKey) {
-                console.log(`❌ [CHECK-DELIVERY] Falha ao gerar chave KeyAuth para ${product.name}`);
-                continue;
-              }
-
-              deliveredContent = generatedKey;
-              console.log(`✅ [CHECK-DELIVERY] Chave KeyAuth gerada para ${product.name}`);
-            } catch (err) {
-              console.log(`❌ [CHECK-DELIVERY] Erro ao gerar chave KeyAuth para ${product.name}:`, err);
-              continue;
-            }
+            // KeyAuth: chave só é gerada após pagamento aprovado (no webhook)
+            // Aqui apenas verificamos se já foi entregue
+            console.log(`⚠️ [CHECK-DELIVERY] Produto KeyAuth ${product.name} - aguardando pagamento para gerar chave`);
+            continue;
           }
 
           // Buscar deliverables
