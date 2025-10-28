@@ -76,7 +76,6 @@ export async function POST(request: NextRequest) {
       stockType,
       fixedContent,
       keyAuthDays,
-      keyAuthPublicKey,
       keyAuthSellerKey,
       stockLines,
       deliverables
@@ -155,7 +154,6 @@ export async function POST(request: NextRequest) {
           stockType: stockType || 'LINE',
           fixedContent: fixedContent || null,
           keyAuthDays: keyAuthDays ? parseInt(keyAuthDays) : null,
-          keyAuthPublicKey: keyAuthPublicKey || null,
           keyAuthSellerKey: keyAuthSellerKey || null,
           order: nextOrder,
           storeId: store.id,
@@ -207,7 +205,6 @@ export async function POST(request: NextRequest) {
         stockType: result.stockType,
         fixedContent: result.fixedContent,
         keyAuthDays: result.keyAuthDays,
-        keyAuthPublicKey: result.keyAuthPublicKey,
         keyAuthSellerKey: result.keyAuthSellerKey,
         order: result.order,
         isActive: result.isActive,

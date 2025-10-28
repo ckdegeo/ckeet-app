@@ -181,19 +181,32 @@ export class OrderService {
           break;
 
         case 'KEYAUTH':
-          // Para KeyAuth, criar purchase com informações da integração
-          if (!product.keyAuthPublicKey || !product.keyAuthSellerKey) {
+          // Gerar chave via KeyAuth API e entregar ao cliente
+          if (!product.keyAuthSellerKey || !product.keyAuthDays) {
             throw new Error(`Produto ${product.name} sem configuração KeyAuth`);
           }
 
-          const keyAuthPurchase = await prisma.purchase.create({
-            data: {
-              deliveredContent: `KeyAuth: ${product.keyAuthPublicKey} | Days: ${product.keyAuthDays}`,
-              orderId,
-              customerId: order.customerId || '',
-            },
-          });
-          purchases.push(keyAuthPurchase);
+          try {
+            const url = `https://keyauth.win/api/seller/?sellerkey=${encodeURIComponent(product.keyAuthSellerKey)}&type=add&expiry=${encodeURIComponent(String(product.keyAuthDays))}&mask=******-******-******-******-******-******&level=1&amount=1&format=text`;
+            const res = await fetch(url, { method: 'GET' });
+            const text = await res.text();
+            const generatedKey = text.trim();
+
+            if (!res.ok || !generatedKey) {
+              throw new Error('Falha ao gerar chave KeyAuth');
+            }
+
+            const keyPurchase = await prisma.purchase.create({
+              data: {
+                deliveredContent: generatedKey,
+                orderId,
+                customerId: order.customerId || '',
+              },
+            });
+            purchases.push(keyPurchase);
+          } catch (err) {
+            throw new Error('Erro ao gerar chave KeyAuth');
+          }
           break;
       }
     }

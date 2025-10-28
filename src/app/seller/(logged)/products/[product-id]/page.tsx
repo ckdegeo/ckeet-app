@@ -40,7 +40,6 @@ export default function ProductPage() {
     stockType: StockType.LINE,
     fixedContent: '',
     keyAuthDays: 0,
-    keyAuthPublicKey: '',
     keyAuthSellerKey: ''
   });
 
@@ -83,7 +82,6 @@ export default function ProductPage() {
               stockType: product.stockType,
               fixedContent: product.fixedContent || '',
               keyAuthDays: product.keyAuthDays || 0,
-              keyAuthPublicKey: product.keyAuthPublicKey || '',
               keyAuthSellerKey: product.keyAuthSellerKey || ''
             });
             
@@ -130,7 +128,6 @@ export default function ProductPage() {
             }
           }
         } catch (error) {
-          console.error('Erro ao carregar produto:', error);
           showErrorToast('Erro ao carregar dados do produto');
         }
       };
@@ -164,7 +161,6 @@ export default function ProductPage() {
             }
           }
         } catch (error) {
-          console.error('Erro ao buscar categoria:', error);
         }
       };
 
@@ -338,10 +334,6 @@ export default function ProductPage() {
         newErrors.keyAuthDays = 'Número de dias é obrigatório';
         errorMessages.push('❌ Número de dias (aba Estoque)');
       }
-      if (!productData.keyAuthPublicKey?.trim()) {
-        newErrors.keyAuthPublicKey = 'Chave pública é obrigatória';
-        errorMessages.push('❌ Chave pública (aba Estoque)');
-      }
       if (!productData.keyAuthSellerKey?.trim()) {
         newErrors.keyAuthSellerKey = 'Seller key é obrigatória';
         errorMessages.push('❌ Seller key (aba Estoque)');
@@ -419,7 +411,6 @@ export default function ProductPage() {
           return;
         }
       } catch (error) {
-        console.error('Erro ao buscar produto:', error);
         showErrorToast('Erro ao carregar dados do produto');
         return;
       }
@@ -454,7 +445,6 @@ export default function ProductPage() {
         stockType: productData.stockType,
         fixedContent: productData.fixedContent,
         keyAuthDays: productData.keyAuthDays,
-        keyAuthPublicKey: productData.keyAuthPublicKey,
         keyAuthSellerKey: productData.keyAuthSellerKey,
         stockLines: stockLines.map(line => ({ content: line.content })),
         deliverables: deliverableLinks.map(link => ({ name: link.name, url: link.url }))
@@ -497,7 +487,6 @@ export default function ProductPage() {
           }
         }
       } catch (error) {
-        console.error('Erro ao obter userId para invalidação de cache:', error);
       }
       
       // Redirecionar para lista de produtos no ambiente logado após um pequeno delay
@@ -505,7 +494,6 @@ export default function ProductPage() {
         router.push('/seller/products');
       }, 500);
     } catch (error) {
-      console.error('Erro ao salvar produto:', error);
       showErrorToast(error instanceof Error ? error.message : 'Erro ao salvar produto');
     } finally {
       setIsSaving(false);
@@ -555,7 +543,6 @@ export default function ProductPage() {
         setNewStockContent('');
         showSuccessToast('Linha de estoque adicionada com sucesso');
       } catch (error) {
-        console.error('Erro ao adicionar linha de estoque:', error);
         showErrorToast(error instanceof Error ? error.message : 'Erro ao adicionar linha de estoque');
         return;
       }
@@ -620,7 +607,6 @@ export default function ProductPage() {
         ));
         showSuccessToast('Linha de estoque atualizada com sucesso');
       } catch (error) {
-        console.error('Erro ao editar linha de estoque:', error);
         showErrorToast(error instanceof Error ? error.message : 'Erro ao editar linha de estoque');
         throw error;
       }
@@ -670,7 +656,6 @@ export default function ProductPage() {
         });
         showSuccessToast('Linha de estoque excluída com sucesso');
       } catch (error) {
-        console.error('Erro ao excluir linha de estoque:', error);
         showErrorToast(error instanceof Error ? error.message : 'Erro ao excluir linha de estoque');
       }
     } else {
@@ -694,7 +679,7 @@ export default function ProductPage() {
   };
 
   // Handlers para KeyAuth
-  const handleKeyAuthChange = (field: 'keyAuthDays' | 'keyAuthPublicKey' | 'keyAuthSellerKey') => (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleKeyAuthChange = (field: 'keyAuthDays' | 'keyAuthSellerKey') => (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = field === 'keyAuthDays' ? Number(e.target.value) : e.target.value;
     setProductData(prev => ({
       ...prev,
@@ -1093,15 +1078,6 @@ export default function ProductPage() {
                       error={errors.keyAuthDays}
                       min="1"
                       max="3650"
-                    />
-
-                    {/* Public Key */}
-                    <Input
-                      label="Chave pública"
-                      placeholder="Digite sua chave pública KeyAuth"
-                      value={productData.keyAuthPublicKey || ''}
-                      onChange={handleKeyAuthChange('keyAuthPublicKey')}
-                      error={errors.keyAuthPublicKey}
                     />
 
                     {/* Seller Key */}

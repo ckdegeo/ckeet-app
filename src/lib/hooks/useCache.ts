@@ -47,7 +47,6 @@ export function useCache<T>(
       
       // Verificar se o cache ainda é válido
       if (now - timestamp < duration) {
-        console.log(`📦 [Cache] Usando dados do cache para ${cacheKey}`);
         return data;
       }
       
@@ -55,7 +54,7 @@ export function useCache<T>(
       localStorage.removeItem(cacheKey);
       return null;
     } catch (error) {
-      console.error(`Erro ao ler cache para ${getCacheKey()}:`, error);
+      
       localStorage.removeItem(getCacheKey());
       return null;
     }
@@ -69,9 +68,8 @@ export function useCache<T>(
         timestamp: Date.now()
       };
       localStorage.setItem(cacheKey, JSON.stringify(cached));
-      console.log(`💾 [Cache] Dados salvos no cache para ${cacheKey}`);
     } catch (error) {
-      console.error(`Erro ao salvar cache para ${getCacheKey()}:`, error);
+      
     }
   };
 
@@ -79,7 +77,6 @@ export function useCache<T>(
     const cacheKey = getCacheKey();
     localStorage.removeItem(cacheKey);
     hasShownToast.current = false;
-    console.log(`🗑️ [Cache] Cache limpo para ${cacheKey}`);
   };
 
   const fetchData = async (force = false) => {
@@ -95,7 +92,6 @@ export function useCache<T>(
     try {
       setLoading(true);
       setError(null);
-      console.log(`🌐 [Cache] Buscando dados do servidor para ${key}...`);
       
       const result = await fetchFunction();
       
@@ -104,7 +100,7 @@ export function useCache<T>(
       setData(result);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      console.error(`Erro ao buscar dados para ${key}:`, errorMessage);
+      
       setError(errorMessage);
     } finally {
       setLoading(false);

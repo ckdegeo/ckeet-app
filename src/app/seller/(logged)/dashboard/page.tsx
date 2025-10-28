@@ -103,7 +103,6 @@ function DashboardContent() {
       const result = await response.json();
       setDashboardData(result.data);
     } catch (error) {
-      console.error('Erro ao carregar dashboard:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar dados da dashboard';
       toast.error(errorMessage);
     } finally {

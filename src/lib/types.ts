@@ -73,7 +73,6 @@ export interface Product {
   
   // KeyAuth Integration
   keyAuthDays?: number;
-  keyAuthPublicKey?: string;
   keyAuthSellerKey?: string;
   
   // Status
@@ -272,7 +271,6 @@ export interface ProductFormData {
   stockType: StockType;
   fixedContent?: string;
   keyAuthDays?: number;
-  keyAuthPublicKey?: string;
   keyAuthSellerKey?: string;
 }
 

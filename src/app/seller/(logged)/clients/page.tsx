@@ -101,7 +101,6 @@ export default function Clients() {
       const data = await response.json();
       setClients(data.data || []);
     } catch (error) {
-      console.error('Erro ao carregar clientes:', error);
       toast.error('Erro ao carregar clientes');
     } finally {
       setIsLoading(false);
@@ -197,7 +196,6 @@ export default function Clients() {
       setSelectedClient(null);
       fetchClients(); // Atualizar lista
     } catch (error) {
-      console.error('Erro ao banir cliente:', error);
       toast.error('Erro ao banir cliente');
     }
   };
@@ -231,7 +229,6 @@ export default function Clients() {
       setSelectedClient(null);
       fetchClients(); // Atualizar lista
     } catch (error) {
-      console.error('Erro ao desbanir cliente:', error);
       toast.error('Erro ao desbanir cliente');
     }
   };
@@ -317,7 +314,7 @@ export default function Clients() {
         {/* Cards de estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <NumberCard
-            title="Total de Clientes"
+            title="Total de clientes"
             value={totalClients}
             icon={Users}
             change={0}

@@ -118,15 +118,12 @@ export default function Products() {
   };
 
   const handleAddProduct = (categoryId: string) => {
-    console.log('handleAddProduct chamado com categoryId:', categoryId);
     // Navegar para página de criação com categoryId como query param
     const url = `/seller/products/new?categoryId=${categoryId}`;
-    console.log('Navegando para:', url);
     router.push(url);
   };
 
   const handleEditProduct = (productId: string) => {
-    console.log('Editar produto:', productId);
     // Redirecionar para página de edição do produto
     router.push(`/seller/products/${productId}`);
   };
@@ -183,13 +180,11 @@ export default function Products() {
           }
         }
       } catch (error) {
-        console.error('Erro ao obter userId para invalidação de cache:', error);
       }
       
       // Recarregar categorias para atualizar a lista
       window.location.reload();
     } catch (error) {
-      console.error('Erro ao excluir produto:', error);
       showErrorToast(error instanceof Error ? error.message : 'Erro ao excluir produto');
     } finally {
       setIsDeleteProductModalOpen(false);
@@ -199,7 +194,6 @@ export default function Products() {
   };
 
   const handleReorderProducts = (categoryId: string, reorderedProducts: ProductDisplay[]) => {
-    console.log('Reordenar produtos na categoria:', categoryId, reorderedProducts);
     
     // Atualizar a categoria com os produtos reordenados
     setLocalCategories(prevCategories => 
@@ -260,18 +254,15 @@ export default function Products() {
 
   const handleSaveOrder = async () => {
     try {
-      console.log('Iniciando salvamento da ordem...');
       
       // Salvar ordem das categorias se houver mudanças
       if (hasOrderChanges) {
         await saveCategoriesOrder(localCategories);
-        console.log('Ordem das categorias salva com sucesso!');
       }
       
       // Salvar ordem dos produtos se houver mudanças
       if (hasProductOrderChanges) {
         await saveProductsOrder();
-        console.log('Ordem dos produtos salva com sucesso!');
       }
       
       setHasOrderChanges(false);
@@ -289,7 +280,6 @@ export default function Products() {
         }
       }, 100);
     } catch (error) {
-      console.error('Erro ao salvar ordem:', error);
       showErrorToast('Erro ao salvar ordem');
     }
   };
@@ -346,7 +336,6 @@ export default function Products() {
         }
       }
     } catch (error) {
-      console.error('Erro ao obter userId para invalidação de cache:', error);
     }
   };
 
@@ -390,9 +379,7 @@ export default function Products() {
                     const payload = JSON.parse(atob(token.split('.')[1]));
                     return payload.userId || payload.sub || null;
                   }
-                } catch (error) {
-                  console.error('Erro ao obter userId:', error);
-                }
+                } catch (error) {}
                 return null;
               })());
               fetchCategories();

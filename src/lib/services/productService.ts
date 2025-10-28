@@ -18,7 +18,6 @@ export class ProductService {
     stockType: StockType;
     fixedContent?: string;
     keyAuthDays?: number;
-    keyAuthPublicKey?: string;
     keyAuthSellerKey?: string;
     storeId: string;
     categoryId: string;
@@ -35,7 +34,6 @@ export class ProductService {
         stockType: data.stockType,
         fixedContent: data.fixedContent,
         keyAuthDays: data.keyAuthDays,
-        keyAuthPublicKey: data.keyAuthPublicKey,
         keyAuthSellerKey: data.keyAuthSellerKey,
         storeId: data.storeId,
         categoryId: data.categoryId,
@@ -186,7 +184,7 @@ export class ProductService {
       case StockType.FIXED:
         return !!product.fixedContent;
       case StockType.KEYAUTH:
-        return !!(product.keyAuthPublicKey && product.keyAuthSellerKey);
+        return !!(product.keyAuthSellerKey && product.keyAuthDays && product.keyAuthDays > 0);
       default:
         return false;
     }

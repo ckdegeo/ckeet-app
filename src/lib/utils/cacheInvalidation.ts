@@ -11,7 +11,6 @@ export const invalidateCategoriesCache = (userId: string) => {
   try {
     const cacheKey = `categories_products_user_${userId}`;
     localStorage.removeItem(cacheKey);
-    console.log(`🗑️ [Cache] Cache de categorias limpo para usuário: ${userId}`);
   } catch (error) {
     console.error('Erro ao limpar cache de categorias:', error);
   }
@@ -26,7 +25,6 @@ export const invalidateIntegrationCache = (userId: string) => {
   try {
     const cacheKey = `integration_data_user_${userId}`;
     localStorage.removeItem(cacheKey);
-    console.log(`🗑️ [Cache] Cache de integração limpo para usuário: ${userId}`);
   } catch (error) {
     console.error('Erro ao limpar cache de integração:', error);
   }
@@ -41,7 +39,6 @@ export const invalidateStoreConfigCache = (userId: string) => {
   try {
     const cacheKey = `store_config_user_${userId}`;
     localStorage.removeItem(cacheKey);
-    console.log(`🗑️ [Cache] Cache de configurações da loja limpo para usuário: ${userId}`);
   } catch (error) {
     console.error('Erro ao limpar cache de configurações da loja:', error);
   }
@@ -56,7 +53,6 @@ export const invalidateMercadoPagoCache = (userId: string) => {
   try {
     const cacheKey = `mercadopago_status_user_${userId}`;
     localStorage.removeItem(cacheKey);
-    console.log(`🗑️ [Cache] Cache do Mercado Pago limpo para usuário: ${userId}`);
   } catch (error) {
     console.error('Erro ao limpar cache do Mercado Pago:', error);
   }
@@ -69,7 +65,6 @@ export const invalidateMercadoPagoCache = (userId: string) => {
 export const invalidateProductCategoryCaches = (userId: string) => {
   invalidateCategoriesCache(userId);
   invalidateStoreConfigCache(userId);
-  console.log(`🗑️ [Cache] Todos os caches relacionados a produtos/categorias limpos para usuário: ${userId}`);
 };
 
 /**
@@ -79,7 +74,6 @@ export const invalidateProductCategoryCaches = (userId: string) => {
 export const invalidateIntegrationCaches = (userId: string) => {
   invalidateIntegrationCache(userId);
   invalidateMercadoPagoCache(userId);
-  console.log(`🗑️ [Cache] Todos os caches relacionados a integrações limpos para usuário: ${userId}`);
 };
 
 /**
@@ -91,5 +85,4 @@ export const invalidateAllCaches = (userId: string) => {
   invalidateIntegrationCache(userId);
   invalidateStoreConfigCache(userId);
   invalidateMercadoPagoCache(userId);
-  console.log(`🗑️ [Cache] Todos os caches limpos para usuário: ${userId}`);
 };

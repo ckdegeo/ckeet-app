@@ -39,7 +39,6 @@ export async function PUT(request: NextRequest) {
       stockType,
       fixedContent,
       keyAuthDays,
-      keyAuthPublicKey,
       keyAuthSellerKey
     } = body;
 
@@ -126,7 +125,6 @@ export async function PUT(request: NextRequest) {
         // stockType mantém o valor existente
         fixedContent: fixedContent || null,
         keyAuthDays: keyAuthDays ? parseInt(keyAuthDays) : null,
-        keyAuthPublicKey: keyAuthPublicKey || null,
         keyAuthSellerKey: keyAuthSellerKey || null,
         categoryId
       },
@@ -174,7 +172,6 @@ export async function PUT(request: NextRequest) {
         stockType: updatedProduct.stockType,
         fixedContent: updatedProduct.fixedContent,
         keyAuthDays: updatedProduct.keyAuthDays,
-        keyAuthPublicKey: updatedProduct.keyAuthPublicKey,
         keyAuthSellerKey: updatedProduct.keyAuthSellerKey,
         order: updatedProduct.order,
         isActive: updatedProduct.isActive,

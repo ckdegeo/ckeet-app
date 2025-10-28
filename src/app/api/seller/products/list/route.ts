@@ -132,7 +132,6 @@ export async function GET(request: NextRequest) {
         stockType: product.stockType,
         fixedContent: product.fixedContent,
         keyAuthDays: product.keyAuthDays,
-        keyAuthPublicKey: product.keyAuthPublicKey,
         keyAuthSellerKey: product.keyAuthSellerKey,
         order: product.order,
         isActive: product.isActive,

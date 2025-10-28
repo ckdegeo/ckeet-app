@@ -93,7 +93,7 @@ export default function OrdersPage() {
             return payload.userId || payload.sub || null;
           }
         } catch (error) {
-          console.error('Erro ao obter userId do token:', error);
+          // Silenciar erro no console; UI lida com estados
         }
         return null;
       })(),
@@ -176,7 +176,7 @@ export default function OrdersPage() {
       setOrdersData(data);
       setOrdersError(null);
     } catch (error) {
-      console.error('Erro ao buscar pedidos:', error);
+      // Silenciar erro no console; UI/Toast cuidam do feedback
       setOrdersError(error instanceof Error ? error.message : 'Erro desconhecido');
     } finally {
       setOrdersLoading(false);
@@ -243,14 +243,14 @@ export default function OrdersPage() {
   // Função para verificar entrega de conteúdo
   const checkDelivery = useCallback(async () => {
     try {
-      console.log('🔍 [POLLING] Verificando se há conteúdo para entregar...');
+      
       const accessToken = localStorage.getItem('customer_access_token');
       if (!accessToken) {
-        console.log('⚠️ [POLLING] Sem customer_access_token');
+        
         return;
       }
 
-      console.log('📡 [POLLING] Chamando /api/customer/orders/check-delivery');
+      
       const response = await fetch('/api/customer/orders/check-delivery', {
         method: 'GET',
         headers: {
@@ -260,19 +260,19 @@ export default function OrdersPage() {
         cache: 'no-store'
       });
 
-      console.log('📊 [POLLING] Response status:', response.status);
+      
 
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ [POLLING] Data recebida:', data);
+        
         if (data.success && data.delivered > 0) {
-          console.log('🎉 [POLLING] Conteúdo entregue! Atualizando página...');
+          
           // Refresh orders para mostrar conteúdo entregue
           await fetchOrders();
         }
       }
     } catch (error) {
-      console.error('❌ [POLLING] Erro:', error);
+      // Silenciar erros de polling no console
     }
   }, [fetchOrders]);
 
@@ -307,7 +307,7 @@ export default function OrdersPage() {
         setIsAuthenticated(true);
         setUserName(user.name);
       } catch (error) {
-        console.error('Erro ao parsear dados do usuário:', error);
+        
         setIsAuthenticated(false);
         setUserName(undefined);
       }
@@ -323,7 +323,7 @@ export default function OrdersPage() {
       window.open(downloadUrl, '_blank');
       showSuccessToast('Download iniciado!');
     } catch (error) {
-      console.error('Erro no download:', error);
+      
       showErrorToast('Erro ao fazer download');
     }
   };
@@ -333,7 +333,7 @@ export default function OrdersPage() {
       await navigator.clipboard.writeText(content);
       showSuccessToast('Conteúdo copiado para a área de transferência!');
     } catch (error) {
-      console.error('Erro ao copiar:', error);
+      
       showErrorToast('Erro ao copiar conteúdo');
     }
   };

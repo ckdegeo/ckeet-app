@@ -21,10 +21,7 @@ export function clearUserCache(userId?: string) {
       
       keysToRemove.forEach(key => {
         localStorage.removeItem(key);
-        console.log(`🗑️ [Cache] Removido: ${key}`);
       });
-      
-      console.log(`✅ [Cache] Cache limpo para usuário ${userId}`);
     } else {
       // Limpar todo o cache da aplicação
       const keysToRemove: string[] = [];
@@ -42,10 +39,7 @@ export function clearUserCache(userId?: string) {
       
       keysToRemove.forEach(key => {
         localStorage.removeItem(key);
-        console.log(`🗑️ [Cache] Removido: ${key}`);
       });
-      
-      console.log(`✅ [Cache] Todo o cache foi limpo`);
     }
   } catch (error) {
     console.error('Erro ao limpar cache:', error);

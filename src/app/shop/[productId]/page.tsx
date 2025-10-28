@@ -45,7 +45,6 @@ export default function ProductPage() {
       setProduct(data.product);
       setSelectedImage(data.product.imageUrl || '');
     } catch (error) {
-      console.error('Erro ao carregar produto:', error);
     } finally {
       setLoading(false);
     }
@@ -62,7 +61,6 @@ export default function ProductPage() {
         setIsAuthenticated(true);
         setUserName(user.name);
       } catch (error) {
-        console.error('Erro ao parsear dados do usuário:', error);
         setIsAuthenticated(false);
       }
     } else {

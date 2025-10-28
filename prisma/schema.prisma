@@ -236,9 +236,8 @@ model Product {
   fixedContent String? // Conteúdo fixo que será sempre entregue
   
   // KeyAuth Integration (for stockType = "keyauth")
-  keyAuthDays      Int?    // Número de dias
-  keyAuthPublicKey String? // Chave pública KeyAuth
-  keyAuthSellerKey String? // Chave do vendedor KeyAuth
+  keyAuthDays      Int?    // Número de dias (expiry)
+  keyAuthSellerKey String? // Chave do vendedor KeyAuth (sellerkey)
   
   // Status
   isActive    Boolean  @default(true)

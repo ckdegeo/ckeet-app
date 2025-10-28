@@ -164,7 +164,6 @@ function SalesContent() {
         setSales([]);
       }
     } catch (error) {
-      console.error('Erro ao carregar vendas:', error);
       toast.error('Erro ao carregar vendas');
     } finally {
       setIsLoading(false);

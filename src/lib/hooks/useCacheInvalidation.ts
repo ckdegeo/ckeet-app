@@ -9,7 +9,6 @@ export function useCacheInvalidation() {
     try {
       const cacheKey = userId ? `${key}_user_${userId}` : key;
       localStorage.removeItem(cacheKey);
-      console.log(`🗑️ [Cache] Cache invalidado para ${cacheKey}`);
     } catch (error) {
       console.error(`Erro ao invalidar cache para ${key}:`, error);
     }
@@ -22,10 +21,7 @@ export function useCacheInvalidation() {
       
       userCacheKeys.forEach(key => {
         localStorage.removeItem(key);
-        console.log(`🗑️ [Cache] Cache invalidado: ${key}`);
       });
-      
-      console.log(`🗑️ [Cache] Todos os caches do usuário ${userId} foram invalidados`);
     } catch (error) {
       console.error('Erro ao invalidar todos os caches do usuário:', error);
     }
@@ -71,7 +67,7 @@ export function useOrderCacheInvalidation() {
         }
       }
     } catch (error) {
-      console.error('Erro ao obter userId para invalidação:', error);
+      
     }
   }, [invalidateOrderRelatedCaches]);
 

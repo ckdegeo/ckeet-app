@@ -41,7 +41,6 @@ export default function ShopPage() {
       setStore(data.store);
       setCategories(data.categories);
     } catch (error) {
-      console.error('Erro ao carregar loja:', error);
     } finally {
       setLoading(false);
     }
@@ -58,7 +57,6 @@ export default function ShopPage() {
         setIsAuthenticated(true);
         setUserName(user.name);
       } catch (error) {
-        console.error('Erro ao parsear dados do usuário:', error);
         setIsAuthenticated(false);
         setUserName(undefined);
       }

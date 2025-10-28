@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
       }
     } else if (product.stockType === 'KEYAUTH') {
       // Para produtos KEYAUTH, verificar se tem configurações
-      if (!product.keyAuthPublicKey || !product.keyAuthSellerKey) {
+      if (!product.keyAuthSellerKey) {
         return NextResponse.json(
           { error: 'Produto KeyAuth não está configurado corretamente' },
           { status: 400 }

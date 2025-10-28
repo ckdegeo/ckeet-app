@@ -119,12 +119,10 @@ export function useMercadoPago(): UseMercadoPagoReturn {
   // Buscar sellerId do perfil autenticado
   const fetchSellerId = async () => {
     try {
-      console.log('🔍 [MercadoPago] Buscando sellerId...');
       
       // Buscar sellerId dinamicamente do token de acesso
       const accessToken = localStorage.getItem('access_token');
       if (!accessToken) {
-        console.error('❌ [MercadoPago] Token de acesso não encontrado');
         setSellerId(null);
         return;
       }
@@ -134,12 +132,9 @@ export function useMercadoPago(): UseMercadoPagoReturn {
       const userId = payload.userId || payload.sub;
       
       if (!userId) {
-        console.error('❌ [MercadoPago] userId não encontrado no token');
         setSellerId(null);
         return;
       }
-      
-      console.log('👤 [MercadoPago] Usando userId:', userId);
       
       // Buscar seller no banco pelo userId
       const response = await fetch(`/api/seller/profile/me?userId=${userId}`, {
@@ -148,14 +143,11 @@ export function useMercadoPago(): UseMercadoPagoReturn {
       
       if (response.ok) {
         const profile: SellerProfile = await response.json();
-        console.log('✅ [MercadoPago] Seller encontrado:', profile.id);
         setSellerId(profile.id);
       } else {
-        console.error('❌ [MercadoPago] Erro ao buscar perfil do seller');
         setSellerId(null);
       }
     } catch (error) {
-      console.error('❌ [MercadoPago] Erro ao buscar perfil do seller:', error);
       setSellerId(null);
     }
   };
@@ -168,7 +160,6 @@ export function useMercadoPago(): UseMercadoPagoReturn {
     if (!forceRefresh) {
       const cachedStatus = getCachedStatus();
       if (cachedStatus) {
-        console.log('📦 [MercadoPago] Usando dados do cache');
         setStatus(cachedStatus);
         return;
       }
@@ -176,7 +167,6 @@ export function useMercadoPago(): UseMercadoPagoReturn {
 
     try {
       setLoading(true);
-      console.log('🌐 [MercadoPago] Buscando status do servidor...');
       
       const response = await fetch(`/api/seller/mercadopago/status?sellerId=${sellerId}`);
       
@@ -198,7 +188,6 @@ export function useMercadoPago(): UseMercadoPagoReturn {
         
         setStatus(data);
       } else {
-        console.error('Erro ao buscar status do Mercado Pago');
         const errorStatus = {
           connected: false,
           status: 'DISCONNECTED' as const
@@ -207,7 +196,6 @@ export function useMercadoPago(): UseMercadoPagoReturn {
         setCachedStatus(errorStatus);
       }
     } catch (error) {
-      console.error('Erro ao buscar status do Mercado Pago:', error);
       const errorStatus = {
         connected: false,
         status: 'DISCONNECTED' as const
@@ -221,18 +209,14 @@ export function useMercadoPago(): UseMercadoPagoReturn {
 
   // Conecta ao Mercado Pago (abre OAuth)
   const connect = () => {
-    console.log('🔗 [MercadoPago] Iniciando conexão...');
-    console.log('👤 [MercadoPago] Seller ID:', sellerId);
     
     if (!sellerId) {
-      console.error('❌ [MercadoPago] Seller ID não disponível');
       return;
     }
 
     setConnecting(true);
     
     const connectUrl = `/api/seller/mercadopago/connect?sellerId=${sellerId}`;
-    console.log('🌐 [MercadoPago] Redirecionando para:', connectUrl);
     
     // Redirecionar para rota de conexão
     window.location.href = connectUrl;
@@ -241,7 +225,6 @@ export function useMercadoPago(): UseMercadoPagoReturn {
   // Desconecta do Mercado Pago
   const disconnect = async () => {
     if (!sellerId) {
-      console.error('Seller ID não disponível');
       return;
     }
 
@@ -272,11 +255,9 @@ export function useMercadoPago(): UseMercadoPagoReturn {
         
         toast.success('Desconectado do Mercado Pago com sucesso!');
       } else {
-        console.error('Erro ao desconectar do Mercado Pago');
         toast.error('Erro ao desconectar do Mercado Pago');
       }
     } catch (error) {
-      console.error('Erro ao desconectar do Mercado Pago:', error);
       toast.error('Erro ao desconectar do Mercado Pago');
     } finally {
       setDisconnecting(false);
@@ -293,7 +274,6 @@ export function useMercadoPago(): UseMercadoPagoReturn {
     const cacheKey = getCacheKey(getUserId());
     localStorage.removeItem(cacheKey);
     hasShownToast.current = false;
-    console.log(`🗑️ [Cache] Cache limpo para ${cacheKey}`);
     
     // Forçar refresh do status após limpar cache
     if (sellerId) {
