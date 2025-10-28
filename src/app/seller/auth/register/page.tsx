@@ -9,6 +9,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSellerRegister } from "@/lib/hooks/useSellerRegister";
 import { type SellerRegisterData } from "@/lib/validations/authSchemas";
+import { validateEmail, validateCPF } from "@/lib/utils/validation";
+import toast from "react-hot-toast";
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -21,6 +23,40 @@ export default function Register() {
   const router = useRouter();
   
   const { isLoading, errors, register } = useSellerRegister();
+
+  // Validação em tempo real para email
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    
+    // Validar apenas se o email estiver completo (contém @)
+    if (value.includes('@')) {
+      const validation = validateEmail(value);
+      if (!validation.isValid) {
+        toast.error(validation.error || 'Email inválido', {
+          duration: 3000,
+        });
+      }
+    }
+  };
+
+  // Validação em tempo real para CPF
+  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const cleanValue = e.target.value.replace(/\D/g, '');
+    if (cleanValue.length <= 11) {
+      setCpf(cleanValue);
+      
+      // Validar apenas se o CPF estiver completo (11 dígitos)
+      if (cleanValue.length === 11) {
+        const validation = validateCPF(cleanValue);
+        if (!validation.isValid) {
+          toast.error(validation.error || 'CPF inválido', {
+            duration: 3000,
+          });
+        }
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,10 +131,9 @@ export default function Register() {
               label="Email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
               placeholder="Digite seu email"
               required
-              error={errors?.email}
               disabled={isLoading || success}
             />
 
@@ -106,16 +141,10 @@ export default function Register() {
               label="CPF"
               type="text"
               value={cpf}
-              onChange={(e) => {
-                const cleanValue = e.target.value.replace(/\D/g, '');
-                if (cleanValue.length <= 11) {
-                  setCpf(cleanValue);
-                }
-              }}
+              onChange={handleCpfChange}
               placeholder="Digite seu CPF"
               maxLength={14}
               required
-              error={errors?.cpf}
               disabled={isLoading || success}
             />
 
