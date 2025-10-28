@@ -13,6 +13,10 @@ import ValueInput from '@/app/components/inputs/valueInput';
 import Tabs from '@/app/components/tabs/tabs';
 import Table from '@/app/components/tables/table';
 import ImageUpload from '@/app/components/images/imageUpload';
+import EditStockLineModal from '@/app/components/modals/editStockLineModal';
+import DeleteStockLineModal from '@/app/components/modals/deleteStockLineModal';
+import EditDeliverableModal from '@/app/components/modals/editDeliverableModal';
+import DeleteDeliverableModal from '@/app/components/modals/deleteDeliverableModal';
 import { ProductFormData, StockType, StockLineFormData, DeliverableFormData } from '@/lib/types';
 
 // Dados do produto e configurações
@@ -205,12 +209,22 @@ export default function ProductPage() {
   const [stockLines, setStockLines] = useState<Array<{id: string; line: number; content: string}>>([]);
   const [newStockContent, setNewStockContent] = useState('');
   
+  // Estados para modais de estoque
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedStockLine, setSelectedStockLine] = useState<{id: string; line: number; content: string} | null>(null);
+  
   // Estados para entregáveis
   const [deliverableLinks, setDeliverableLinks] = useState<Array<{id: string; name: string; url: string}>>([]);
   const [newDeliverable, setNewDeliverable] = useState<DeliverableFormData>({
     name: '',
     url: ''
   });
+  
+  // Estados para modais de entregáveis
+  const [editDeliverableModalOpen, setEditDeliverableModalOpen] = useState(false);
+  const [deleteDeliverableModalOpen, setDeleteDeliverableModalOpen] = useState(false);
+  const [selectedDeliverable, setSelectedDeliverable] = useState<{id: string; name: string; url: string} | null>(null);
 
   const handleBack = () => {
     router.back();
@@ -490,17 +504,63 @@ export default function ProductPage() {
   };
 
   // Funções para estoque por linha
-  const handleAddStockLine = () => {
+  const handleAddStockLine = async () => {
     if (!newStockContent.trim()) return;
     
-    const newLine = {
-      id: Date.now().toString(),
-      line: stockLines.length + 1,
-      content: newStockContent.trim()
-    };
-    
-    setStockLines(prev => [...prev, newLine]);
-    setNewStockContent('');
+    // Se estiver editando um produto existente, salvar no banco imediatamente
+    if (!isNewProduct && productId) {
+      try {
+        const accessToken = localStorage.getItem('access_token');
+        if (!accessToken) {
+          showErrorToast('Token de acesso não encontrado');
+          return;
+        }
+
+        const response = await fetch('/api/seller/stock-lines', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+          },
+          body: JSON.stringify({
+            productId: productId,
+            content: newStockContent.trim()
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Erro ao adicionar linha de estoque');
+        }
+
+        const data = await response.json();
+        
+        // Adicionar a linha retornada pelo backend
+        const newLine = {
+          id: data.stockLine.id,
+          line: stockLines.length + 1,
+          content: data.stockLine.content
+        };
+        
+        setStockLines(prev => [...prev, newLine]);
+        setNewStockContent('');
+        showSuccessToast('Linha de estoque adicionada com sucesso');
+      } catch (error) {
+        console.error('Erro ao adicionar linha de estoque:', error);
+        showErrorToast(error instanceof Error ? error.message : 'Erro ao adicionar linha de estoque');
+        return;
+      }
+    } else {
+      // Se for produto novo, apenas adicionar localmente
+      const newLine = {
+        id: Date.now().toString(),
+        line: stockLines.length + 1,
+        content: newStockContent.trim()
+      };
+      
+      setStockLines(prev => [...prev, newLine]);
+      setNewStockContent('');
+    }
     
     // Limpar erro de stockLines quando adicionar uma linha
     if (errors.stockLines) {
@@ -512,18 +572,102 @@ export default function ProductPage() {
   };
 
   const handleEditStockLine = (line: {id: string; line: number; content: string}) => {
-    const newContent = prompt('Editar conteúdo da linha:', line.content);
-    if (newContent !== null && newContent.trim()) {
+    setSelectedStockLine(line);
+    setEditModalOpen(true);
+  };
+
+  const handleConfirmEditStockLine = async (content: string) => {
+    if (!selectedStockLine) return;
+
+    // Se estiver editando um produto existente, salvar no banco
+    if (!isNewProduct && productId) {
+      try {
+        const accessToken = localStorage.getItem('access_token');
+        if (!accessToken) {
+          showErrorToast('Token de acesso não encontrado');
+          return;
+        }
+
+        const response = await fetch('/api/seller/stock-lines', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+          },
+          body: JSON.stringify({
+            id: selectedStockLine.id,
+            content: content
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Erro ao editar linha de estoque');
+        }
+
+        // Atualizar no estado local
+        setStockLines(prev => prev.map(l => 
+          l.id === selectedStockLine.id ? { ...l, content } : l
+        ));
+        showSuccessToast('Linha de estoque atualizada com sucesso');
+      } catch (error) {
+        console.error('Erro ao editar linha de estoque:', error);
+        showErrorToast(error instanceof Error ? error.message : 'Erro ao editar linha de estoque');
+        throw error;
+      }
+    } else {
+      // Se for produto novo, apenas atualizar localmente
       setStockLines(prev => prev.map(l => 
-        l.id === line.id ? { ...l, content: newContent.trim() } : l
+        l.id === selectedStockLine.id ? { ...l, content } : l
       ));
+      showSuccessToast('Linha de estoque atualizada com sucesso');
     }
   };
 
   const handleDeleteStockLine = (line: {id: string; line: number; content: string}) => {
-    if (confirm('Tem certeza que deseja excluir esta linha de estoque?')) {
+    setSelectedStockLine(line);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDeleteStockLine = async () => {
+    if (!selectedStockLine) return;
+
+    // Se estiver editando um produto existente, deletar no banco
+    if (!isNewProduct && productId) {
+      try {
+        const accessToken = localStorage.getItem('access_token');
+        if (!accessToken) {
+          showErrorToast('Token de acesso não encontrado');
+          return;
+        }
+
+        const response = await fetch(`/api/seller/stock-lines?id=${selectedStockLine.id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Erro ao excluir linha de estoque');
+        }
+
+        // Remover do estado local
+        setStockLines(prev => {
+          const filtered = prev.filter(l => l.id !== selectedStockLine.id);
+          // Renumerar as linhas
+          return filtered.map((l, index) => ({ ...l, line: index + 1 }));
+        });
+        showSuccessToast('Linha de estoque excluída com sucesso');
+      } catch (error) {
+        console.error('Erro ao excluir linha de estoque:', error);
+        showErrorToast(error instanceof Error ? error.message : 'Erro ao excluir linha de estoque');
+      }
+    } else {
+      // Se for produto novo, apenas remover localmente
       setStockLines(prev => {
-        const filtered = prev.filter(l => l.id !== line.id);
+        const filtered = prev.filter(l => l.id !== selectedStockLine.id);
         // Renumerar as linhas
         return filtered.map((l, index) => ({ ...l, line: index + 1 }));
       });
@@ -572,21 +716,29 @@ export default function ProductPage() {
   };
 
   const handleEditDeliverable = (link: {id: string; name: string; url: string}) => {
-    const newName = prompt('Editar nome do entregável:', link.name);
-    if (newName !== null && newName.trim()) {
-      const newUrl = prompt('Editar URL do entregável:', link.url);
-      if (newUrl !== null && newUrl.trim()) {
-        setDeliverableLinks(prev => prev.map(l => 
-          l.id === link.id ? { ...l, name: newName.trim(), url: newUrl.trim() } : l
-        ));
-      }
-    }
+    setSelectedDeliverable(link);
+    setEditDeliverableModalOpen(true);
+  };
+
+  const handleConfirmEditDeliverable = async (name: string, url: string) => {
+    if (!selectedDeliverable) return;
+
+    setDeliverableLinks(prev => prev.map(l => 
+      l.id === selectedDeliverable.id ? { ...l, name, url } : l
+    ));
+    showSuccessToast('Entregável atualizado com sucesso');
   };
 
   const handleDeleteDeliverable = (link: {id: string; name: string; url: string}) => {
-    if (confirm('Tem certeza que deseja excluir este entregável?')) {
-      setDeliverableLinks(prev => prev.filter(l => l.id !== link.id));
-    }
+    setSelectedDeliverable(link);
+    setDeleteDeliverableModalOpen(true);
+  };
+
+  const handleConfirmDeleteDeliverable = async () => {
+    if (!selectedDeliverable) return;
+
+    setDeliverableLinks(prev => prev.filter(l => l.id !== selectedDeliverable.id));
+    showSuccessToast('Entregável excluído com sucesso');
   };
 
   // Configuração das colunas da tabela de estoque
@@ -1043,6 +1195,55 @@ export default function ProductPage() {
           </Button>
         </div>
       </div>
+
+      {/* Modais de Estoque */}
+      {selectedStockLine && (
+        <>
+          <EditStockLineModal
+            isOpen={editModalOpen}
+            onClose={() => {
+              setEditModalOpen(false);
+              setSelectedStockLine(null);
+            }}
+            onConfirm={handleConfirmEditStockLine}
+            currentContent={selectedStockLine.content}
+          />
+          <DeleteStockLineModal
+            isOpen={deleteModalOpen}
+            onClose={() => {
+              setDeleteModalOpen(false);
+              setSelectedStockLine(null);
+            }}
+            onConfirm={handleConfirmDeleteStockLine}
+            content={selectedStockLine.content}
+          />
+        </>
+      )}
+
+      {/* Modais de Entregáveis */}
+      {selectedDeliverable && (
+        <>
+          <EditDeliverableModal
+            isOpen={editDeliverableModalOpen}
+            onClose={() => {
+              setEditDeliverableModalOpen(false);
+              setSelectedDeliverable(null);
+            }}
+            onConfirm={handleConfirmEditDeliverable}
+            currentName={selectedDeliverable.name}
+            currentUrl={selectedDeliverable.url}
+          />
+          <DeleteDeliverableModal
+            isOpen={deleteDeliverableModalOpen}
+            onClose={() => {
+              setDeleteDeliverableModalOpen(false);
+              setSelectedDeliverable(null);
+            }}
+            onConfirm={handleConfirmDeleteDeliverable}
+            name={selectedDeliverable.name}
+          />
+        </>
+      )}
     </div>
   );
 }

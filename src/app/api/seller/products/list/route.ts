@@ -69,7 +69,8 @@ export async function GET(request: NextRequest) {
           },
           stockLines: {
             where: {
-              isDeleted: false
+              isDeleted: false,
+              isUsed: false
             },
             select: {
               id: true,

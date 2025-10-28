@@ -126,8 +126,10 @@ export async function POST(request: NextRequest) {
 
     // Atualizar order baseado no status
     console.log('🔍 [WEBHOOK] Status do pagamento:', paymentStatus.status);
+    console.log('🔍 [WEBHOOK] Status detail:', paymentStatus.statusDetail);
     
-    if (paymentStatus.status === 'approved') {
+    // Accept both 'approved' and 'processed' statuses (PIX)
+    if (paymentStatus.status === 'approved' || paymentStatus.status === 'processed') {
       console.log('✅ [WEBHOOK] Pagamento aprovado! Iniciando processo de entrega...');
       await prisma.order.update({
         where: { id: transaction.orderId },

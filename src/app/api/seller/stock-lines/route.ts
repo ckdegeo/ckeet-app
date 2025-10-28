@@ -171,6 +171,70 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PUT(request: NextRequest) {
+  try {
+    const { id, content } = await request.json();
+
+    if (!id || !content) {
+      return NextResponse.json(
+        { error: 'ID e conteúdo são obrigatórios' },
+        { status: 400 }
+      );
+    }
+
+    // Verificar se a linha existe
+    const stockLine = await prisma.stockLine.findUnique({
+      where: { id },
+      include: {
+        product: {
+          include: {
+            store: {
+              select: {
+                sellerId: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!stockLine) {
+      return NextResponse.json(
+        { error: 'Linha de estoque não encontrada' },
+        { status: 404 }
+      );
+    }
+
+    // Verificar se a linha foi vendida
+    if (stockLine.isUsed && stockLine.isDeleted) {
+      return NextResponse.json(
+        { error: 'Não é possível editar uma linha já vendida' },
+        { status: 400 }
+      );
+    }
+
+    // Atualizar a linha de estoque
+    const updatedStockLine = await prisma.stockLine.update({
+      where: { id },
+      data: {
+        content: content.trim()
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      stockLine: updatedStockLine
+    });
+
+  } catch (error) {
+    console.error('Erro ao editar linha de estoque:', error);
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

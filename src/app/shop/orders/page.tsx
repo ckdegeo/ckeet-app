@@ -245,9 +245,9 @@ export default function OrdersPage() {
     const checkDelivery = async () => {
       try {
         console.log('🔍 [POLLING] Verificando se há conteúdo para entregar...');
-        const accessToken = localStorage.getItem('access_token');
+        const accessToken = localStorage.getItem('customer_access_token');
         if (!accessToken) {
-          console.log('⚠️ [POLLING] Sem access_token');
+          console.log('⚠️ [POLLING] Sem customer_access_token');
           return;
         }
 
