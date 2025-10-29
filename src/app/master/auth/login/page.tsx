@@ -110,7 +110,7 @@ export default function MasterLogin() {
             <hr className="border-gray-200 my-4" />
 
             <Button className="w-full" disabled={isLoading} type="submit">
-              {isLoading ? 'Acessando...' : 'Acessar Painel'}
+              {isLoading ? 'Acessando...' : 'Entrar'}
             </Button>
 
             <div className="text-center">
