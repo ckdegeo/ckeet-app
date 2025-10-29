@@ -8,11 +8,11 @@ export const revalidate = 0;
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting: 5 tentativas de login por IP a cada 5 minutos
+    // Rate limiting: 5 tentativas de login por IP a cada 2 minutos
     const identifier = getRateLimitIdentifier(request);
     const rateLimit = checkRateLimit(`login:${identifier}`, {
       maxRequests: 5,
-      windowMs: 5 * 60 * 1000, // 5 minutos
+      windowMs: 2 * 60 * 1000, // 2 minutos
     });
 
     if (!rateLimit.allowed) {
@@ -104,8 +104,23 @@ export async function POST(request: NextRequest) {
     // Sincronizar usuário com Prisma
     await AuthService.syncUser(authData.user);
 
-    // Obter dados do seller
+    // Obter dados do seller com loja
     const seller = await AuthService.getSellerByEmail(email);
+
+    if (!seller) {
+      return NextResponse.json(
+        { error: 'Seller não encontrado' },
+        { status: 404 }
+      );
+    }
+
+    // Verificar se a loja está bloqueada
+    if (seller.store && !seller.store.isActive) {
+      return NextResponse.json(
+        { error: 'Sua loja está bloqueada. Entre em contato com o suporte.' },
+        { status: 403 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
@@ -115,8 +130,8 @@ export async function POST(request: NextRequest) {
         email: authData.user.email,
         name: authData.user.user_metadata?.name,
         user_type: 'seller',
-        seller_id: seller?.id,
-        store_id: seller?.store?.id,
+        seller_id: seller.id,
+        store_id: seller.store?.id,
       },
       tokens: {
         access_token: authData.session?.access_token,

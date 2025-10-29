@@ -80,6 +80,21 @@ enum CustomerStatus {
 
 
 // ===========================================
+// MASTERS (ADMINISTRADORES)
+// ===========================================
+
+model Master {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("masters")
+}
+
+// ===========================================
 // SELLERS (VENDEDORES)
 // ===========================================
 

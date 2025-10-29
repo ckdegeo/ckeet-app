@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { 
   DollarSign, 
   TrendingUp, 
@@ -12,35 +12,50 @@ import {
 import ValueCard from '@/app/components/cards/valueCard';
 import NumberCard from '@/app/components/cards/numberCard';
 import AreaChartCard from '@/app/components/cards/areaChart';
-import DatePicker from '@/app/components/selectors/datePicker';
+import Selector from '@/app/components/selectors/selector';
+import { getAccessToken } from '@/lib/utils/authUtils';
 
 export default function Dashboard() {
-  // Estado para o datepicker
-  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
-    new Date(new Date().setMonth(new Date().getMonth() - 1)), // 1 mês atrás
-    new Date() // Hoje
-  ]);
+  // Período (Selector)
+  const [period, setPeriod] = useState<'7d' | '30d' | '90d' | '12m'>('30d');
 
-  // Dados simulados para o gráfico (últimos 7 dias)
-  const chartData = [
-    { name: 'Segunda', faturamento: 45200, usuarios: 1250, vendas: 320 },
-    { name: 'Terça', faturamento: 38800, usuarios: 1180, vendas: 280 },
-    { name: 'Quarta', faturamento: 51100, usuarios: 1420, vendas: 380 },
-    { name: 'Quinta', faturamento: 47700, usuarios: 1350, vendas: 340 },
-    { name: 'Sexta', faturamento: 62200, usuarios: 1580, vendas: 450 },
-    { name: 'Sábado', faturamento: 75500, usuarios: 1680, vendas: 520 },
-    { name: 'Domingo', faturamento: 58800, usuarios: 1520, vendas: 410 }
-  ];
+  // Estado de métricas
+  const [masterData, setMasterData] = useState({
+    faturamentoBruto: 0,
+    faturamentoLiquido: 0,
+    totalPagos: 0,
+    totalOrdens: 0,
+  });
 
-  // Dados dos cards - métricas essenciais
-  const masterData = {
-    faturamentoBruto: 1250000,
-    faturamentoLiquido: 1125000,
-    totalPagos: 15680,
-    totalOrdens: 18450,
-    lojasCadastradas: 1230,
-    lojasBloqueadas: 45
-  };
+  // Gráfico
+  const [chartData, setChartData] = useState<{ name: string; faturamento: number }[]>([]);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const token = getAccessToken();
+        const res = await fetch(`/api/master/dashboard?period=${period}`, {
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : ''
+          }
+        });
+        const json = await res.json();
+        if (res.ok && json?.data) {
+          setMasterData({
+            faturamentoBruto: json.data.faturamentoBruto || 0,
+            faturamentoLiquido: json.data.faturamentoLiquido || 0,
+            totalPagos: json.data.totalPagos || 0,
+            totalOrdens: json.data.totalOrdens || 0,
+          });
+          setChartData(json.data.chart || []);
+        }
+      } catch (e) {
+        console.error('Erro ao carregar dashboard master:', e);
+      }
+    };
+
+    fetchDashboard();
+  }, [period]);
 
   // Configuração do gráfico
   const dataKeys = [
@@ -60,17 +75,22 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Cabeçalho com título e filtro de data */}
+      {/* Cabeçalho com título e filtro */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-[var(--foreground)]">
           Dashboard
         </h1>
         
         <div className="w-full md:w-72">
-          <DatePicker
-            startDate={dateRange[0]}
-            endDate={dateRange[1]}
-            onChange={setDateRange}
+          <Selector
+            value={period}
+            onChange={(v) => setPeriod(v as '7d' | '30d' | '90d' | '12m')}
+            options={[
+              { value: '7d', label: 'Últimos 7 dias' },
+              { value: '30d', label: 'Últimos 30 dias' },
+              { value: '90d', label: 'Últimos 90 dias' },
+              { value: '12m', label: 'Últimos 12 meses' },
+            ]}
           />
         </div>
       </div>
@@ -82,7 +102,7 @@ export default function Dashboard() {
           value={masterData.faturamentoBruto}
           currency="BRL"
           icon={DollarSign}
-          change={15}
+          change={0}
           changeType="increase"
         />
         
@@ -91,7 +111,7 @@ export default function Dashboard() {
           value={masterData.faturamentoLiquido}
           currency="BRL"
           icon={TrendingUp}
-          change={12}
+          change={0}
           changeType="increase"
           background="secondary"
         />
@@ -100,7 +120,7 @@ export default function Dashboard() {
           title="Pagos"
           value={masterData.totalPagos}
           icon={CheckCircle}
-          change={8}
+          change={0}
           changeType="increase"
         />
         
@@ -108,7 +128,7 @@ export default function Dashboard() {
           title="Ordens"
           value={masterData.totalOrdens}
           icon={Package}
-          change={5}
+          change={0}
           changeType="increase"
           background="transparent"
         />
@@ -120,7 +140,7 @@ export default function Dashboard() {
       {/* Gráfico de evolução */}
       <div className="mt-8">
         <AreaChartCard
-          title="Detalhes do Faturamento Liquido"
+          title="Projeção do líquido (Plataforma)"
           data={chartData}
           dataKeys={dataKeys}
           className="h-96"

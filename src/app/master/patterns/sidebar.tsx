@@ -96,13 +96,18 @@ export default function Sidebar({ className = "" }) {
       {/* Sidebar */}
       <aside
         className={`
-          fixed md:sticky top-0 left-0 z-40
-          h-screen bg-[var(--surface)] border-r border-gray-200
+          fixed md:static md:sticky top-0 left-0 z-40
+          h-screen md:h-screen bg-[var(--surface)] border-r border-gray-200
           transition-all duration-300 ease-in-out
           ${effectiveIsCollapsed ? "w-20" : "w-64"}
           ${isMobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
           ${className}
         `}
+        style={{
+          // Evita criar overflow horizontal quando oculto no mobile
+          transform: isMobileOpen ? undefined : undefined,
+          willChange: 'transform'
+        }}
       >
         <div className="flex flex-col h-full p-4">
           {/* Header */}

@@ -1,114 +1,81 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import NumberCard from "@/app/components/cards/numberCard";
 import Table from "@/app/components/tables/table";
 import Search from "@/app/components/inputs/search";
-import { Users, Eye } from "lucide-react";
+import { Users } from "lucide-react";
+import { getAccessToken } from '@/lib/utils/authUtils';
+import { showToastWithAutoClose } from '@/lib/utils/toastUtils';
 
 // Interface para os dados dos clientes
 interface Client {
-  id: number;
+  id: string;
   nomeCliente: string;
-  loja: string;
-  cpf: string;
+  email: string;
   telefone: string;
+  status: 'ACTIVE' | 'BANNED';
   dataCriacao: string;
+  
+  // Dados da loja
+  lojaNome: string;
+  lojaSubdomain: string | null;
+  lojaContactEmail: string | null;
+  
+  // Dados do seller
+  sellerId: string | null;
+  sellerNome: string;
+  sellerEmail: string;
+  sellerTelefone: string;
+  
+  // Métricas
+  totalPedidos: number;
+  pedidosPagos: number;
+  totalGasto: number;
+  totalCompras: number;
 }
-
-// Dados mock para os clientes
-const mockClients: Client[] = [
-  {
-    id: 1,
-    nomeCliente: "Pedro Henrique Silva",
-    loja: "Tech Store SP",
-    cpf: "111.222.333-44",
-    telefone: "(11) 91234-5678",
-    dataCriacao: "2024-02-15"
-  },
-  {
-    id: 2,
-    nomeCliente: "Ana Carolina Santos",
-    loja: "Fashion Boutique",
-    cpf: "222.333.444-55",
-    telefone: "(11) 98765-4321",
-    dataCriacao: "2024-02-20"
-  },
-  {
-    id: 3,
-    nomeCliente: "Roberto Lima Costa",
-    loja: "Casa & Decoração",
-    cpf: "333.444.555-66",
-    telefone: "(11) 95555-1111",
-    dataCriacao: "2024-01-30"
-  },
-  {
-    id: 4,
-    nomeCliente: "Mariana Oliveira",
-    loja: "Sports Center",
-    cpf: "444.555.666-77",
-    telefone: "(11) 94444-2222",
-    dataCriacao: "2024-02-10"
-  },
-  {
-    id: 5,
-    nomeCliente: "Carlos Eduardo Pereira",
-    loja: "Eletrônicos Plus",
-    cpf: "555.666.777-88",
-    telefone: "(11) 93333-3333",
-    dataCriacao: "2024-01-25"
-  },
-  {
-    id: 6,
-    nomeCliente: "Juliana Fernandes",
-    loja: "Tech Store SP",
-    cpf: "666.777.888-99",
-    telefone: "(11) 92222-4444",
-    dataCriacao: "2024-02-18"
-  },
-  {
-    id: 7,
-    nomeCliente: "Fernando Rodrigues",
-    loja: "Fashion Boutique",
-    cpf: "777.888.999-00",
-    telefone: "(11) 91111-5555",
-    dataCriacao: "2024-02-12"
-  },
-  {
-    id: 8,
-    nomeCliente: "Patricia Almeida",
-    loja: "Sports Center",
-    cpf: "888.999.000-11",
-    telefone: "(11) 90000-6666",
-    dataCriacao: "2024-01-28"
-  },
-  {
-    id: 9,
-    nomeCliente: "Lucas Martins",
-    loja: "Eletrônicos Plus",
-    cpf: "999.000.111-22",
-    telefone: "(11) 99999-7777",
-    dataCriacao: "2024-02-05"
-  },
-  {
-    id: 10,
-    nomeCliente: "Camila Souza",
-    loja: "Casa & Decoração",
-    cpf: "000.111.222-33",
-    telefone: "(11) 98888-8888",
-    dataCriacao: "2024-02-08"
-  }
-];
-
-// Dados para os cards
-const clientData = {
-  totalClientes: mockClients.length,
-  clientesAtivos: mockClients.length // Todos os clientes são considerados ativos neste exemplo
+// Dados para os cards (atualizados via API)
+const initialCards = {
+  totalClientes: 0,
+  clientesAtivos: 0
 };
 
 export default function Clients() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredClients, setFilteredClients] = useState(mockClients);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [filteredClients, setFilteredClients] = useState<Client[]>([]);
+  const [cards, setCards] = useState(initialCards);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Carregar clientes da API
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        setIsLoading(true);
+        const token = getAccessToken();
+        const res = await fetch('/api/master/clients', {
+          headers: { 'Authorization': token ? `Bearer ${token}` : '' }
+        });
+        const json = await res.json();
+        if (res.ok && json?.data) {
+          setClients(json.data);
+          setFilteredClients(json.data);
+          setCards({
+            totalClientes: json.totals?.totalClientes || json.data.length,
+            clientesAtivos: json.totals?.clientesAtivos || 0
+          });
+        } else {
+          showToastWithAutoClose('error', json.error || 'Erro ao carregar clientes', 4000);
+        }
+      } catch (e) {
+        console.error('Erro ao carregar clientes:', e);
+        showToastWithAutoClose('error', 'Erro ao carregar clientes', 4000);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchClients();
+  }, []);
 
   // Função para filtrar clientes com base no termo de pesquisa
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -116,40 +83,33 @@ export default function Clients() {
     setSearchTerm(term);
     
     if (term.trim() === '') {
-      setFilteredClients(mockClients);
+      setFilteredClients(clients);
       return;
     }
     
-    const filtered = mockClients.filter(client => 
+    const filtered = clients.filter(client => 
       client.nomeCliente.toLowerCase().includes(term) ||
-      client.loja.toLowerCase().includes(term) ||
-      client.cpf.includes(term) ||
-      client.telefone.includes(term)
+      client.email.toLowerCase().includes(term) ||
+      client.lojaNome.toLowerCase().includes(term) ||
+      client.sellerNome.toLowerCase().includes(term) ||
+      client.sellerEmail.toLowerCase().includes(term) ||
+      client.telefone.includes(term) ||
+      client.sellerTelefone.includes(term)
     );
     
     setFilteredClients(filtered);
-  };
-
-  const handleVerDetalhes = (client: Client) => {
-    console.log("Ver detalhes do cliente:", client.nomeCliente);
-    // Implementar modal ou navegação para detalhes do cliente
   };
 
   const columns = [
     {
       key: 'nomeCliente' as keyof Client,
       label: 'Nome do Cliente',
+      width: 'w-[200px]'
+    },
+    {
+      key: 'email' as keyof Client,
+      label: 'E-mail',
       width: 'w-[220px]'
-    },
-    {
-      key: 'loja' as keyof Client,
-      label: 'Loja',
-      width: 'w-[180px]'
-    },
-    {
-      key: 'cpf' as keyof Client,
-      label: 'CPF',
-      width: 'w-[140px]'
     },
     {
       key: 'telefone' as keyof Client,
@@ -157,22 +117,86 @@ export default function Clients() {
       width: 'w-[140px]'
     },
     {
-      key: 'dataCriacao' as keyof Client,
-      label: 'Data de Cadastro',
+      key: 'status' as keyof Client,
+      label: 'Status',
+      width: 'w-[120px]',
+      render: (value: unknown) => {
+        const status = String(value);
+        return (
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            status === 'ACTIVE' 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            {status === 'ACTIVE' ? 'Ativo' : 'Banido'}
+          </span>
+        );
+      }
+    },
+    {
+      key: 'lojaNome' as keyof Client,
+      label: 'Loja',
+      width: 'w-[180px]'
+    },
+    {
+      key: 'sellerNome' as keyof Client,
+      label: 'Vendedor',
+      width: 'w-[180px]'
+    },
+    {
+      key: 'sellerEmail' as keyof Client,
+      label: 'E-mail Vendedor',
+      width: 'w-[200px]'
+    },
+    {
+      key: 'totalPedidos' as keyof Client,
+      label: 'Total Pedidos',
+      width: 'w-[120px]',
+      render: (value: unknown) => {
+        const pedidos = Number(value);
+        return <span>{pedidos}</span>;
+      }
+    },
+    {
+      key: 'pedidosPagos' as keyof Client,
+      label: 'Pedidos Pagos',
+      width: 'w-[130px]',
+      render: (value: unknown) => {
+        const pagos = Number(value);
+        return <span>{pagos}</span>;
+      }
+    },
+    {
+      key: 'totalGasto' as keyof Client,
+      label: 'Total Gasto',
       width: 'w-[140px]',
       render: (value: unknown) => {
-        const dateValue = String(value);
-        return new Date(dateValue).toLocaleDateString('pt-BR');
+        const total = Number(value);
+        return (
+          <span>
+            {total.toLocaleString('pt-BR', {
+              style: 'currency',
+              currency: 'BRL'
+            })}
+          </span>
+        );
       }
-    }
-  ];
-
-  const actions = [
+    },
     {
-      icon: Eye,
-      label: 'Ver Detalhes',
-      onClick: handleVerDetalhes,
-      color: 'primary'
+      key: 'dataCriacao' as keyof Client,
+      label: 'Data de Cadastro',
+      width: 'w-[160px]',
+      render: (value: unknown) => {
+        const dateValue = String(value);
+        const d = new Date(dateValue);
+        return d.toLocaleString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
     }
   ];
 
@@ -190,7 +214,7 @@ export default function Clients() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <NumberCard
             title="Clientes"
-            value={clientData.totalClientes}
+            value={cards.totalClientes}
             icon={Users}
             change={15}
             changeType="increase"
@@ -198,7 +222,7 @@ export default function Clients() {
           
           <NumberCard
             title="Ativos"
-            value={clientData.clientesAtivos}
+            value={cards.clientesAtivos}
             icon={Users}
             change={8}
             changeType="increase"
@@ -210,7 +234,7 @@ export default function Clients() {
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="w-full sm:w-[400px]">
             <Search
-              placeholder="Pesquisar por nome, loja, CPF ou telefone..."
+              placeholder="Pesquisar por nome, email, loja ou vendedor..."
               value={searchTerm}
               onChange={handleSearch}
             />
@@ -219,13 +243,18 @@ export default function Clients() {
       </div>
 
       {/* Tabela de clientes */}
-      <Table
-        data={filteredClients}
-        columns={columns}
-        actions={actions}
-        itemsPerPage={10}
-        emptyMessage="Nenhum cliente encontrado"
-      />
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
+        </div>
+      ) : (
+        <Table
+          data={filteredClients}
+          columns={columns}
+          itemsPerPage={10}
+          emptyMessage="Nenhum cliente encontrado"
+        />
+      )}
     </div>
   );
 }

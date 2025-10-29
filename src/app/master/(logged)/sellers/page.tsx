@@ -1,14 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import NumberCard from "@/app/components/cards/numberCard";
 import Table from "@/app/components/tables/table";
 import Search from "@/app/components/inputs/search";
 import { Store, ShieldX, Shield, UserCheck, ExternalLink } from "lucide-react";
+import { getAccessToken } from '@/lib/utils/authUtils';
+import { showToastWithAutoClose } from '@/lib/utils/toastUtils';
+import BanSellerModal from '@/app/components/modals/banSellerModal';
 
 // Interface para os dados dos sellers
 interface Seller {
-  id: number;
+  id: string;
   nomeLoja: string;
   nomeSeller: string;
   cpf: string;
@@ -18,87 +21,54 @@ interface Seller {
   comissao: number;
   quantidadeVendas: number;
   dataCriacao: string;
-  status: string;
+  status: 'ativo' | 'bloqueado';
+  subdomain: string | null;
 }
-
-// Dados mock para as lojas
-const mockSellers: Seller[] = [
-  {
-    id: 1,
-    nomeLoja: "Tech Store SP",
-    nomeSeller: "João Silva Santos",
-    cpf: "123.456.789-00",
-    email: "joao@techstore.com",
-    telefone: "(11) 99999-1234",
-    faturamentoBruto: 45000.00,
-    comissao: 45000.00 * 0.05, // 5% do faturamento bruto
-    quantidadeVendas: 127,
-    dataCriacao: "2024-01-15",
-    status: "ativo"
-  },
-  {
-    id: 2,
-    nomeLoja: "Fashion Boutique",
-    nomeSeller: "Maria Oliveira Costa",
-    cpf: "987.654.321-00",
-    email: "maria@fashionboutique.com",
-    telefone: "(11) 88888-5678",
-    faturamentoBruto: 32000.00,
-    comissao: 32000.00 * 0.05, // 5% do faturamento bruto
-    quantidadeVendas: 89,
-    dataCriacao: "2024-02-10",
-    status: "ativo"
-  },
-  {
-    id: 3,
-    nomeLoja: "Casa & Decoração",
-    nomeSeller: "Carlos Eduardo Lima",
-    cpf: "456.789.123-00",
-    email: "carlos@casadecoracao.com",
-    telefone: "(11) 77777-9012",
-    faturamentoBruto: 28500.00,
-    comissao: 28500.00 * 0.05, // 5% do faturamento bruto
-    quantidadeVendas: 72,
-    dataCriacao: "2024-01-28",
-    status: "bloqueado"
-  },
-  {
-    id: 4,
-    nomeLoja: "Sports Center",
-    nomeSeller: "Ana Paula Rodrigues",
-    cpf: "789.123.456-00",
-    email: "ana@sportscenter.com",
-    telefone: "(11) 66666-3456",
-    faturamentoBruto: 52000.00,
-    comissao: 52000.00 * 0.05, // 5% do faturamento bruto
-    quantidadeVendas: 145,
-    dataCriacao: "2023-12-05",
-    status: "ativo"
-  },
-  {
-    id: 5,
-    nomeLoja: "Eletrônicos Plus",
-    nomeSeller: "Roberto Santos Filho",
-    cpf: "321.654.987-00",
-    email: "roberto@eletronicosplus.com",
-    telefone: "(11) 55555-7890",
-    faturamentoBruto: 67000.00,
-    comissao: 67000.00 * 0.05, // 5% do faturamento bruto
-    quantidadeVendas: 198,
-    dataCriacao: "2023-11-20",
-    status: "ativo"
-  }
-];
-
-// Dados para os cards
-const masterData = {
-  lojasCadastradas: mockSellers.length,
-  lojasBloqueadas: mockSellers.filter(seller => seller.status === "bloqueado").length
-};
 
 export default function Sellers() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredSellers, setFilteredSellers] = useState(mockSellers);
+  const [sellers, setSellers] = useState<Seller[]>([]);
+  const [filteredSellers, setFilteredSellers] = useState<Seller[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [masterData, setMasterData] = useState({
+    lojasCadastradas: 0,
+    lojasBloqueadas: 0
+  });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null);
+
+  // Buscar sellers da API
+  useEffect(() => {
+    const fetchSellers = async () => {
+      try {
+        setIsLoading(true);
+        const token = getAccessToken();
+        const res = await fetch('/api/master/sellers', {
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : ''
+          }
+        });
+        const json = await res.json();
+        if (res.ok && json?.data) {
+          setSellers(json.data);
+          setFilteredSellers(json.data);
+          setMasterData({
+            lojasCadastradas: json.totals?.lojasCadastradas || 0,
+            lojasBloqueadas: json.totals?.lojasBloqueadas || 0
+          });
+        } else {
+          showToastWithAutoClose('error', json.error || 'Erro ao carregar sellers', 4000);
+        }
+      } catch (e) {
+        console.error('Erro ao buscar sellers:', e);
+        showToastWithAutoClose('error', 'Erro ao carregar sellers', 4000);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSellers();
+  }, []);
 
   // Função para filtrar sellers com base no termo de pesquisa
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,45 +76,104 @@ export default function Sellers() {
     setSearchTerm(term);
     
     if (term.trim() === '') {
-      setFilteredSellers(mockSellers);
+      setFilteredSellers(sellers);
       return;
     }
     
-    const filtered = mockSellers.filter(seller => 
+    const filtered = sellers.filter(seller => 
       seller.nomeLoja.toLowerCase().includes(term) ||
       seller.nomeSeller.toLowerCase().includes(term) ||
       seller.email.toLowerCase().includes(term) ||
-      seller.cpf.includes(term) ||
-      seller.telefone.includes(term)
+      seller.cpf.replace(/[.-]/g, '').includes(term.replace(/[.-]/g, '')) ||
+      seller.telefone.replace(/[()-\s]/g, '').includes(term.replace(/[()-\s]/g, ''))
     );
     
     setFilteredSellers(filtered);
   };
 
   const handleBloquearLoja = (seller: Seller) => {
-    console.log("Bloquear loja:", seller.nomeLoja);
-    // Implementar lógica para bloquear/desbloquear loja
+    setSelectedSeller(seller);
+    setIsModalOpen(true);
+  };
+
+  const handleConfirmBlock = async () => {
+    if (!selectedSeller) return;
+
+    try {
+      // Tentar renovar o token antes de fazer a requisição
+      const { refreshAuthToken } = await import('@/lib/utils/authUtils');
+      await refreshAuthToken('master');
+      
+      const token = getAccessToken();
+      const action = selectedSeller.status === 'ativo' ? 'block' : 'unblock';
+      
+      if (!token) {
+        showToastWithAutoClose('error', 'Token de acesso não encontrado. Faça login novamente.', 4000);
+        return;
+      }
+      
+      const res = await fetch(`/api/master/sellers/${selectedSeller.id}/block`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ action })
+      });
+
+      const json = await res.json();
+
+      if (res.ok) {
+        showToastWithAutoClose('success', json.message || 'Operação realizada com sucesso', 4000);
+        // Recarregar sellers
+        const refreshToken = getAccessToken();
+        const refreshRes = await fetch('/api/master/sellers', {
+          headers: {
+            'Authorization': refreshToken ? `Bearer ${refreshToken}` : ''
+          }
+        });
+        const refreshJson = await refreshRes.json();
+        if (refreshRes.ok && refreshJson?.data) {
+          setSellers(refreshJson.data);
+          setFilteredSellers(refreshJson.data);
+          setMasterData({
+            lojasCadastradas: refreshJson.totals?.lojasCadastradas || 0,
+            lojasBloqueadas: refreshJson.totals?.lojasBloqueadas || 0
+          });
+        }
+      } else {
+        showToastWithAutoClose('error', json.error || 'Erro ao realizar operação', 4000);
+      }
+    } catch (error) {
+      console.error('Erro ao bloquear/desbloquear loja:', error);
+      showToastWithAutoClose('error', 'Erro ao realizar operação', 4000);
+    }
   };
 
   const handleEntrarAdmin = (seller: Seller) => {
-    console.log("Entrar no admin da loja:", seller.nomeLoja);
-    // Implementar navegação para admin da loja
+    // Redirecionar para o dashboard do seller (implementar se necessário)
+    console.log("Entrar no admin da loja:", seller);
+    showToastWithAutoClose('info', 'Funcionalidade será implementada em breve', 4000);
   };
 
   const handleIrParaLoja = (seller: Seller) => {
-    console.log("Ir para loja:", seller.nomeLoja);
-    // Implementar navegação para a loja
+    if (seller.subdomain) {
+      // Abrir loja em nova aba
+      window.open(`https://${seller.subdomain}.ckeet.store`, '_blank');
+    } else {
+      showToastWithAutoClose('error', 'Loja não possui subdomain configurado', 4000);
+    }
   };
 
   const columns = [
     {
       key: 'nomeLoja' as keyof Seller,
-      label: 'Nome da Loja',
+      label: 'Loja',
       width: 'w-[180px]'
     },
     {
       key: 'nomeSeller' as keyof Seller,
-      label: 'Nome do Seller',
+      label: 'Seller',
       width: 'w-[200px]'
     },
     {
@@ -154,7 +183,7 @@ export default function Sellers() {
     },
     {
       key: 'email' as keyof Seller,
-      label: 'Email',
+      label: 'E-mail',
       width: 'w-[220px]'
     },
     {
@@ -163,8 +192,28 @@ export default function Sellers() {
       width: 'w-[140px]'
     },
     {
+      key: 'status' as keyof Seller,
+      label: 'Status',
+      width: 'w-[120px]',
+      render: (value: unknown) => {
+        const v = String(value);
+        const isActive = v === 'ativo';
+        return (
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-semibold border inline-block ${
+              isActive
+                ? 'text-green-700 border-green-300 bg-green-50'
+                : 'text-red-700 border-red-300 bg-red-50'
+            }`}
+          >
+            {isActive ? 'Ativa' : 'Bloqueada'}
+          </span>
+        );
+      }
+    },
+    {
       key: 'quantidadeVendas' as keyof Seller,
-      label: 'Qtd. Vendas',
+      label: 'Qtd. vendas',
       width: 'w-[120px]',
       render: (value: unknown) => {
         const numValue = Number(value);
@@ -173,7 +222,7 @@ export default function Sellers() {
     },
     {
       key: 'faturamentoBruto' as keyof Seller,
-      label: 'Faturamento Bruto',
+      label: 'Bruto',
       width: 'w-[160px]',
       render: (value: unknown) => {
         const numValue = Number(value);
@@ -185,7 +234,7 @@ export default function Sellers() {
     },
     {
       key: 'comissao' as keyof Seller,
-      label: 'Comissão (5%)',
+      label: 'Comissão',
       width: 'w-[140px]',
       render: (value: unknown) => {
         const numValue = Number(value);
@@ -197,11 +246,18 @@ export default function Sellers() {
     },
     {
       key: 'dataCriacao' as keyof Seller,
-      label: 'Data de Criação',
+      label: 'Criado em',
       width: 'w-[140px]',
       render: (value: unknown) => {
         const dateValue = String(value);
-        return new Date(dateValue).toLocaleDateString('pt-BR');
+        const d = new Date(dateValue);
+        return d.toLocaleString('pt-BR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
       }
     }
   ];
@@ -209,29 +265,31 @@ export default function Sellers() {
   const actions = [
     {
       icon: Shield,
-      label: 'Bloquear/Desbloquear Loja',
+      label: 'Bloquear loja',
       onClick: handleBloquearLoja,
       color: 'error',
-      show: (seller: Seller) => seller.status === 'ativo'
+      show: (seller: Seller) => seller.status === 'ativo' && seller.subdomain !== null
     },
     {
       icon: ShieldX,
-      label: 'Desbloquear Loja',
+      label: 'Desbloquear loja',
       onClick: handleBloquearLoja,
       color: 'secondary',
-      show: (seller: Seller) => seller.status === 'bloqueado'
+      show: (seller: Seller) => seller.status === 'bloqueado' && seller.subdomain !== null
     },
     {
       icon: UserCheck,
-      label: 'Entrar no Admin',
+      label: 'Entrar no admin',
       onClick: handleEntrarAdmin,
-      color: 'primary'
+      color: 'primary',
+      show: (seller: Seller) => seller.subdomain !== null
     },
     {
       icon: ExternalLink,
-      label: 'Ir para Loja',
+      label: 'Ir para loja',
       onClick: handleIrParaLoja,
-      color: 'primary'
+      color: 'primary',
+      show: (seller: Seller) => seller.subdomain !== null
     }
   ];
 
@@ -248,18 +306,18 @@ export default function Sellers() {
         {/* Cards de métricas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <NumberCard
-            title="Lojas Cadastradas"
+            title="Lojas cadastradas"
             value={masterData.lojasCadastradas}
             icon={Store}
-            change={12}
+            change={0}
             changeType="increase"
           />
           
           <NumberCard
-            title="Lojas Bloqueadas"
+            title="Lojas bloqueadas"
             value={masterData.lojasBloqueadas}
             icon={ShieldX}
-            change={-8}
+            change={0}
             changeType="decrease"
             background="transparent"
           />
@@ -278,13 +336,33 @@ export default function Sellers() {
       </div>
 
       {/* Tabela de sellers */}
-      <Table
-        data={filteredSellers}
-        columns={columns}
-        actions={actions}
-        itemsPerPage={10}
-        emptyMessage="Nenhuma loja encontrada"
-      />
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
+        </div>
+      ) : (
+        <Table
+          data={filteredSellers}
+          columns={columns}
+          actions={actions}
+          itemsPerPage={10}
+          emptyMessage="Nenhuma loja encontrada"
+        />
+      )}
+
+      {/* Modal de confirmação */}
+      {selectedSeller && (
+        <BanSellerModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedSeller(null);
+          }}
+          onConfirm={handleConfirmBlock}
+          lojaName={selectedSeller.nomeLoja}
+          action={selectedSeller.status === 'ativo' ? 'ban' : 'unban'}
+        />
+      )}
     </div>
   );
 }

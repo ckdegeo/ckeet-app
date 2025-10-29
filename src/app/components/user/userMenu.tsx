@@ -54,6 +54,9 @@ export default function UserMenu({
   const displayEmail = user?.email || userEmail || "usuario@exemplo.com";
   const displayAvatar = userAvatar;
 
+  // Verificar se é master (não precisa de configurações)
+  const isMaster = user?.user_type === 'master';
+
   const handleSettingsClick = () => {
     setShowUserMenu(false);
     setShowSettingsModal(true);
@@ -107,13 +110,16 @@ export default function UserMenu({
           <div className="absolute right-0 mt-2 w-56 bg-[var(--surface)] border border-gray-200 rounded-lg shadow-lg z-50">
 
             <div className="p-2 space-y-1">
-              <Button
-                onClick={handleSettingsClick}
-                className="w-full justify-start bg-[var(--surface)] text-[var(--on-surface)] hover:bg-gray-100 py-2"
-              >
-                <Settings size={16} />
-                <span className="text-sm font-medium">Configurações</span>
-              </Button>
+              {/* Não mostrar Configurações para master */}
+              {!isMaster && (
+                <Button
+                  onClick={handleSettingsClick}
+                  className="w-full justify-start bg-[var(--surface)] text-[var(--on-surface)] hover:bg-gray-100 py-2"
+                >
+                  <Settings size={16} />
+                  <span className="text-sm font-medium">Configurações</span>
+                </Button>
+              )}
               <Button
                 onClick={handleLogoutClick}
                 className="w-full justify-start bg-[var(--error)] text-[var(--on-error)] py-2"
@@ -134,11 +140,13 @@ export default function UserMenu({
         />
       )}
 
-      {/* Settings Modal */}
-      <SettingsModal
-        isOpen={showSettingsModal}
-        onClose={() => setShowSettingsModal(false)}
-      />
+      {/* Settings Modal - Apenas para não-masters */}
+      {!isMaster && (
+        <SettingsModal
+          isOpen={showSettingsModal}
+          onClose={() => setShowSettingsModal(false)}
+        />
+      )}
     </>
   );
 }

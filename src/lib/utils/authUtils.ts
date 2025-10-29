@@ -86,13 +86,28 @@ export const clearAuthData = () => {
   localStorage.removeItem('domain_cache');
 };
 
-// Renovar token usando refresh token
-export const refreshAuthToken = async (): Promise<boolean> => {
+// Verificar se é um tipo de usuário específico
+export const isUserType = (userType: 'seller' | 'customer' | 'master'): boolean => {
+  const userData = getUserData();
+  return userData?.user_type === userType;
+};
+
+// Verificar se está autenticado e é master
+export const isMasterAuthenticated = (): boolean => {
+  return isAuthenticated() && isUserType('master');
+};
+
+// Renovar token usando refresh token (genérico)
+export const refreshAuthToken = async (userType?: 'seller' | 'master'): Promise<boolean> => {
   const refreshToken = getRefreshToken();
   if (!refreshToken) return false;
 
+  // Determinar endpoint baseado no tipo de usuário
+  const userData = getUserData();
+  const endpoint = userType || userData?.user_type || 'seller';
+  
   try {
-    const response = await fetch('/api/seller/auth/refresh', {
+    const response = await fetch(`/api/${endpoint}/auth/refresh`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -118,13 +133,17 @@ export const refreshAuthToken = async (): Promise<boolean> => {
   }
 };
 
-// Fazer logout
-export const logout = async () => {
+// Fazer logout (genérico)
+export const logout = async (userType?: 'seller' | 'master') => {
   const accessToken = getAccessToken();
   
   if (accessToken) {
     try {
-      await fetch('/api/seller/auth/logout', {
+      // Determinar endpoint baseado no tipo de usuário
+      const userData = getUserData();
+      const endpoint = userType || userData?.user_type || 'seller';
+      
+      await fetch(`/api/${endpoint}/auth/logout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -58,7 +58,7 @@ export default function RefundConfirmationModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 pb-4">
           <h2 className="text-xl font-bold text-[var(--foreground)]">
-            Confirmar reembolso
+            Reembolsar pedido
           </h2>
           <IconOnlyButton
             icon={X}
@@ -113,7 +113,7 @@ export default function RefundConfirmationModal({
               disabled={!password.trim() || isLoading}
               className="flex-1"
             >
-              {isLoading ? 'Processando...' : 'Confirmar reembolso'}
+              {isLoading ? 'Processando...' : 'Confirmar'}
             </Button>
           </div>
         </div>

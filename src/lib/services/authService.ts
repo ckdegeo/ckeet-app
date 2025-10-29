@@ -15,6 +15,10 @@ export class AuthService {
   static async syncUser(supabaseUser: { id: string; email?: string; user_metadata?: { user_type?: string; name?: string } }) {
     const userType = supabaseUser.user_metadata?.user_type;
     
+    if (userType === 'master') {
+      return await this.syncMaster(supabaseUser);
+    }
+    
     if (userType === 'seller') {
       return await this.syncSeller(supabaseUser);
     }
@@ -24,6 +28,22 @@ export class AuthService {
     }
     
     throw new Error('Tipo de usuário não reconhecido');
+  }
+
+  // Sincronizar Master
+  static async syncMaster(supabaseUser: { id: string; email?: string; user_metadata?: { user_type?: string; name?: string } }) {
+    return await prisma.master.upsert({
+      where: { email: supabaseUser.email || '' },
+      update: {
+        name: supabaseUser.user_metadata?.name,
+      },
+      create: {
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        name: supabaseUser.user_metadata?.name,
+        password: '', // Senha gerenciada pelo Supabase
+      },
+    });
   }
 
   // Sincronizar Seller
@@ -82,6 +102,41 @@ export class AuthService {
         }
       });
     }
+  }
+
+  // ===========================================
+  // MASTER OPERATIONS
+  // ===========================================
+
+  // Criar master
+  static async createMaster(data: {
+    id: string;
+    email: string;
+    name: string;
+    password?: string; // Opcional, pois Supabase gerencia
+  }) {
+    return await prisma.master.create({
+      data: {
+        id: data.id,
+        email: data.email,
+        name: data.name,
+        password: data.password || '', // Senha gerenciada pelo Supabase
+      },
+    });
+  }
+
+  // Buscar master por email
+  static async getMasterByEmail(email: string) {
+    return await prisma.master.findUnique({
+      where: { email },
+    });
+  }
+
+  // Buscar master por ID
+  static async getMasterById(id: string) {
+    return await prisma.master.findUnique({
+      where: { id },
+    });
   }
 
   // ===========================================
@@ -218,11 +273,13 @@ export class AuthService {
   // Buscar usuário por email (qualquer tipo)
   static async getUserByEmail(email: string) {
     // Tentar buscar em todas as tabelas
-    const [seller, customer] = await Promise.all([
+    const [master, seller, customer] = await Promise.all([
+      prisma.master.findUnique({ where: { email } }),
       prisma.seller.findUnique({ where: { email } }),
       prisma.customer.findFirst({ where: { email } }),
     ]);
 
+    if (master) return { ...master, user_type: 'master' };
     if (seller) return { ...seller, user_type: 'seller' };
     if (customer) return { ...customer, user_type: 'customer' };
     
@@ -376,6 +433,17 @@ export class AuthService {
     
     if (user?.user_metadata?.user_type !== 'customer') {
       throw new Error('Acesso negado. Usuário não é um cliente.');
+    }
+
+    return user;
+  }
+
+  // Validar se usuário é master
+  static async validateMaster(accessToken: string) {
+    const user = await this.verifyToken(accessToken);
+    
+    if (user?.user_metadata?.user_type !== 'master') {
+      throw new Error('Acesso negado. Usuário não é um administrador.');
     }
 
     return user;

@@ -65,20 +65,23 @@ export default function Table<T>({
   };
 
   return (
-    <div className="w-full h-full flex flex-col gap-4">
+    <div className="w-full flex flex-col gap-4 min-w-0">
       {/* Container da tabela com scroll horizontal */}
       <div 
-        className={`w-full overflow-auto rounded-2xl border hide-scrollbar relative isolate min-h-[300px] md:min-h-[400px] ${
+        className={`w-full max-w-full overflow-x-auto overflow-y-visible rounded-2xl border relative isolate ${
           useDefaultStyles ? 'bg-[var(--surface)]' : ''
         }`}
-        style={useDefaultStyles ? {
-          borderColor: 'var(--border)'
-        } : {
-          borderColor: `${primaryColor}20`,
-          backgroundColor: 'white'
+        style={{
+          ...(useDefaultStyles ? {
+            borderColor: 'var(--border)'
+          } : {
+            borderColor: `${primaryColor}20`,
+            backgroundColor: 'white'
+          }),
+          maxWidth: '100%'
         }}
       >
-        <table className="w-full" style={{minWidth: '1400px', tableLayout: 'fixed'}}>
+        <table style={{minWidth: '1800px', tableLayout: 'fixed'}}>
           {/* Cabeçalho */}
           <thead>
             <tr 

@@ -1,8 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+import { AuthService } from '@/lib/services/authService';
+import { checkRateLimit, getRateLimitIdentifier } from '@/lib/utils/rateLimit';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting: 5 tentativas de login por IP a cada 2 minutos
+    const identifier = getRateLimitIdentifier(request);
+    const rateLimit = checkRateLimit(`login:master:${identifier}`, {
+      maxRequests: 5,
+      windowMs: 2 * 60 * 1000, // 2 minutos
+    });
+
+    if (!rateLimit.allowed) {
+      const retryAfter = Math.ceil((rateLimit.resetAt - Date.now()) / 1000);
+      return NextResponse.json(
+        {
+          error: 'Muitas tentativas de login. Tente novamente em alguns minutos.',
+          retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': retryAfter.toString(),
+            'X-RateLimit-Limit': '5',
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': new Date(rateLimit.resetAt).toISOString(),
+          },
+        }
+      );
+    }
+
     const { email, password } = await request.json();
 
     // Validar dados de entrada
@@ -13,7 +44,11 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const supabase = createServerSupabaseClient();
+    // Usar ANON_KEY para autenticação de usuário (não SERVICE_ROLE_KEY)
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
 
     // Fazer login no Supabase
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -22,20 +57,56 @@ export async function POST(request: NextRequest) {
     });
 
     if (authError) {
+      console.error('[Master Login] Erro de autenticação:', authError.message);
+      
+      // Verificar se é erro de email não confirmado
+      if (authError.message === 'Email not confirmed') {
+        return NextResponse.json(
+          { error: 'Email não confirmado. Verifique sua caixa de entrada e clique no link de confirmação.' },
+          { status: 401 }
+        );
+      }
+      
       return NextResponse.json(
         { error: 'Credenciais inválidas' },
         { status: 401 }
       );
     }
 
-    // Verificar se é um master
+    // Verificar se é um master ou se pode se tornar um
     const userType = authData.user?.user_metadata?.user_type;
+    
+    // Se não é master, verificar se pode se tornar um (criar conta de master)
     if (userType !== 'master') {
-      return NextResponse.json(
-        { error: 'Acesso negado. Esta área é apenas para administradores.' },
-        { status: 403 }
-      );
+      // Verificar se já existe um master com este email
+      const existingMaster = await AuthService.getMasterByEmail(email);
+      
+      if (!existingMaster) {
+        return NextResponse.json(
+          { error: 'Acesso negado. Esta área é apenas para administradores.' },
+          { status: 403 }
+        );
+      }
+      
+      // Se existe master, atualizar user_type nos metadados
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: {
+          ...authData.user.user_metadata,
+          user_type: 'master'
+        }
+      });
+      
+      if (updateError) {
+        console.error('Erro ao atualizar user_type:', updateError);
+        // Continuar mesmo com erro, pois o master existe
+      }
     }
+
+    // Sincronizar usuário com Prisma
+    await AuthService.syncUser(authData.user);
+
+    // Obter dados do master
+    const master = await AuthService.getMasterByEmail(email);
 
     return NextResponse.json({
       success: true,
@@ -43,9 +114,9 @@ export async function POST(request: NextRequest) {
       user: {
         id: authData.user.id,
         email: authData.user.email,
-        name: authData.user.user_metadata?.name,
+        name: authData.user.user_metadata?.name || master?.name,
         user_type: 'master',
-        master_id: authData.user.id,
+        master_id: master?.id || authData.user.id,
       },
       tokens: {
         access_token: authData.session?.access_token,
