@@ -10,8 +10,8 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "ckeet",
-  description: "ckeet digital dynamic stores",
+  title: "Ckeet - Lojinha virtual em minutos",
+  description: "Crie e gerencie sua loja virtual em minutos com Ckeet",
 };
 
 export default function RootLayout({
