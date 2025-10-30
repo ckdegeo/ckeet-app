@@ -62,7 +62,7 @@ export default function ResendConfirmationModal({
               <Mail className="text-blue-600" size={20} />
             </div>
             <h2 className="text-xl font-bold text-[var(--foreground)]">
-              Reenviar Confirmação
+              Reenviar confirmação
             </h2>
           </div>
           <IconOnlyButton
