@@ -209,6 +209,8 @@ model Store {
   products      Product[]
   orders        Order[]
   transactions  Transaction[]
+  resellListings ResellListing[]
+  catalogCategorySubscriptions CatalogCategorySubscription[]
 
   @@map("stores")
 }
@@ -229,8 +231,29 @@ model Category {
   storeId  String
   store    Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
   products Product[]
+  resellListings ResellListing[]
+  catalogCategorySubscriptions CatalogCategorySubscription[]
 
   @@map("categories")
+}
+
+// ===========================================
+// CATALOG (CATÁLOGO GLOBAL DA CKEET)
+// ===========================================
+
+model CatalogCategory {
+  id        String   @id @default(cuid())
+  name      String
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Produtos do catálogo (relacionados via Product.catalogCategoryId)
+  products  Product[]
+  catalogCategorySubscriptions CatalogCategorySubscription[]
+
+  @@map("catalog_categories")
 }
 
 model Product {
@@ -267,6 +290,14 @@ model Product {
   orderItems  OrderItem[]
   stockLines  StockLine[]  // Estoque por linha
   deliverables Deliverable[] // Links de entrega
+
+  // Catálogo Ckeet
+  isCatalog         Boolean          @default(false)
+  catalogCategoryId String?
+  catalogCategory   CatalogCategory? @relation(fields: [catalogCategoryId], references: [id])
+
+  // Listagens de revenda (produtos importados por sellers)
+  resellListings    ResellListing[]
 
   @@map("products")
 }
@@ -422,4 +453,50 @@ model Transaction {
   store      Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
   @@map("transactions")
+}
+
+// ===========================================
+// RESELL LISTING (LISTAGEM DE REVENDA POR PRODUTO)
+// ===========================================
+
+model ResellListing {
+  id              String   @id @default(cuid())
+  storeId         String
+  categoryId      String             // categoria do SELLER onde o card ficará
+  sourceProductId String             // Product original (isCatalog = true)
+  order           Int      @default(0) // ordem horizontal do card na categoria
+  commissionRate  Float    @default(0.40)
+  fixedFee        Float    @default(0.50)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  store           Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  category        Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  sourceProduct   Product  @relation(fields: [sourceProductId], references: [id])
+
+  @@unique([storeId, sourceProductId], name: "unique_resell_per_store")
+  @@map("resell_listings")
+}
+
+// ===========================================
+// CATÁLOGO - ASSINATURA DE CATEGORIA (IMPORTAÇÃO EM MASSA)
+// ===========================================
+
+model CatalogCategorySubscription {
+  id                String   @id @default(cuid())
+  storeId           String
+  targetCategoryId  String            // categoria da LOJA para onde os produtos irão
+  catalogCategoryId String            // categoria global do catálogo Ckeet
+  autoSync          Boolean  @default(true) // cria listagens ao surgirem novos produtos
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  store             Store            @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  targetCategory    Category         @relation(fields: [targetCategoryId], references: [id], onDelete: Cascade)
+  catalogCategory   CatalogCategory  @relation(fields: [catalogCategoryId], references: [id])
+
+  @@unique([storeId, catalogCategoryId], name: "unique_category_subscription_per_store")
+  @@map("catalog_category_subscriptions")
 }

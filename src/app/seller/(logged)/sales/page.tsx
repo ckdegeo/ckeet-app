@@ -433,7 +433,7 @@ function SalesContent() {
           data={filteredSales}
           columns={columns}
           actions={actions}
-          itemsPerPage={10}
+          itemsPerPage={6}
           emptyMessage="Nenhuma venda encontrada"
         />
       </div>

@@ -371,7 +371,7 @@ export default function Clients() {
           data={filteredClients}
           columns={columns}
           actions={actions}
-          itemsPerPage={10}
+          itemsPerPage={5}
           emptyMessage="Nenhum cliente encontrado"
         />
       </div>

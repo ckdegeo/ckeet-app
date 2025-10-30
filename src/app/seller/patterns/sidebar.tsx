@@ -13,7 +13,8 @@ import {
   PackageIcon,
   Users,
   ShoppingCart,
-  CreditCard
+  CreditCard,
+  BookOpen
 } from "lucide-react";
 import Button from "@/app/components/buttons/button";
 import IconOnlyButton from "@/app/components/buttons/iconOnlyButton";
@@ -29,6 +30,12 @@ const menuItems = [
     label: "Dashboard",
     href: "/seller/dashboard",
     icon: LayoutDashboard,
+  },
+
+  {
+    label: "Catálogo",
+    href: "/seller/catalog",
+    icon: BookOpen,
   },
 
   {
