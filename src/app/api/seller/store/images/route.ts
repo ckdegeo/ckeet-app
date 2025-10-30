@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase';
+import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,7 +42,13 @@ export async function POST(request: NextRequest) {
     }
 
     const fileExtension = file.name.split('.').pop();
-    const filePath = `sellers/${user.id}/${folder}.${fileExtension}`;
+    const secret = process.env.IMAGE_NAMESPACE_SECRET || 'ns-default-secret';
+    const namespace = crypto
+      .createHmac('sha256', secret)
+      .update(user.id)
+      .digest('hex')
+      .slice(0, 16);
+    const filePath = `tenants/${namespace}/${folder}.${fileExtension}`;
 
     // Upload com upsert: true para substituir arquivo existente
     const { data, error } = await supabase.storage
@@ -109,9 +116,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Listar arquivos do seller
+    const secret = process.env.IMAGE_NAMESPACE_SECRET || 'ns-default-secret';
+    const namespace = crypto
+      .createHmac('sha256', secret)
+      .update(user.id)
+      .digest('hex')
+      .slice(0, 16);
     const { data: files, error } = await supabase.storage
       .from('store-images')
-      .list(`sellers/${user.id}`, {
+      .list(`tenants/${namespace}`, {
         limit: 100,
         sortBy: { column: 'created_at', order: 'desc' }
       });
@@ -187,9 +200,15 @@ export async function DELETE(request: NextRequest) {
     }
 
     const fullPath = pathParts.slice(bucketIndex + 1).join('/');
-    
-    // Verificar se o arquivo pertence ao seller atual
-    if (!fullPath.startsWith(`sellers/${user.id}/`)) {
+    const secret = process.env.IMAGE_NAMESPACE_SECRET || 'ns-default-secret';
+    const namespace = crypto
+      .createHmac('sha256', secret)
+      .update(user.id)
+      .digest('hex')
+      .slice(0, 16);
+
+    // Verificar se o arquivo pertence ao namespace do seller atual
+    if (!fullPath.startsWith(`tenants/${namespace}/`)) {
       return NextResponse.json(
         { error: 'Você não tem permissão para deletar este arquivo' },
         { status: 403 }

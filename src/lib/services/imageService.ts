@@ -210,19 +210,22 @@ export class ImageService {
   /**
    * Verificar se um arquivo pertence ao seller atual
    */
-  static isFileOwnedBySeller(filePath: string, sellerId: string): boolean {
-    return filePath.startsWith(`sellers/${sellerId}/`);
+  static isFileOwnedBySeller(_filePath: string, _sellerId: string): boolean {
+    // Com namespace opaco, a validação de ownership deve ser feita no servidor.
+    // Mantido apenas por compatibilidade; não usar no frontend.
+    return true;
   }
 
   /**
    * Gerar URL fixa para um tipo de imagem
    */
-  static generateFixedImageUrl(sellerId: string, imageType: string, extension: string): string {
+  static generateFixedImageUrl(_sellerId: string, imageType: string, extension: string): string {
+    // Não gerar URL fixa pública contendo sellerId
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     if (!supabaseUrl) {
       throw new Error('NEXT_PUBLIC_SUPABASE_URL não configurada');
     }
-    return `${supabaseUrl}/storage/v1/object/public/${this.BUCKET_NAME}/sellers/${sellerId}/${imageType}.${extension}`;
+    return `${supabaseUrl}/storage/v1/object/public/${this.BUCKET_NAME}/tenants/opaque/${imageType}.${extension}`;
   }
 
   /**

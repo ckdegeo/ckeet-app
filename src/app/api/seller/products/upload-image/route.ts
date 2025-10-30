@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase';
+import crypto from 'crypto';
 import { AuthService } from '@/lib/services/authService';
 import { getAccessToken } from '@/lib/utils/authUtils';
 
@@ -24,6 +25,13 @@ export async function POST(request: NextRequest) {
     }
 
     const sellerId = user.id;
+    // Derivar um namespace opaco a partir do sellerId (não reversível)
+    const secret = process.env.IMAGE_NAMESPACE_SECRET || 'ns-default-secret';
+    const namespace = crypto
+      .createHmac('sha256', secret)
+      .update(sellerId)
+      .digest('hex')
+      .slice(0, 16); // curto e não identificável
 
     const supabase = createServerSupabaseClient();
 
@@ -55,13 +63,7 @@ export async function POST(request: NextRequest) {
       ? `${productId}-${imageType}.${fileExtension}` 
       : `temp-${timestamp}-${imageType}.${fileExtension}`;
     
-    const filePath = `sellers/${sellerId}/products/${fileName}`;
-
-    console.log('Fazendo upload de imagem:', {
-      filePath,
-      fileSize: file.size,
-      fileType: file.type
-    });
+    const filePath = `tenants/${namespace}/products/${fileName}`;
 
     // Upload da imagem
     const { error } = await supabase.storage
@@ -88,12 +90,10 @@ export async function POST(request: NextRequest) {
     // Adicionar timestamp para cache-busting
     const urlWithCacheBust = `${urlData.publicUrl}?t=${timestamp}`;
 
-    console.log('Upload concluído com sucesso:', urlWithCacheBust);
-
     return NextResponse.json({
       success: true,
       url: urlWithCacheBust,
-      path: filePath
+      // não retornamos o caminho físico
     });
 
   } catch (error) {
@@ -127,6 +127,12 @@ export async function DELETE(request: NextRequest) {
     }
 
     const sellerId = user.id;
+    const secret = process.env.IMAGE_NAMESPACE_SECRET || 'ns-default-secret';
+    const namespace = crypto
+      .createHmac('sha256', secret)
+      .update(sellerId)
+      .digest('hex')
+      .slice(0, 16);
 
     const supabase = createServerSupabaseClient();
 
@@ -140,8 +146,8 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Verificar se o caminho pertence ao seller
-    if (!imagePath.startsWith(`sellers/${sellerId}/`)) {
+    // Verificar se o caminho pertence ao namespace do seller
+    if (!imagePath.startsWith(`tenants/${namespace}/`)) {
       return NextResponse.json(
         { error: 'Permissão negada' },
         { status: 403 }

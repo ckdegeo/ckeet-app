@@ -20,24 +20,21 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [success, setSuccess] = useState(false);
+  const [emailError, setEmailError] = useState<string | undefined>(undefined);
   const router = useRouter();
   
   const { isLoading, errors, register } = useSellerRegister();
 
-  // Validação em tempo real para email
+  // Email: validar somente ao sair do campo (onBlur) para não floodar toasts
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setEmail(value);
-    
-    // Validar apenas se o email estiver completo (contém @)
-    if (value.includes('@')) {
-      const validation = validateEmail(value);
-      if (!validation.isValid) {
-        toast.error(validation.error || 'Email inválido', {
-          duration: 3000,
-        });
-      }
-    }
+    setEmail(e.target.value);
+    if (emailError) setEmailError(undefined);
+  };
+
+  const handleEmailBlur = () => {
+    if (!email) return;
+    const validation = validateEmail(email);
+    setEmailError(validation.isValid ? undefined : (validation.error || 'E-mail inválido'));
   };
 
   // Validação em tempo real para CPF
@@ -133,9 +130,11 @@ export default function Register() {
               type="email"
               value={email}
               onChange={handleEmailChange}
+              onBlur={handleEmailBlur}
               placeholder="Digite seu email"
               required
               disabled={isLoading || success}
+              error={errors?.email || emailError}
             />
 
             <Input

@@ -51,7 +51,7 @@ export default function Navbar({ className = "", title = "Seller" }: NavbarProps
 
   return (
     <nav className={`
-      bg-[var(--surface)] border-b border-gray-200 px-4 py-3
+      bg-[var(--surface)] border-b border-gray-200 px-4 py-3 w-full overflow-x-hidden
       ${className}
     `}>
       <div className="flex items-center justify-between">
