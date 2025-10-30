@@ -107,7 +107,7 @@ export default function UserMenu({
 
         {/* User Dropdown */}
         {showUserMenu && (
-          <div className="absolute right-0 mt-2 w-56 bg-[var(--surface)] border border-gray-200 rounded-lg shadow-lg z-50">
+          <div className="absolute right-0 mt-2 w-56 bg-[var(--surface)] border border-gray-200 rounded-lg shadow-lg z-[9999]">
 
             <div className="p-2 space-y-1">
               {/* Não mostrar Configurações para master */}
