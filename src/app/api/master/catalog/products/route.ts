@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { withMasterAuth, AuthMiddleware } from '@/lib/middleware/auth';
 import { ProductService } from '@/lib/services/productService';
 import { StockType } from '@/lib/types';

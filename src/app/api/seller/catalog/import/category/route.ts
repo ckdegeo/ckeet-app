@@ -2,8 +2,7 @@ import { NextRequest } from 'next/server';
 import { withSellerAuth, AuthMiddleware } from '@/lib/middleware/auth';
 import { prisma } from '@/lib/prisma';
 import { ProductService } from '@/lib/services/productService';
-import { Product } from '@prisma/client';
-import { checkRateLimit, getRateLimitIdentifier } from '@/lib/utils/rateLimit';
+import { checkRateLimit } from '@/lib/utils/rateLimit';
 
 // POST /api/seller/catalog/import/category
 // body: { catalogCategoryId: string, targetCategoryId: string }
@@ -18,7 +17,6 @@ export async function POST(request: NextRequest) {
       });
 
       if (!rateLimit.allowed) {
-        const retryAfter = Math.ceil((rateLimit.resetAt - Date.now()) / 1000);
         return AuthMiddleware.createErrorResponse(
           `Muitas tentativas de importação. Aguarde alguns minutos antes de tentar novamente.`,
           429
@@ -26,10 +24,13 @@ export async function POST(request: NextRequest) {
       }
 
       const body = await req.json();
-      let { catalogCategoryId, targetCategoryId } = body || {};
-      if (!catalogCategoryId) {
+      const { catalogCategoryId: bodyCatalogCategoryId, targetCategoryId: bodyTargetCategoryId } = body || {};
+      if (!bodyCatalogCategoryId) {
         return AuthMiddleware.createErrorResponse('Parâmetros inválidos', 400);
       }
+      
+      const catalogCategoryId = bodyCatalogCategoryId;
+      let targetCategoryId = bodyTargetCategoryId;
 
       const seller = await prisma.seller.findUnique({
         where: { id: user.id },

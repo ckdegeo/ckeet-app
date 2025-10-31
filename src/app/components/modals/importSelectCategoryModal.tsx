@@ -37,7 +37,11 @@ export default function ImportSelectCategoryModal({
         const res = await fetch('/api/seller/categories/list', { headers });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Erro ao carregar categorias');
-        const opts: SellerCategoryOption[] = (data?.categories || []).map((c: any) => ({ value: c.id, label: c.name }));
+        interface CategoryResponse {
+          id: string;
+          name: string;
+        }
+        const opts: SellerCategoryOption[] = (data?.categories || []).map((c: CategoryResponse) => ({ value: c.id, label: c.name }));
         setOptions(opts);
         setSelected(opts[0]?.value || '');
       } catch (e) {

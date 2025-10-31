@@ -97,7 +97,11 @@ export default function CatalogProductPage() {
           const r = await fetch(`/api/master/catalog/categories`, { headers, cache: 'no-store' });
           const d = await r.json();
           if (r.ok && Array.isArray(d?.data?.categories)) {
-            const cat = d.data.categories.find((c: any) => c.id === categoryId);
+            interface CategoryResponse {
+              id: string;
+              name: string;
+            }
+            const cat = (d.data.categories as CategoryResponse[]).find((c) => c.id === categoryId);
             if (cat) setCategoryName(cat.name);
           }
         }
@@ -128,12 +132,16 @@ export default function CatalogProductPage() {
               fixedContent: p.fixedContent || '',
               keyAuthDays: p.keyAuthDays || 0,
               keyAuthSellerKey: p.keyAuthSellerKey || '',
-            } as any));
+            }));
             setActiveStockTab(stockTypeToTabId(p.stockType));
             
             // Carregar stockLines se existirem
             if (p.stockLines && Array.isArray(p.stockLines)) {
-              setStockLines(p.stockLines.map((line: any, index: number) => ({
+              interface StockLineResponse {
+                id?: string;
+                content: string;
+              }
+              setStockLines((p.stockLines as StockLineResponse[]).map((line, index) => ({
                 id: line.id || Date.now().toString() + index,
                 line: index + 1,
                 content: line.content || ''
@@ -142,7 +150,12 @@ export default function CatalogProductPage() {
             
             // Carregar deliverables se existirem
             if (p.deliverables && Array.isArray(p.deliverables)) {
-              setDeliverableLinks(p.deliverables.map((del: any, index: number) => ({
+              interface DeliverableResponse {
+                id?: string;
+                name: string;
+                url: string;
+              }
+              setDeliverableLinks((p.deliverables as DeliverableResponse[]).map((del, index) => ({
                 id: del.id || Date.now().toString() + index,
                 name: del.name || '',
                 url: del.url || ''
@@ -310,7 +323,24 @@ export default function CatalogProductPage() {
       if (!accessToken) throw new Error('Sessão expirada');
 
       // Montar payload
-      const body: any = {
+      interface ProductPayload {
+        name: string;
+        description: string;
+        price: number;
+        videoUrl: string | null;
+        imageUrl: string | null;
+        image2Url: string | null;
+        image3Url: string | null;
+        stockType: StockType;
+        fixedContent: string | null;
+        keyAuthDays: number | null;
+        keyAuthSellerKey: string | null;
+        isCatalog: boolean;
+        catalogCategoryId: string;
+        stockLines: Array<{ content: string }>;
+        deliverables: Array<{ name: string; url: string }>;
+      }
+      const body: ProductPayload = {
         name: productData.name.trim(),
         description: productData.description.trim(),
         price: Number(productData.price),

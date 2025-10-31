@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { withSellerAuth, AuthMiddleware } from '@/lib/middleware/auth';
 import { prisma } from '@/lib/prisma';
 import { ProductService } from '@/lib/services/productService';
-import { checkRateLimit, getRateLimitIdentifier } from '@/lib/utils/rateLimit';
+import { checkRateLimit } from '@/lib/utils/rateLimit';
 
 // POST /api/seller/catalog/import
 // body: { sourceProductId: string, targetCategoryId: string }
@@ -17,7 +17,6 @@ export async function POST(request: NextRequest) {
       });
 
       if (!rateLimit.allowed) {
-        const retryAfter = Math.ceil((rateLimit.resetAt - Date.now()) / 1000);
         return AuthMiddleware.createErrorResponse(
           `Muitas tentativas de importação. Aguarde alguns minutos antes de tentar novamente.`,
           429

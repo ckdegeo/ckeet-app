@@ -42,7 +42,14 @@ export default function CatalogPage() {
       const results = await Promise.all(categories.map(async (cat) => {
         const r = await fetch(`/api/seller/catalog/products?catalogCategoryId=${cat.id}`, { headers, cache: 'no-store' });
         const d = await r.json();
-        const products: CatalogProductDisplay[] = (d?.data?.products || []).map((p: any) => ({
+        interface ProductResponse {
+          id: string;
+          name: string;
+          price: number;
+          imageUrl?: string;
+          order?: number;
+        }
+        const products: CatalogProductDisplay[] = ((d?.data?.products || []) as ProductResponse[]).map((p) => ({
           id: p.id,
           name: p.name,
           price: p.price,

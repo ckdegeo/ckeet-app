@@ -322,7 +322,14 @@ const handleReorderProducts = (categoryId: string, reorderedProducts: CatalogPro
         if (!r.ok) {
           return { ...cat, products: [] as CatalogProduct[] };
         }
-        const products: CatalogProduct[] = (d.data.products || []).map((p: any) => ({
+        interface ProductResponse {
+          id: string;
+          name: string;
+          price: number;
+          imageUrl?: string;
+          order: number;
+        }
+        const products: CatalogProduct[] = ((d.data.products || []) as ProductResponse[]).map((p) => ({
           id: p.id,
           title: p.name,
           price: p.price,
