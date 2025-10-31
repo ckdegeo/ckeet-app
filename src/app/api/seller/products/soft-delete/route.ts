@@ -51,7 +51,45 @@ export async function DELETE(request: NextRequest) {
       }, { status: 409 });
     }
 
-    // Soft delete do produto
+    // Verificar se é produto importado: buscar ResellListing que aponta para produto do catálogo
+    // com mesmo nome e preço do produto sendo deletado
+    const sourceProduct = await prisma.product.findFirst({
+      where: {
+        isCatalog: true,
+        name: product.name,
+        price: product.price
+      }
+    });
+
+    if (sourceProduct) {
+      // Verificar se existe ResellListing para este produto do catálogo nesta loja
+      const resellListing = await prisma.resellListing.findFirst({
+        where: {
+          storeId: store.id,
+          sourceProductId: sourceProduct.id
+        }
+      });
+
+      if (resellListing) {
+        // Produto importado: HARD DELETE (deletar permanentemente)
+        // Primeiro deletar o ResellListing relacionado
+        await prisma.resellListing.delete({
+          where: { id: resellListing.id }
+        });
+
+        // Depois deletar o produto permanentemente
+        await prisma.product.delete({
+          where: { id }
+        });
+
+        return NextResponse.json({
+          success: true,
+          message: 'Produto importado removido permanentemente'
+        });
+      }
+    }
+
+    // Produto normal do seller: SOFT DELETE
     await prisma.product.update({
       where: { id },
       data: {

@@ -81,7 +81,35 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Soft delete - apenas marcar como inativa
+    // Verificar se é categoria importada (criada automaticamente para imports do catálogo)
+    const isImportedCategory = existingCategory.name.includes('(Catálogo)');
+
+    if (isImportedCategory) {
+      // Categoria importada: HARD DELETE (deletar permanentemente)
+      // Primeiro, deletar ResellListings órfãos relacionados a esta categoria (caso existam)
+      await prisma.resellListing.deleteMany({
+        where: {
+          storeId: seller.store.id,
+          categoryId: categoryId
+        }
+      });
+
+      // Depois deletar a categoria permanentemente
+      await prisma.category.delete({
+        where: { id: categoryId }
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Categoria importada removida permanentemente',
+        category: {
+          id: existingCategory.id,
+          name: existingCategory.name
+        }
+      });
+    }
+
+    // Categoria normal do seller: SOFT DELETE - apenas marcar como inativa
     const updatedCategory = await prisma.category.update({
       where: { id: categoryId },
       data: {

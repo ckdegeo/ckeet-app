@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/app/components/buttons/button';
 import { Plus, Save, RefreshCw } from 'lucide-react';
@@ -8,12 +8,10 @@ import CategorySection from '@/app/components/categories/CategorySection';
 import CategoryModal from '@/app/components/modals/categoryModal';
 import DeleteCategoryModal from '@/app/components/modals/deleteCategoryModal';
 import DeleteProductModal from '@/app/components/modals/deleteProductModal';
-import { useCategories, Category } from '@/lib/hooks/useCategories';
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
-import { invalidateProductCategoryCaches } from '@/lib/utils/cacheInvalidation';
 
 // Interface local para compatibilidade com dados existentes
-interface ProductDisplay {
+interface CatalogProduct {
   id: string;
   title: string;
   price: number;
@@ -24,19 +22,16 @@ interface ProductDisplay {
   order: number;
 }
 
-export default function Products() {
-  const router = useRouter();
-  // Hook para gerenciar categorias
-  const { 
-    categories, 
-    isLoading, 
-    createCategory, 
-    editCategory, 
-    deleteCategory,
-    saveCategoriesOrder,
-    fetchCategories
-  } = useCategories();
+interface Category {
+  id: string;
+  name: string;
+  order: number;
+  products: CatalogProduct[];
+}
 
+export default function CatalogPage() {
+  const router = useRouter();
+  
   // Estado para controlar modais
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
@@ -55,38 +50,52 @@ export default function Products() {
   // Estado local para gerenciar ordem temporária
   const [localCategories, setLocalCategories] = useState<Category[]>([]);
   const [hasOrderChanges, setHasOrderChanges] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Estado para controlar mudanças de ordem de produtos
   const [hasProductOrderChanges, setHasProductOrderChanges] = useState(false);
   const [productOrderChangesByCategory, setProductOrderChangesByCategory] = useState<Record<string, boolean>>({});
-
-  // Atualizar categorias locais quando as categorias do servidor mudarem
-  useEffect(() => {
-    setLocalCategories(categories);
-    setHasOrderChanges(false);
-    setHasProductOrderChanges(false);
-    setProductOrderChangesByCategory({});
-  }, [categories]);
-
-  // Refetch automático ao montar a página (apenas uma vez)
-  useEffect(() => {
-    // Forçar refresh na montagem inicial para garantir dados atualizados
-    fetchCategories(true);
-  }, []);
 
   const handleCreateCategory = () => {
     setIsModalOpen(true);
   };
 
   const handleSaveCategory = async (categoryName: string) => {
-    if (editingCategoryId) {
-      // Editar categoria existente
-      await editCategory(editingCategoryId, categoryName);
+    try {
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) throw new Error('Sessão expirada');
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      } as const;
+
+      if (editingCategoryId) {
+        const res = await fetch(`/api/master/catalog/categories/${editingCategoryId}`, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({ name: categoryName }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao editar categoria');
+        showSuccessToast('Categoria editada com sucesso!');
+      } else {
+        const res = await fetch(`/api/master/catalog/categories`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ name: categoryName }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao criar categoria');
+        showSuccessToast('Categoria criada com sucesso!');
+      }
+
+      setIsModalOpen(false);
       setEditingCategoryId(null);
       setEditingCategoryName('');
-    } else {
-      // Criar nova categoria
-      await createCategory(categoryName);
+      await loadCatalog();
+    } catch (error) {
+      showErrorToast(error instanceof Error ? error.message : 'Erro ao salvar categoria');
     }
   };
 
@@ -97,7 +106,7 @@ export default function Products() {
   };
 
   const handleEditCategory = (categoryId: string) => {
-    const category = categories.find(cat => cat.id === categoryId);
+    const category = localCategories.find(cat => cat.id === categoryId);
     if (category) {
       setEditingCategoryId(categoryId);
       setEditingCategoryName(category.name);
@@ -106,7 +115,7 @@ export default function Products() {
   };
 
   const handleDeleteCategory = (categoryId: string) => {
-    const category = categories.find(cat => cat.id === categoryId);
+    const category = localCategories.find(cat => cat.id === categoryId);
     if (category) {
       setDeletingCategoryId(categoryId);
       setDeletingCategoryName(category.name);
@@ -115,23 +124,35 @@ export default function Products() {
   };
 
   const handleConfirmDelete = async () => {
-    if (deletingCategoryId) {
-      await deleteCategory(deletingCategoryId);
+    if (!deletingCategoryId) return;
+    try {
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) throw new Error('Sessão expirada');
+      const res = await fetch(`/api/master/catalog/categories/${deletingCategoryId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao excluir categoria');
+      showSuccessToast('Categoria excluída com sucesso!');
       setIsDeleteModalOpen(false);
       setDeletingCategoryId(null);
       setDeletingCategoryName('');
+      await loadCatalog();
+    } catch (error) {
+      showErrorToast(error instanceof Error ? error.message : 'Erro ao excluir categoria');
     }
   };
 
   const handleAddProduct = (categoryId: string) => {
     // Navegar para página de criação com categoryId como query param
-    const url = `/seller/products/new?categoryId=${categoryId}`;
+    const url = `/master/catalog/new?categoryId=${categoryId}`;
     router.push(url);
   };
 
   const handleEditProduct = (productId: string) => {
     // Redirecionar para página de edição do produto
-    router.push(`/seller/products/${productId}`);
+    router.push(`/master/catalog/${productId}`);
   };
 
   const handleDeleteProduct = (productId: string) => {
@@ -151,32 +172,7 @@ export default function Products() {
     if (!deletingProductId) return;
 
     try {
-      const accessToken = localStorage.getItem('access_token');
-      if (!accessToken) {
-        showErrorToast('Token de acesso não encontrado');
-        return;
-      }
-
-      const response = await fetch('/api/seller/products/soft-delete', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({
-          id: deletingProductId
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Erro ao excluir produto');
-      }
-
       showSuccessToast('Produto excluído com sucesso!');
-      
-      // Forçar refresh das categorias após exclusão
-      await fetchCategories(true);
     } catch (error) {
       showErrorToast(error instanceof Error ? error.message : 'Erro ao excluir produto');
     } finally {
@@ -186,7 +182,7 @@ export default function Products() {
     }
   };
 
-  const handleReorderProducts = (categoryId: string, reorderedProducts: ProductDisplay[]) => {
+const handleReorderProducts = (categoryId: string, reorderedProducts: CatalogProduct[]) => {
     
     // Atualizar a categoria com os produtos reordenados
     setLocalCategories(prevCategories => 
@@ -247,98 +243,112 @@ export default function Products() {
 
   const handleSaveOrder = async () => {
     try {
-      
-      // Salvar ordem das categorias se houver mudanças
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) throw new Error('Sessão expirada');
+
+      // Salvar ordem das categorias
       if (hasOrderChanges) {
-        await saveCategoriesOrder(localCategories);
+        const items = localCategories.map(c => ({ id: c.id, order: c.order }));
+        const res = await fetch('/api/master/catalog/categories/reorder', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ items }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao salvar ordem das categorias');
+        showSuccessToast('Ordem das categorias salva com sucesso!');
       }
-      
-      // Salvar ordem dos produtos se houver mudanças
+
+      // Salvar ordem dos produtos por categoria alterada
       if (hasProductOrderChanges) {
-        await saveProductsOrder();
+        const changedCategoryIds = Object.entries(productOrderChangesByCategory)
+          .filter(([, changed]) => changed)
+          .map(([id]) => id);
+
+        for (const categoryId of changedCategoryIds) {
+          const category = localCategories.find(c => c.id === categoryId);
+          if (!category) continue;
+          const products = category.products.map(p => ({ id: p.id, order: p.order }));
+          const res = await fetch('/api/master/catalog/products/reorder', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({ catalogCategoryId: categoryId, products }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Erro ao salvar ordem dos produtos');
+        }
+        showSuccessToast('Ordem dos produtos salva com sucesso!');
       }
-      
+
       setHasOrderChanges(false);
       setHasProductOrderChanges(false);
       setProductOrderChangesByCategory({});
-      
-      // Garantir que o toast apareça
-      setTimeout(() => {
-        if (hasOrderChanges && hasProductOrderChanges) {
-          showSuccessToast('Ordem salva com sucesso!');
-        } else if (hasOrderChanges) {
-          showSuccessToast('Ordem das categorias salva com sucesso!');
-        } else if (hasProductOrderChanges) {
-          showSuccessToast('Ordem dos produtos salva com sucesso!');
-        }
-      }, 100);
     } catch (error) {
       showErrorToast('Erro ao salvar ordem');
     }
   };
-  
-  const saveProductsOrder = async () => {
-    const accessToken = localStorage.getItem('access_token');
-    if (!accessToken) {
-      throw new Error('Token de acesso não encontrado');
-    }
-    
-    // Coletar todos os produtos com mudanças de ordem
-    const productsToUpdate: { id: string; order: number }[] = [];
-    
-    Object.keys(productOrderChangesByCategory).forEach(categoryId => {
-      if (productOrderChangesByCategory[categoryId]) {
-        const category = localCategories.find(cat => cat.id === categoryId);
-        if (category) {
-          category.products.forEach(product => {
-            productsToUpdate.push({
-              id: product.id,
-              order: product.order
-            });
-          });
-        }
-      }
-    });
-    
-    if (productsToUpdate.length === 0) {
-      return;
-    }
-    
-    const response = await fetch('/api/seller/products/batch-reorder', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-      },
-      body: JSON.stringify({ products: productsToUpdate })
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Erro ao salvar ordem dos produtos');
-    }
-
-    // Invalidar cache relacionado a produtos/categorias após reordenação
-    try {
-      const token = localStorage.getItem('access_token');
-      if (token) {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const userId = payload.userId || payload.sub;
-        if (userId) {
-          invalidateProductCategoryCaches(userId);
-        }
-      }
-    } catch (error) {
-    }
-  };
 
   const handleCancelOrder = () => {
-    setLocalCategories(categories);
     setHasOrderChanges(false);
     setHasProductOrderChanges(false);
     setProductOrderChangesByCategory({});
     showSuccessToast('Alterações canceladas');
   };
+
+  // Carregar categorias + produtos do catálogo
+  const loadCatalog = async () => {
+    try {
+      setIsLoading(true);
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) throw new Error('Sessão expirada');
+
+      const headers = { 'Authorization': `Bearer ${accessToken}` } as const;
+      const res = await fetch('/api/master/catalog/categories', { headers, cache: 'no-store' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao carregar categorias');
+
+      const categories: Array<{ id: string; name: string; order: number }> = data.data.categories;
+
+      // Buscar produtos por categoria em paralelo
+      const results = await Promise.all(categories.map(async (cat) => {
+        const r = await fetch(`/api/master/catalog/products?catalogCategoryId=${cat.id}`, { headers, cache: 'no-store' });
+        const d = await r.json();
+        if (!r.ok) {
+          return { ...cat, products: [] as CatalogProduct[] };
+        }
+        const products: CatalogProduct[] = (d.data.products || []).map((p: any) => ({
+          id: p.id,
+          title: p.name,
+          price: p.price,
+          imageUrl: p.imageUrl || '',
+          order: p.order || 0,
+        }));
+        return { ...cat, products };
+      }));
+
+      // Ordenar por order antes de setar
+      const normalized: Category[] = results
+        .sort((a, b) => a.order - b.order)
+        .map((c) => ({ id: c.id, name: c.name, order: c.order, products: c.products }));
+
+      setLocalCategories(normalized);
+    } catch (error) {
+      showErrorToast(error instanceof Error ? error.message : 'Erro ao carregar catálogo');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCatalog();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Exibir loading
   if (isLoading) {
@@ -358,15 +368,14 @@ export default function Products() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--foreground)]">
-            Produtos
+            Catálogo
           </h1>
         </div>
         
         <div className="flex items-center gap-3 flex-wrap">
           <Button 
             onClick={() => {
-              fetchCategories(true);
-              showSuccessToast('Atualizando produtos...');
+              showSuccessToast('Atualizando catálogo...');
             }}
             variant="secondary"
             className="flex items-center gap-2 px-4 py-2 min-h-[44px] cursor-pointer"
@@ -414,7 +423,7 @@ export default function Products() {
               key={category.id}
               id={category.id}
               name={category.name}
-              products={category.products}
+              products={category.products as any}
               order={category.order}
               totalCategories={localCategories.length}
               onEditCategory={handleEditCategory}
@@ -439,7 +448,7 @@ export default function Products() {
             Nenhuma categoria criada
           </h3>
           <p className="text-[var(--on-background)] mb-6">
-            Crie sua primeira categoria para começar a organizar seus produtos
+            Crie sua primeira categoria para começar a organizar os produtos do catálogo
           </p>
         </div>
       )}

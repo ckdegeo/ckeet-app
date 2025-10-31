@@ -11,7 +11,7 @@ import {
   X,
   ChevronLeft,
   Users,
-  Banknote,
+  BookOpen,
 } from "lucide-react";
 import Button from "@/app/components/buttons/button";
 import IconOnlyButton from "@/app/components/buttons/iconOnlyButton";
@@ -22,6 +22,11 @@ const menuItems = [
     label: "Dashboard",
     href: "/master/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    label: "Catálogo",
+    href: "/master/catalog",
+    icon: BookOpen,
   },
   {
     label: "Vendedores",

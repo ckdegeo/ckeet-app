@@ -283,10 +283,11 @@ model Product {
   updatedAt   DateTime @updatedAt
 
   // Relacionamentos
-  storeId     String
-  store       Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  categoryId  String
-  category    Category     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  // Para produtos de catálogo (isCatalog=true), storeId/categoryId ficam nulos
+  storeId     String?
+  store       Store?       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  categoryId  String?
+  category    Category?    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   orderItems  OrderItem[]
   stockLines  StockLine[]  // Estoque por linha
   deliverables Deliverable[] // Links de entrega

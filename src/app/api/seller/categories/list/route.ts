@@ -76,21 +76,54 @@ export async function GET(request: NextRequest) {
       orderBy: { order: 'asc' }
     });
 
+    // Buscar todos os ResellListing ativos para determinar quais produtos são importados
+    const resellListings = await prisma.resellListing.findMany({
+      where: {
+        storeId: seller.store.id,
+        isActive: true
+      },
+      include: {
+        sourceProduct: {
+          select: {
+            id: true,
+            name: true,
+            price: true
+          }
+        }
+      }
+    });
+
+    // Criar um mapa de produtos importados: chave = name+price, valor = true
+    const importedProductsMap = new Map<string, boolean>();
+    resellListings.forEach(listing => {
+      if (listing.sourceProduct) {
+        const key = `${listing.sourceProduct.name}|${listing.sourceProduct.price}`;
+        importedProductsMap.set(key, true);
+      }
+    });
+
     // Formatar dados para compatibilidade com o frontend
     const formattedCategories = categories.map(category => ({
       id: category.id,
       name: category.name,
       order: category.order,
-      products: category.products.map(product => ({
-        id: product.id,
-        title: product.name,
-        price: product.price,
-        imageUrl: product.imageUrl || '/product1.gif', // Usar imagem padrão se não houver imagem
-        order: product.order,
-        stock: 0, // Placeholder - será implementado quando necessário
-        stockType: product.stockType,
-        stockLinesCount: product.stockLines?.length || 0
-      }))
+      products: category.products.map(product => {
+        // Verificar se o produto é importado baseado no ResellListing
+        const productKey = `${product.name}|${product.price}`;
+        const isImported = importedProductsMap.has(productKey);
+        
+        return {
+          id: product.id,
+          title: product.name,
+          price: product.price,
+          imageUrl: product.imageUrl || '/product1.gif', // Usar imagem padrão se não houver imagem
+          order: product.order,
+          stock: 0, // Placeholder - será implementado quando necessário
+          stockType: product.stockType,
+          stockLinesCount: product.stockLines?.length || 0,
+          isImported
+        };
+      })
     }));
 
     return NextResponse.json({

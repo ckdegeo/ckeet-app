@@ -18,6 +18,7 @@ interface ProductCardProps {
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
   className?: string;
+  isImported?: boolean;
 }
 
 export default function ProductCard({
@@ -31,6 +32,7 @@ export default function ProductCard({
   onEdit,
   onDelete,
   className = "",
+  isImported = false,
 }: ProductCardProps) {
   // Estado para controlar se o link foi copiado
   const [copied, setCopied] = useState(false);
@@ -176,13 +178,15 @@ export default function ProductCard({
       
       {/* Ações */}
       <div className="flex items-center justify-end gap-2 p-4 pt-0">
-        <IconOnlyButton 
-          icon={Edit2} 
-          onClick={handleEdit}
-          className="w-10 h-10"
-          variant="surface"
-          aria-label="Editar produto"
-        />
+        {!isImported && (
+          <IconOnlyButton 
+            icon={Edit2} 
+            onClick={handleEdit}
+            className="w-10 h-10"
+            variant="surface"
+            aria-label="Editar produto"
+          />
+        )}
         <IconOnlyButton 
           icon={Trash2} 
           onClick={handleDelete}

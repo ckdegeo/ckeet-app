@@ -54,7 +54,10 @@ export default function CatalogCategorySection({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={() => onImportSection && onImportSection(id)}>
+            <Button 
+              onClick={() => onImportSection && onImportSection(id)}
+              disabled={products.length === 0}
+            >
               Importar todos
               <ArrowRight size={16} />
             </Button>
@@ -71,8 +74,12 @@ export default function CatalogCategorySection({
             </span>
           </div>
           <div className="flex justify-end">
-            <Button onClick={() => onImportSection && onImportSection(id)} className="text-sm px-3 py-2">
-              Importar
+            <Button 
+              onClick={() => onImportSection && onImportSection(id)} 
+              className="text-sm px-3 py-2"
+              disabled={products.length === 0}
+            >
+              Importar todos
             </Button>
           </div>
         </div>

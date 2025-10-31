@@ -125,3 +125,22 @@ export async function withCustomerAuth(
 
   return handler(request, authResult.user, authResult.accessToken);
 }
+
+export async function withMasterAuth(
+  request: NextRequest,
+  handler: (request: NextRequest, user: { id: string; email?: string; user_metadata?: Record<string, unknown> }, accessToken: string) => Promise<NextResponse>
+) {
+  const authResult = await AuthMiddleware.verifyAuth(request);
+
+  if ('error' in authResult) {
+    return AuthMiddleware.createErrorResponse(authResult.error || 'Erro de autenticação', authResult.status || 401);
+  }
+
+  try {
+    await AuthService.validateMaster(authResult.accessToken);
+  } catch (e) {
+    return AuthMiddleware.createErrorResponse('Acesso negado. Apenas administradores.', 403);
+  }
+
+  return handler(request, authResult.user, authResult.accessToken);
+}

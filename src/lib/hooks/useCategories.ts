@@ -11,6 +11,7 @@ interface ProductDisplay {
   price: number;
   imageUrl: string;
   stock?: number;
+  isImported?: boolean;
   order: number;
 }
 
@@ -62,8 +63,15 @@ export function useCategories() {
   }, [cacheLoading, cacheError]);
 
   // Buscar categorias (agora usa cache)
-  const fetchCategories = useCallback(async () => {
+  const fetchCategories = useCallback(async (force = false) => {
     try {
+      if (force) {
+        // Invalidar cache antes de buscar
+        invalidateCache();
+        // Limpar dados atuais para forçar reload
+        setCategories([]);
+      }
+      // refreshCache sempre força refresh, mas garantir que o cache foi limpo primeiro
       await refreshCache();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';

@@ -36,15 +36,17 @@ export function validatePaymentConfig() {
 }
 
 // Função para calcular split payment
-export function calculateSplitPayment(amount: number) {
-  const commission = (amount * PAYMENT_CONFIG.PLATFORM_COMMISSION_RATE) + PAYMENT_CONFIG.PLATFORM_FIXED_FEE;
+export function calculateSplitPayment(amount: number, customCommissionRate?: number, customFixedFee?: number) {
+  const commissionRate = customCommissionRate ?? PAYMENT_CONFIG.PLATFORM_COMMISSION_RATE;
+  const fixedFee = customFixedFee ?? PAYMENT_CONFIG.PLATFORM_FIXED_FEE;
+  const commission = (amount * commissionRate) + fixedFee;
   const sellerAmount = amount - commission;
   
   return {
     totalAmount: amount,
     sellerAmount,
     platformAmount: commission,
-    commissionRate: PAYMENT_CONFIG.PLATFORM_COMMISSION_RATE,
-    commissionFixedFee: PAYMENT_CONFIG.PLATFORM_FIXED_FEE
+    commissionRate,
+    commissionFixedFee: fixedFee
   };
 }

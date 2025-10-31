@@ -139,8 +139,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar se a loja está ativa
-    if (!product.store.isActive) {
+    // Verificar se a loja existe e está ativa
+    if (!product.store || !product.store.isActive || !product.storeId) {
       return NextResponse.json(
         { error: 'Loja não está ativa' },
         { status: 400 }
@@ -205,8 +205,48 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Calcular split payment
-    const split = calculateSplitPayment(totalAmount);
+    // Verificar se o produto é importado (tem ResellListing ativo)
+    // O ResellListing.sourceProductId aponta para o produto do catálogo (isCatalog=true)
+    // Precisamos encontrar um ResellListing ativo na loja cujo sourceProduct tem mesmo nome e preço
+    let importedCommissionRate: number | undefined;
+    let importedFixedFee: number | undefined;
+
+    if (product.storeId) {
+      const resellListing = await prisma.resellListing.findFirst({
+        where: {
+          storeId: product.storeId,
+          isActive: true,
+          sourceProduct: {
+            name: product.name,
+            price: product.price,
+            isCatalog: true,
+            isActive: true
+          }
+        },
+        include: {
+          sourceProduct: {
+            select: {
+              id: true,
+              name: true,
+              price: true
+            }
+          }
+        }
+      });
+
+      // Se encontrou ResellListing, produto é importado - usar comissão customizada (40% + R$0,50)
+      if (resellListing) {
+        importedCommissionRate = resellListing.commissionRate;
+        importedFixedFee = resellListing.fixedFee;
+      }
+    }
+    
+    // Calcular split payment com comissão customizada se produto for importado
+    const split = calculateSplitPayment(
+      totalAmount,
+      importedCommissionRate,
+      importedFixedFee
+    );
 
     // Validar application_fee para Mercado Pago
     if (split.platformAmount <= 0) {
@@ -281,15 +321,15 @@ export async function POST(request: NextRequest) {
         platformAmount: split.platformAmount,
         commissionRate: split.commissionRate,
         commissionFixedFee: split.commissionFixedFee,
-        gatewayTransactionId: pixData.paymentId?.toString() || null,
+        gatewayTransactionId: pixData.paymentId?.toString() || undefined,
         gatewayResponse: JSON.stringify(pixData),
         gatewayStatus: 'pending',
-        mpPaymentId: pixData.paymentId?.toString() || null,
+        mpPaymentId: pixData.paymentId?.toString() || undefined,
         mpCollectorId: mpConfig.userId!,
         mpApplicationFee: split.platformAmount,
         orderId: order.id,
         customerId: customer.id,
-        storeId: product.storeId
+        storeId: product.storeId!
       }
     });
 

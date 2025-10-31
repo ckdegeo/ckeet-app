@@ -1,11 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import CatalogCategorySection from '@/app/components/categories/CatalogCategorySection';
 import Selector from '@/app/components/selectors/selector';
 import IconOnlyButton from '@/app/components/buttons/iconOnlyButton';
 import { AlertCircle } from 'lucide-react';
 import CatalogFeeNoticeModal from '@/app/components/modals/catalogFeeNoticeModal';
+import { useRouter } from 'next/navigation';
+import { invalidateProductCategoryCaches } from '@/lib/utils/cacheInvalidation';
+import { showErrorToast, showSuccessToast } from '@/lib/utils/toastUtils';
+import ImportSelectCategoryModal from '@/app/components/modals/importSelectCategoryModal';
 
 interface CatalogProductDisplay {
   id: string;
@@ -18,67 +22,50 @@ interface CatalogProductDisplay {
 export default function CatalogPage() {
   const [niche, setNiche] = useState('all');
   const [showNotice, setShowNotice] = useState(false);
-  // Placeholder de exemplo (substitua pela sua fonte de dados)
-  const exampleSections: { id: string; name: string; products: CatalogProductDisplay[] }[] = [
-    { id: 'cat-1', name: 'Destaques', products: [
-      { id: 'p-1', name: 'Netflix Premium 1 mês', price: 19.9, imageUrl: '/product-image.png', order: 0 },
-      { id: 'p-2', name: 'Spotify Família 1 mês', price: 14.9, imageUrl: '/product-image.png', order: 1 },
-      { id: 'p-3', name: 'VPN Ilimitada 30 dias', price: 12.5, imageUrl: '/product-image.png', order: 2 },
-      { id: 'p-4', name: 'E-book Guia de Vendas', price: 29.9, imageUrl: '/product-image.png', order: 3 },
-    ] },
-    { id: 'cat-2', name: 'Produtos Populares', products: [
-      { id: 'p-5', name: 'Assinatura Premium 1 mês', price: 19.9, imageUrl: '/product-image.png', order: 0 },
-      { id: 'p-6', name: 'Assinatura Família 1 mês', price: 14.9, imageUrl: '/product-image.png', order: 1 },
-      { id: 'p-7', name: 'VPN Ilimitada 30 dias', price: 12.5, imageUrl: '/product-image.png', order: 2 },
-      { id: 'p-8', name: 'E-book Guia de Vendas', price: 29.9, imageUrl: '/product-image.png', order: 3 },
-    ] },
-    { id: 'cat-3', name: 'Produtos Recentes', products: [
-      { id: 'p-9', name: 'Assinatura Premium 1 mês', price: 19.9, imageUrl: '/product-image.png', order: 0 },
-      { id: 'p-10', name: 'Assinatura Família 1 mês', price: 14.9, imageUrl: '/product-image.png', order: 1 },
-      { id: 'p-11', name: 'VPN Ilimitada 30 dias', price: 12.5, imageUrl: '/product-image.png', order: 2 },
-      { id: 'p-12', name: 'E-book Guia de Vendas', price: 29.9, imageUrl: '/product-image.png', order: 3 },
-    ] },
-    { id: 'cat-4', name: 'Produtos em Promoção', products: [
-      { id: 'p-13', name: 'Assinatura Premium 1 mês', price: 19.9, imageUrl: '/product-image.png', order: 0 },
-      { id: 'p-14', name: 'Assinatura Família 1 mês', price: 14.9, imageUrl: '/product-image.png', order: 1 },
-      { id: 'p-15', name: 'VPN Ilimitada 30 dias', price: 12.5, imageUrl: '/product-image.png', order: 2 },
-      { id: 'p-16', name: 'E-book Guia de Vendas', price: 29.9, imageUrl: '/product-image.png', order: 3 },
-    ] },
-    { id: 'cat-5', name: 'Produtos em Promoção', products: [
-      { id: 'p-17', name: 'Assinatura Premium 1 mês', price: 19.9, imageUrl: '/product-image.png', order: 0 },
-      { id: 'p-18', name: 'Assinatura Família 1 mês', price: 14.9, imageUrl: '/product-image.png', order: 1 },
-      { id: 'p-19', name: 'VPN Ilimitada 30 dias', price: 12.5, imageUrl: '/product-image.png', order: 2 },
-      { id: 'p-20', name: 'E-book Guia de Vendas', price: 29.9, imageUrl: '/product-image.png', order: 3 },
-    ] },
-    { id: 'cat-6', name: 'Produtos em Promoção', products: [
-      { id: 'p-21', name: 'Assinatura Premium 1 mês', price: 19.9, imageUrl: '/product-image.png', order: 0 },
-      { id: 'p-22', name: 'Assinatura Família 1 mês', price: 14.9, imageUrl: '/product-image.png', order: 1 },
-      { id: 'p-23', name: 'VPN Ilimitada 30 dias', price: 12.5, imageUrl: '/product-image.png', order: 2 },
-      { id: 'p-24', name: 'E-book Guia de Vendas', price: 29.9, imageUrl: '/product-image.png', order: 3 },
-    ] },
-    { id: 'cat-7', name: 'Produtos em Promoção', products: [    
-      { id: 'p-25', name: 'Assinatura Premium 1 mês', price: 19.9, imageUrl: '/product-image.png', order: 0 },
-      { id: 'p-26', name: 'Assinatura Família 1 mês', price: 14.9, imageUrl: '/product-image.png', order: 1 },
-      { id: 'p-27', name: 'VPN Ilimitada 30 dias', price: 12.5, imageUrl: '/product-image.png', order: 2 },
-      { id: 'p-28', name: 'E-book Guia de Vendas', price: 29.9, imageUrl: '/product-image.png', order: 3 },
-    ] },
-    { id: 'cat-8', name: 'Produtos em Promoção', products: [
-      { id: 'p-29', name: 'Assinatura Premium 1 mês', price: 19.9, imageUrl: '/product-image.png', order: 0 },
-      { id: 'p-30', name: 'Assinatura Família 1 mês', price: 14.9, imageUrl: '/product-image.png', order: 1 },
-      { id: 'p-31', name: 'VPN Ilimitada 30 dias', price: 12.5, imageUrl: '/product-image.png', order: 2 },
-      { id: 'p-32', name: 'E-book Guia de Vendas', price: 29.9, imageUrl: '/product-image.png', order: 3 },
-    ] },
-    { id: 'cat-9', name: 'Produtos em Promoção', products: [
-      { id: 'p-33', name: 'Assinatura Premium 1 mês', price: 19.9, imageUrl: '/product-image.png', order: 0 },
-      { id: 'p-34', name: 'Assinatura Família 1 mês', price: 14.9, imageUrl: '/product-image.png', order: 1 },
-      { id: 'p-35', name: 'VPN Ilimitada 30 dias', price: 12.5, imageUrl: '/product-image.png', order: 2 },
-      { id: 'p-36', name: 'E-book Guia de Vendas', price: 29.9, imageUrl: '/product-image.png', order: 3 },
-    ] }
-  ];
+  const [sections, setSections] = useState<{ id: string; name: string; products: CatalogProductDisplay[] }[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectCategoryOpen, setSelectCategoryOpen] = useState(false);
+  const [pendingSourceProductId, setPendingSourceProductId] = useState<string | null>(null);
+  const [pendingCatalogCategoryId, setPendingCatalogCategoryId] = useState<string | null>(null);
+  const router = useRouter();
 
-  const handleImport = (sourceProductId: string) => {
-    // Substitua pela chamada real de importação
-    console.log('Importar produto do catálogo:', sourceProductId);
+  const loadCatalog = async () => {
+    try {
+      setIsLoading(true);
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) throw new Error('Sessão expirada');
+      const headers = { 'Authorization': `Bearer ${accessToken}` } as const;
+      const res = await fetch('/api/seller/catalog/categories', { headers, cache: 'no-store' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erro ao carregar categorias');
+      const categories: Array<{ id: string; name: string; order: number }> = data.data.categories || [];
+      const results = await Promise.all(categories.map(async (cat) => {
+        const r = await fetch(`/api/seller/catalog/products?catalogCategoryId=${cat.id}`, { headers, cache: 'no-store' });
+        const d = await r.json();
+        const products: CatalogProductDisplay[] = (d?.data?.products || []).map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          imageUrl: p.imageUrl || '',
+          order: p.order || 0,
+        }));
+        return { id: cat.id, name: cat.name, products };
+      }));
+      setSections(results);
+    } catch (e) {
+      showErrorToast(e instanceof Error ? e.message : 'Erro ao carregar catálogo');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCatalog();
+  }, []);
+
+  const handleImport = async (sourceProductId: string) => {
+    setPendingSourceProductId(sourceProductId);
+    setSelectCategoryOpen(true);
   };
 
   return (
@@ -120,19 +107,113 @@ export default function CatalogPage() {
 
       {/* Seções do catálogo */}
       <div className="flex flex-col gap-6">
-        {exampleSections.map((section) => (
+        {sections.map((section) => (
           <CatalogCategorySection
             key={section.id}
             id={section.id}
             name={section.name}
             products={section.products}
             onImport={handleImport}
+            onImportSection={async (catalogCategoryId) => {
+              try {
+                const accessToken = localStorage.getItem('access_token');
+                if (!accessToken) throw new Error('Sessão expirada');
+                const headers = { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' } as const;
+                const res = await fetch('/api/seller/catalog/import/category', {
+                  method: 'POST',
+                  headers,
+                  body: JSON.stringify({ catalogCategoryId })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erro ao importar categoria');
+                const imp = data?.data?.imported ?? 0;
+                const skipped = data?.data?.skipped ?? 0;
+                if (imp > 0) {
+                  showSuccessToast(`Importados ${imp} produto(s).`);
+                  // Invalidar cache antes de redirecionar
+                  try {
+                    const token = localStorage.getItem('access_token');
+                    if (token) {
+                      const payload = JSON.parse(atob(token.split('.')[1]));
+                      const userId = payload.userId || payload.sub;
+                      if (userId) {
+                        invalidateProductCategoryCaches(userId);
+                      }
+                    }
+                  } catch (error) {
+                    // Ignorar erro de parsing do token
+                  }
+                  // levar o seller para ver os produtos importados
+                  router.push('/seller/products');
+                }
+                if (skipped > 0) showErrorToast(`${skipped} produto(s) ignorados (já importados).`);
+              } catch (e) {
+                showErrorToast(e instanceof Error ? e.message : 'Erro ao importar categoria');
+              }
+            }}
           />
         ))}
       </div>
 
       {/* Modal de aviso da taxa do catálogo */}
       <CatalogFeeNoticeModal isOpen={showNotice} onClose={() => setShowNotice(false)} />
+
+      {/* Modal para selecionar categoria antes de importar */}
+      <ImportSelectCategoryModal
+        isOpen={selectCategoryOpen}
+        onClose={() => setSelectCategoryOpen(false)}
+        onConfirm={async (targetCategoryId) => {
+          try {
+            // Decide se é importação individual ou por categoria
+            const accessToken = localStorage.getItem('access_token');
+            if (!accessToken) throw new Error('Sessão expirada');
+            const headers = { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' } as const;
+            if (pendingSourceProductId) {
+              const res = await fetch('/api/seller/catalog/import', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ sourceProductId: pendingSourceProductId, targetCategoryId })
+              });
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.error || 'Erro ao importar');
+              if (data?.data?.alreadyImported) {
+                showErrorToast('Este produto já foi importado para a sua loja.');
+              } else {
+                showSuccessToast('Produto importado!');
+                // Invalidar cache após importação bem-sucedida
+                try {
+                  const token = localStorage.getItem('access_token');
+                  if (token) {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const userId = payload.userId || payload.sub;
+                    if (userId) {
+                      invalidateProductCategoryCaches(userId);
+                    }
+                  }
+                } catch (error) {
+                  // Ignorar erro de parsing do token
+                }
+              }
+              setPendingSourceProductId(null);
+            } else if (pendingCatalogCategoryId) {
+              const res = await fetch('/api/seller/catalog/import/category', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ catalogCategoryId: pendingCatalogCategoryId, targetCategoryId })
+              });
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.error || 'Erro ao importar categoria');
+              const imp = data?.data?.imported ?? 0;
+              const skipped = data?.data?.skipped ?? 0;
+              if (imp > 0) showSuccessToast(`Importados ${imp} produto(s).`);
+              if (skipped > 0) showErrorToast(`${skipped} produto(s) ignorados (já importados).`);
+              setPendingCatalogCategoryId(null);
+            }
+          } catch (e) {
+            showErrorToast(e instanceof Error ? e.message : 'Erro ao importar');
+          }
+        }}
+      />
     </div>
   );
 }

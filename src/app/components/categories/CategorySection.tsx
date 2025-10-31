@@ -17,6 +17,7 @@ interface ProductDisplay {
   stockType?: StockType;
   stockLinesCount?: number;
   order: number;
+  isImported?: boolean;
 }
 import {
   DndContext,
@@ -89,6 +90,7 @@ function SortableProductCard({ product, onEdit, onDelete }: {
         stockLinesCount={product.stockLinesCount}
         onEdit={onEdit}
         onDelete={onDelete}
+        isImported={product.isImported}
         className="ml-2" // Adiciona margem para não sobrepor o handle
       />
     </div>
@@ -217,6 +219,7 @@ export default function CategorySection({
             <Button
               onClick={handleAddProduct}
               className="flex items-center gap-2 bg-[var(--primary)] text-[var(--on-primary)] hover:bg-[var(--primary-variant)]"
+              disabled={name.includes('(Catálogo)')}
             >
               <Plus size={16} />
               Adicionar Produto
@@ -226,6 +229,7 @@ export default function CategorySection({
               icon={Edit2}
               onClick={handleEditCategory}
               variant="primary"
+              disabled={name.includes('(Catálogo)')}
             />
             
             <IconOnlyButton
@@ -332,6 +336,7 @@ export default function CategorySection({
                     stockLinesCount={product.stockLinesCount}
                     onEdit={onEditProduct}
                     onDelete={onDeleteProduct}
+                    isImported={product.isImported}
                   />
                 ))}
               </div>
