@@ -340,6 +340,13 @@ export default function CatalogProductPage() {
         stockLines: Array<{ content: string }>;
         deliverables: Array<{ name: string; url: string }>;
       }
+      
+      // Validar que catalogCategoryId existe (obrigatório para produtos de catálogo)
+      const finalCatalogCategoryId = catalogCategoryId || categoryId;
+      if (!finalCatalogCategoryId) {
+        throw new Error('Categoria do catálogo é obrigatória');
+      }
+      
       const body: ProductPayload = {
         name: productData.name.trim(),
         description: productData.description.trim(),
@@ -353,7 +360,7 @@ export default function CatalogProductPage() {
         keyAuthDays: productData.keyAuthDays || null,
         keyAuthSellerKey: productData.keyAuthSellerKey || null,
         isCatalog: true,
-        catalogCategoryId: catalogCategoryId || categoryId,
+        catalogCategoryId: finalCatalogCategoryId,
         // Incluir stockLines e deliverables se existirem
         stockLines: productData.stockType === StockType.LINE && stockLines.length > 0
           ? stockLines.map(line => ({ content: line.content }))
