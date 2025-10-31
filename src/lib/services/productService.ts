@@ -50,7 +50,7 @@ export class ProductService {
           // Continuar o fluxo para criar novo produto e listing
         } else {
           // Produto importado existe e está ativo - já importado
-          if (params.moveIfExists) {
+          if (params.moveIfExists && sourceData) {
             // tentar mover o produto existente para a categoria destino
             const found = await prisma.product.findFirst({
               where: {
