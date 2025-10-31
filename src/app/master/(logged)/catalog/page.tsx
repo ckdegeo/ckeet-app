@@ -9,6 +9,7 @@ import CategoryModal from '@/app/components/modals/categoryModal';
 import DeleteCategoryModal from '@/app/components/modals/deleteCategoryModal';
 import DeleteProductModal from '@/app/components/modals/deleteProductModal';
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
+import { StockType } from '@/lib/types';
 
 // Interface local para compatibilidade com dados existentes
 interface CatalogProduct {
@@ -439,7 +440,9 @@ const handleReorderProducts = (categoryId: string, reorderedProducts: CatalogPro
                 title: p.title,
                 price: p.price,
                 imageUrl: p.imageUrl,
-                order: p.order
+                order: p.order,
+                stockType: p.stockType as StockType | undefined,
+                stockLinesCount: p.stockLinesCount
               }))}
               order={category.order}
               totalCategories={localCategories.length}
