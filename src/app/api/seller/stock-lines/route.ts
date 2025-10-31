@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
           productId: productId,
           productName: line.product.name,
           stockType: line.product.stockType,
-          storeName: line.product.store.name,
+          storeName: line.product.store?.name || 'N/A',
           total: 0,
           available: 0,
           sold: 0,
