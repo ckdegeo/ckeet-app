@@ -79,27 +79,66 @@ export class ProductService {
         });
       }
     }
-    // Buscar produto de catálogo
-    const source = await prisma.product.findUnique({ where: { id: params.sourceProductId } });
+    // Buscar produto de catálogo com stockLines e deliverables
+    const source = await prisma.product.findUnique({ 
+      where: { id: params.sourceProductId },
+      include: {
+        stockLines: {
+          where: { isDeleted: false },
+          orderBy: { createdAt: 'asc' }
+        },
+        deliverables: {
+          orderBy: { createdAt: 'asc' }
+        }
+      }
+    });
     if (!source || !source.isCatalog || !source.isActive) {
       throw new Error('Produto de catálogo inválido');
     }
 
-    // Criar produto do seller (clonado com campos públicos)
-    const created = await prisma.product.create({
-      data: {
-        name: source.name,
-        description: source.description || '',
-        price: source.price,
-        imageUrl: source.imageUrl,
-        image2Url: source.image2Url,
-        image3Url: source.image3Url,
-        videoUrl: source.videoUrl,
-        stockType: source.stockType, // Sem conteúdo privado
-        isActive: true,
-        storeId: params.storeId,
-        categoryId: params.targetCategoryId,
-      },
+    // Criar produto do seller (clonado com campos públicos e estoque)
+    const created = await prisma.$transaction(async (tx) => {
+      const createdProduct = await tx.product.create({
+        data: {
+          name: source.name,
+          description: source.description || '',
+          price: source.price,
+          imageUrl: source.imageUrl,
+          image2Url: source.image2Url,
+          image3Url: source.image3Url,
+          videoUrl: source.videoUrl,
+          stockType: source.stockType,
+          fixedContent: source.fixedContent,
+          keyAuthDays: source.keyAuthDays,
+          keyAuthSellerKey: source.keyAuthSellerKey,
+          isActive: true,
+          storeId: params.storeId,
+          categoryId: params.targetCategoryId,
+        },
+      });
+
+      // Copiar stockLines do produto original
+      if (source.stockLines && source.stockLines.length > 0) {
+        await tx.stockLine.createMany({
+          data: source.stockLines.map((line) => ({
+            content: line.content,
+            productId: createdProduct.id,
+          })),
+        });
+      }
+
+      // Copiar deliverables do produto original
+      if (source.deliverables && source.deliverables.length > 0) {
+        await tx.deliverable.createMany({
+          data: source.deliverables.map((deliverable) => ({
+            name: deliverable.name,
+            url: deliverable.url,
+            productId: createdProduct.id,
+          })),
+        });
+      }
+
+      return createdProduct;
     });
 
     // Criar vínculo de revenda (regras de comissão)

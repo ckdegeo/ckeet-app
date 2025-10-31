@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Buscar produto com dados da loja
+    // Buscar produto com dados da loja e estoque
     const product = await prisma.product.findUnique({
       where: { id: productId },
       include: {
@@ -120,7 +120,16 @@ export async function POST(request: NextRequest) {
             }
           }
         },
-        category: true
+        category: true,
+        stockLines: {
+          where: {
+            isUsed: false,
+            isDeleted: false
+          },
+          orderBy: {
+            createdAt: 'asc'
+          }
+        }
       }
     });
 
