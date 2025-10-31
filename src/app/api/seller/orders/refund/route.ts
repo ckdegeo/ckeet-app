@@ -38,14 +38,8 @@ export async function POST(request: NextRequest) {
       include: { 
         transactions: { orderBy: { createdAt: 'desc' }, take: 1 },
         store: { 
-          include: { seller: true },
-          select: {
-            id: true,
-            seller: {
-              select: {
-                id: true
-              }
-            }
+          include: { 
+            seller: true
           }
         },
         products: {
@@ -65,13 +59,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Pedido não encontrado' }, { status: 404 });
     }
 
+    // Verificar se o pedido está pago (verificar antes para evitar processamento desnecessário)
+    if (order.status !== 'PAID') {
+      return NextResponse.json({ error: 'Apenas pedidos pagos podem ser reembolsados' }, { status: 400 });
+    }
+
+    // Verificar se storeId existe
+    const storeId = order.storeId || order.store?.id;
+    if (!storeId) {
+      return NextResponse.json({ error: 'Loja não encontrada para este pedido' }, { status: 404 });
+    }
+
     // Verificar ANTES de qualquer outra coisa se algum produto é importado (do catálogo master)
     // Isso previne reembolsos mesmo se o pedido já foi reembolsado anteriormente
     if (order.products && order.products.length > 0) {
       // Buscar todos os ResellListings ativos da loja para verificar produtos importados
       const resellListings = await prisma.resellListing.findMany({
         where: {
-          storeId: order.storeId,
+          storeId: storeId,
           isActive: true
         },
         include: {
@@ -108,11 +113,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Verificar se o pedido está pago (após validar se é importado)
-    if (order.status !== 'PAID') {
-      return NextResponse.json({ error: 'Apenas pedidos pagos podem ser reembolsados' }, { status: 400 });
-    }
-
     const tx = order.transactions?.[0];
     if (!tx?.mpPaymentId) {
       return NextResponse.json({ error: 'Pagamento não encontrado para reembolso' }, { status: 400 });
@@ -136,7 +136,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
+    console.error('❌ [SELLER-REFUND] Erro ao processar reembolso:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    console.error('❌ [SELLER-REFUND] Detalhes do erro:', {
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined
+    });
+    return NextResponse.json({ 
+      error: 'Erro interno do servidor',
+      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+    }, { status: 500 });
   }
 }
 
