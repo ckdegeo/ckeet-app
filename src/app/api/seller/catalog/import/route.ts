@@ -2,12 +2,28 @@ import { NextRequest } from 'next/server';
 import { withSellerAuth, AuthMiddleware } from '@/lib/middleware/auth';
 import { prisma } from '@/lib/prisma';
 import { ProductService } from '@/lib/services/productService';
+import { checkRateLimit, getRateLimitIdentifier } from '@/lib/utils/rateLimit';
 
 // POST /api/seller/catalog/import
 // body: { sourceProductId: string, targetCategoryId: string }
 export async function POST(request: NextRequest) {
   return withSellerAuth(request, async (req, user) => {
     try {
+      // Rate limiting: 30 importações por seller a cada 10 minutos
+      const identifier = `seller:${user.id}`;
+      const rateLimit = checkRateLimit(`catalog-import:${identifier}`, {
+        maxRequests: 30,
+        windowMs: 10 * 60 * 1000, // 10 minutos
+      });
+
+      if (!rateLimit.allowed) {
+        const retryAfter = Math.ceil((rateLimit.resetAt - Date.now()) / 1000);
+        return AuthMiddleware.createErrorResponse(
+          `Muitas tentativas de importação. Aguarde alguns minutos antes de tentar novamente.`,
+          429
+        );
+      }
+
       const body = await req.json();
       const { sourceProductId, targetCategoryId } = body || {};
       if (!sourceProductId || !targetCategoryId) {
@@ -21,6 +37,28 @@ export async function POST(request: NextRequest) {
       });
       if (!seller?.store?.id) {
         return AuthMiddleware.createErrorResponse('Loja não encontrada para o seller', 400);
+      }
+
+      // Validar se sourceProductId é produto do catálogo válido
+      const sourceProduct = await prisma.product.findUnique({
+        where: { id: sourceProductId },
+        select: { id: true, isCatalog: true, isActive: true }
+      });
+      if (!sourceProduct || !sourceProduct.isCatalog || !sourceProduct.isActive) {
+        return AuthMiddleware.createErrorResponse('Produto de catálogo inválido ou inativo', 404);
+      }
+
+      // Validar se targetCategoryId pertence à loja do seller
+      const targetCategory = await prisma.category.findFirst({
+        where: {
+          id: targetCategoryId,
+          storeId: seller.store.id,
+          isActive: true
+        },
+        select: { id: true }
+      });
+      if (!targetCategory) {
+        return AuthMiddleware.createErrorResponse('Categoria de destino não encontrada ou não pertence à sua loja', 404);
       }
 
       const result = await ProductService.importCatalogProduct({

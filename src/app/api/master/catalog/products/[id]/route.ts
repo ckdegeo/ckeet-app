@@ -45,6 +45,68 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         return AuthMiddleware.createErrorResponse('Produto não encontrado no catálogo', 404);
       }
 
+      // Validações de segurança
+      if (body.name && (typeof body.name !== 'string' || body.name.trim().length === 0 || body.name.length > 200)) {
+        return AuthMiddleware.createErrorResponse('Nome inválido (máximo 200 caracteres)', 400);
+      }
+
+      if (body.price !== undefined) {
+        if (typeof body.price !== 'number' || body.price <= 0 || body.price > 999999.99 || !isFinite(body.price)) {
+          return AuthMiddleware.createErrorResponse('Preço inválido (deve estar entre R$ 0,01 e R$ 999.999,99)', 400);
+        }
+      }
+
+      if (body.description !== undefined && body.description !== null && (typeof body.description !== 'string' || body.description.length > 5000)) {
+        return AuthMiddleware.createErrorResponse('Descrição inválida (máximo 5000 caracteres)', 400);
+      }
+
+      // Validar limites de arrays
+      if (body.stockLines !== undefined && (!Array.isArray(body.stockLines) || body.stockLines.length > 10000)) {
+        return AuthMiddleware.createErrorResponse('Limite de linhas de estoque excedido (máximo 10000)', 400);
+      }
+
+      if (body.deliverables !== undefined && (!Array.isArray(body.deliverables) || body.deliverables.length > 100)) {
+        return AuthMiddleware.createErrorResponse('Limite de entregáveis excedido (máximo 100)', 400);
+      }
+
+      // Validar tamanho de cada linha de estoque
+      if (body.stockLines && Array.isArray(body.stockLines)) {
+        for (const line of body.stockLines) {
+          if (!line.content || typeof line.content !== 'string' || line.content.trim().length === 0 || line.content.length > 1000) {
+            return AuthMiddleware.createErrorResponse('Linha de estoque inválida (máximo 1000 caracteres por linha)', 400);
+          }
+        }
+      }
+
+      // Validar entregáveis
+      if (body.deliverables && Array.isArray(body.deliverables)) {
+        for (const deliverable of body.deliverables) {
+          if (!deliverable.name || typeof deliverable.name !== 'string' || deliverable.name.trim().length === 0 || deliverable.name.length > 200) {
+            return AuthMiddleware.createErrorResponse('Nome de entregável inválido (máximo 200 caracteres)', 400);
+          }
+          if (!deliverable.url || typeof deliverable.url !== 'string' || deliverable.url.trim().length === 0 || deliverable.url.length > 2000) {
+            return AuthMiddleware.createErrorResponse('URL de entregável inválida (máximo 2000 caracteres)', 400);
+          }
+          // Validar formato de URL
+          try {
+            new URL(deliverable.url.trim());
+          } catch {
+            return AuthMiddleware.createErrorResponse('URL de entregável inválida (formato incorreto)', 400);
+          }
+        }
+      }
+
+      // Validar catalogCategoryId se fornecido
+      if (body.catalogCategoryId !== undefined && body.catalogCategoryId !== null) {
+        const catalogCategory = await prisma.catalogCategory.findUnique({
+          where: { id: body.catalogCategoryId },
+          select: { id: true, isActive: true }
+        });
+        if (!catalogCategory || !catalogCategory.isActive) {
+          return AuthMiddleware.createErrorResponse('Categoria do catálogo não encontrada ou inativa', 404);
+        }
+      }
+
       const data: Record<string, unknown> = { ...body, isCatalog: true };
       data.storeId = null;
       data.categoryId = null;
