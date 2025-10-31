@@ -328,6 +328,8 @@ const handleReorderProducts = (categoryId: string, reorderedProducts: CatalogPro
           price: number;
           imageUrl?: string;
           order: number;
+          stockType?: string;
+          stockLines?: Array<{ id: string }>;
         }
         const products: CatalogProduct[] = ((d.data.products || []) as ProductResponse[]).map((p) => ({
           id: p.id,
@@ -335,6 +337,8 @@ const handleReorderProducts = (categoryId: string, reorderedProducts: CatalogPro
           price: p.price,
           imageUrl: p.imageUrl || '',
           order: p.order || 0,
+          stockType: p.stockType,
+          stockLinesCount: p.stockLines?.length || 0,
         }));
         return { ...cat, products };
       }));

@@ -251,6 +251,16 @@ export class ProductService {
             ]
           : undefined,
       },
+      include: {
+        stockLines: {
+          where: {
+            isDeleted: false
+          },
+          select: {
+            id: true
+          }
+        }
+      },
       orderBy: { order: 'asc' },
     });
   }

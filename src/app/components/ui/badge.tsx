@@ -23,7 +23,7 @@ export default function Badge({ status, primaryColor = '#bd253c', secondaryColor
           text: 'Pendente',
           bgColor: '#f59e0b',
           textColor: 'white',
-          borderColor: '#d97706'
+          borderColor: '' // Sem borda para pendente
         };
       case 'entregue':
       case 'delivered':
@@ -60,14 +60,15 @@ export default function Badge({ status, primaryColor = '#bd253c', secondaryColor
   };
 
   const config = getStatusConfig(status);
+  const isPending = status.toLowerCase() === 'pendente' || status.toLowerCase() === 'pending';
 
   return (
     <span
-      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isPending ? '' : 'border'}`}
       style={{
         backgroundColor: config.bgColor,
         color: config.textColor,
-        borderColor: config.borderColor
+        ...(isPending ? {} : { borderColor: config.borderColor })
       }}
     >
       {config.text}
