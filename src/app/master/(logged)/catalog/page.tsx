@@ -430,7 +430,13 @@ const handleReorderProducts = (categoryId: string, reorderedProducts: CatalogPro
               key={category.id}
               id={category.id}
               name={category.name}
-              products={category.products as any}
+              products={category.products.map(p => ({
+                id: p.id,
+                title: p.title,
+                price: p.price,
+                imageUrl: p.imageUrl,
+                order: p.order
+              }))}
               order={category.order}
               totalCategories={localCategories.length}
               onEditCategory={handleEditCategory}
