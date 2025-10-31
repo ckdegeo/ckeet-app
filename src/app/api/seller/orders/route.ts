@@ -84,7 +84,9 @@ export async function GET(request: NextRequest) {
           include: {
             product: {
               select:{
+                id: true,
                 name: true,
+                price: true,
                 imageUrl: true,
                 description: true
               }
@@ -104,9 +106,58 @@ export async function GET(request: NextRequest) {
       }
     });
 
+    // Buscar todos os ResellListings ativos com produtos do catálogo
+    const resellListings = await prisma.resellListing.findMany({
+      where: {
+        storeId: store.id,
+        isActive: true
+      },
+      include: {
+        sourceProduct: {
+          select: {
+            id: true,
+            name: true,
+            price: true
+          }
+        }
+      }
+    });
+
+    // Criar um mapa de produtos importados: chave = nome+preço, valor = true
+    // Usamos nome+preço porque é assim que identificamos produtos importados
+    const importedProductsMap = new Map<string, boolean>();
+    resellListings.forEach(listing => {
+      if (listing.sourceProduct) {
+        const key = `${listing.sourceProduct.name}|${listing.sourceProduct.price}`;
+        importedProductsMap.set(key, true);
+      }
+    });
+
+    // Adicionar informação de importação para cada produto nas orders
+    const ordersWithImportInfo = orders.map((order) => {
+      const productsWithImportInfo = order.products.map((orderProduct) => {
+        const product = orderProduct.product;
+        if (!product) return { ...orderProduct, isImported: false };
+
+        // Verificar se o produto é importado comparando nome e preço
+        const productKey = `${product.name}|${product.price || 0}`;
+        const isProductImported = importedProductsMap.has(productKey);
+
+        return {
+          ...orderProduct,
+          isImported: isProductImported
+        };
+      });
+
+      return {
+        ...order,
+        products: productsWithImportInfo
+      };
+    });
+
     return NextResponse.json({
       success: true,
-      data: orders
+      data: ordersWithImportInfo
     }, {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',

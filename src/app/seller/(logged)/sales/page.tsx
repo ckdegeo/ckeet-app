@@ -32,6 +32,7 @@ interface Sale {
   createdAt: string;
   deliveredContent?: string;
   downloadUrl?: string;
+  isImported?: boolean;
   deliverables?: Array<{
     id: string;
     name: string;
@@ -129,6 +130,7 @@ function SalesContent() {
           products: Array<{ 
             product: { name: string; imageUrl: string; description?: string };
             productId: string;
+            isImported?: boolean;
           }>;
           customer: { name: string; email: string } | null;
           status: string;
@@ -158,7 +160,8 @@ function SalesContent() {
             amount: order.totalAmount,
             createdAt: order.createdAt,
             deliveredContent: firstPurchase?.deliveredContent,
-            downloadUrl: firstPurchase?.downloadUrl
+            downloadUrl: firstPurchase?.downloadUrl,
+            isImported: firstProduct?.isImported || false
           };
         }) || [];
 
@@ -296,6 +299,23 @@ function SalesContent() {
       width: 'w-[200px]'
     },
     {
+      key: 'isImported' as keyof Sale,
+      label: 'Tipo',
+      width: 'w-[120px]',
+      render: (value: unknown) => {
+        const isImported = value as boolean;
+        return (
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+              isImported ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-green-100 text-green-800 border-green-300'
+            }`}
+          >
+            {isImported ? 'Importado' : 'Próprio'}
+          </span>
+        );
+      }
+    },
+    {
       key: 'customerName' as keyof Sale,
       label: 'Cliente',
       width: 'w-[150px]'
@@ -344,7 +364,7 @@ function SalesContent() {
       label: 'Processar reembolso',
       onClick: handleRefund,
       color: 'error',
-      show: (sale: Sale) => sale.status === 'PAID'
+      show: (sale: Sale) => sale.status === 'PAID' && !sale.isImported // Apenas produtos próprios podem ser reembolsados
     }
   ];
 

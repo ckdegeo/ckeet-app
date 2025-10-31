@@ -32,18 +32,83 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Senha inválida' }, { status: 401 });
     }
 
-    // Buscar order e última transação MP
+    // Buscar order com produtos e transação MP
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: { 
         transactions: { orderBy: { createdAt: 'desc' }, take: 1 },
-        store: { include: { seller: true } }
+        store: { 
+          include: { seller: true },
+          select: {
+            id: true,
+            seller: {
+              select: {
+                id: true
+              }
+            }
+          }
+        },
+        products: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                price: true
+              }
+            }
+          }
+        }
       }
     });
     if (!order) {
       return NextResponse.json({ error: 'Pedido não encontrado' }, { status: 404 });
     }
 
+    // Verificar ANTES de qualquer outra coisa se algum produto é importado (do catálogo master)
+    // Isso previne reembolsos mesmo se o pedido já foi reembolsado anteriormente
+    if (order.products && order.products.length > 0) {
+      // Buscar todos os ResellListings ativos da loja para verificar produtos importados
+      const resellListings = await prisma.resellListing.findMany({
+        where: {
+          storeId: order.storeId,
+          isActive: true
+        },
+        include: {
+          sourceProduct: {
+            select: {
+              id: true,
+              name: true,
+              price: true
+            }
+          }
+        }
+      });
+
+      // Criar um mapa de produtos importados: chave = nome|preço, valor = true
+      const importedProductsMap = new Map<string, boolean>();
+      resellListings.forEach(listing => {
+        if (listing.sourceProduct) {
+          const key = `${listing.sourceProduct.name}|${listing.sourceProduct.price}`;
+          importedProductsMap.set(key, true);
+        }
+      });
+
+      // Verificar se algum produto da ordem é importado
+      for (const orderProduct of order.products) {
+        const product = orderProduct.product;
+        if (product) {
+          const productKey = `${product.name}|${product.price || 0}`;
+          if (importedProductsMap.has(productKey)) {
+            return NextResponse.json({ 
+              error: 'Produtos importados do catálogo não podem ser reembolsados. Apenas produtos próprios podem ser reembolsados.' 
+            }, { status: 403 });
+          }
+        }
+      }
+    }
+
+    // Verificar se o pedido está pago (após validar se é importado)
     if (order.status !== 'PAID') {
       return NextResponse.json({ error: 'Apenas pedidos pagos podem ser reembolsados' }, { status: 400 });
     }
