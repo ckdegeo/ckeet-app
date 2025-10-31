@@ -63,6 +63,9 @@ export async function GET(request: NextRequest) {
             order: true,
             isActive: true,
             stockType: true,
+            fixedContent: true,
+            keyAuthDays: true,
+            keyAuthSellerKey: true,
             categoryId: true,
             storeId: true,
             createdAt: true,
@@ -77,6 +80,13 @@ export async function GET(request: NextRequest) {
                 isUsed: true,
                 usedAt: true,
                 orderId: true,
+              },
+            },
+            deliverables: {
+              select: {
+                id: true,
+                name: true,
+                url: true,
               },
             },
           },
