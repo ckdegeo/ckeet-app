@@ -365,9 +365,8 @@ export default function CatalogProductPage() {
         stockLines: productData.stockType === StockType.LINE && stockLines.length > 0
           ? stockLines.map(line => ({ content: line.content }))
           : [],
-        deliverables: deliverableLinks.length > 0
-          ? deliverableLinks.map(link => ({ name: link.name, url: link.url }))
-          : [],
+        // Sempre enviar deliverables (mesmo que vazio) para que a API possa salvar corretamente
+        deliverables: deliverableLinks.map(link => ({ name: link.name.trim(), url: link.url.trim() })),
       };
 
       const headers = {
@@ -386,13 +385,13 @@ export default function CatalogProductPage() {
         if (!res.ok) throw new Error(data.error || 'Erro ao criar produto');
       } else {
         const id = typeof productId === 'string' ? productId : productId?.[0];
-        // Para edição, incluir stockLines e deliverables também
+        // Para edição, garantir que stockLines e deliverables estão atualizados
         body.stockLines = productData.stockType === StockType.LINE && stockLines.length > 0
           ? stockLines.map(line => ({ content: line.content }))
           : [];
-        body.deliverables = deliverableLinks.length > 0
-          ? deliverableLinks.map(link => ({ name: link.name, url: link.url }))
-          : [];
+        // IMPORTANTE: Sempre enviar deliverables (mesmo que vazio) para edição
+        // para que a API possa deletar os antigos e criar os novos
+        body.deliverables = deliverableLinks.map(link => ({ name: link.name.trim(), url: link.url.trim() }));
         
         const res = await fetch(`/api/master/catalog/products/${id}`, {
           method: 'PUT',

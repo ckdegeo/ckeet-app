@@ -107,7 +107,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         }
       }
 
+      // Criar objeto data para update do produto, excluindo relações
       const data: Record<string, unknown> = { ...body, isCatalog: true };
+      // Remover stockLines e deliverables do data (são relações, tratadas separadamente)
+      delete data.stockLines;
+      delete data.deliverables;
       data.storeId = null;
       data.categoryId = null;
       // Se não enviar catalogCategoryId, preservar o atual
