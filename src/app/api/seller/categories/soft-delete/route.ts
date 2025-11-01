@@ -86,7 +86,68 @@ export async function DELETE(request: NextRequest) {
 
     if (isImportedCategory) {
       // Categoria importada: HARD DELETE (deletar permanentemente)
-      // Primeiro, deletar ResellListings órfãos relacionados a esta categoria (caso existam)
+      // Primeiro, verificar se há produtos na categoria que têm order_items relacionados
+      const productsInCategory = await prisma.product.findMany({
+        where: {
+          categoryId: categoryId,
+          storeId: seller.store.id
+        },
+        include: {
+          _count: {
+            select: {
+              orderItems: true
+            }
+          }
+        }
+      });
+
+      // Verificar se algum produto tem order_items relacionados
+      const hasProductsWithOrders = productsInCategory.some(p => p._count.orderItems > 0);
+
+      if (hasProductsWithOrders) {
+        // Se há produtos com pedidos, fazer soft delete da categoria e dos produtos
+        // Não podemos deletar permanentemente porque há histórico de vendas
+        await prisma.category.update({
+          where: { id: categoryId },
+          data: { isActive: false }
+        });
+
+        await prisma.product.updateMany({
+          where: {
+            categoryId: categoryId,
+            storeId: seller.store.id
+          },
+          data: { isActive: false }
+        });
+
+        // Deletar ResellListings relacionados
+        await prisma.resellListing.deleteMany({
+          where: {
+            storeId: seller.store.id,
+            categoryId: categoryId
+          }
+        });
+
+        return NextResponse.json({
+          success: true,
+          message: 'Categoria importada removida (produtos têm histórico de vendas)',
+          category: {
+            id: existingCategory.id,
+            name: existingCategory.name
+          }
+        });
+      }
+
+      // Se não há produtos com pedidos, podemos deletar permanentemente
+      // Primeiro, deletar todos os produtos da categoria (hard delete)
+      await prisma.product.deleteMany({
+        where: {
+          categoryId: categoryId,
+          storeId: seller.store.id
+        }
+      });
+
+      // Depois, deletar ResellListings relacionados
       await prisma.resellListing.deleteMany({
         where: {
           storeId: seller.store.id,
@@ -94,7 +155,7 @@ export async function DELETE(request: NextRequest) {
         }
       });
 
-      // Depois deletar a categoria permanentemente
+      // Por fim, deletar a categoria permanentemente
       await prisma.category.delete({
         where: { id: categoryId }
       });
