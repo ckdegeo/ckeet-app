@@ -137,7 +137,7 @@ model SellerPaymentConfig {
   errorMessage String? // Mensagem de erro (se houver)
   
   // Platform Commission Configuration
-  commissionRate      Float @default(0.0599) // 5.99%
+  commissionRate      Float @default(0.0349) // 3.49%
   commissionFixedFee  Float @default(0.50)   // R$ 0,50 por transação
   
   createdAt DateTime @default(now())
@@ -429,7 +429,7 @@ model Transaction {
   // Split Payment Info
   sellerAmount       Float   // valor que o seller recebe (após comissão)
   platformAmount     Float   // valor da plataforma (comissão)
-  commissionRate     Float   @default(0.0599) // taxa percentual (5.99%)
+  commissionRate     Float   @default(0.0349) // taxa percentual (3.49%)
   commissionFixedFee Float   @default(0.50)   // taxa fixa (R$ 0,50)
   
   // Payment Gateway Info
@@ -466,8 +466,8 @@ model ResellListing {
   categoryId      String             // categoria do SELLER onde o card ficará
   sourceProductId String             // Product original (isCatalog = true)
   order           Int      @default(0) // ordem horizontal do card na categoria
-  commissionRate  Float    @default(0.40)
-  fixedFee        Float    @default(0.50)
+  commissionRate  Float    @default(0.30) // 30% para o master em produtos importados
+  fixedFee        Float    @default(0.50) // R$ 0,50 por venda
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
