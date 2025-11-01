@@ -212,9 +212,11 @@ export default function LandingPage() {
       <div className="h-20"></div>
 
       {/* Hero Headline Section */}
-      <section className="relative overflow-hidden py-12 lg:py-12 bg-gradient-to-b from-[var(--background)] via-[var(--surface)] to-[var(--background)]">
+      <section className="relative overflow-hidden py-12 lg:py-20 bg-gradient-to-b from-[var(--background)] via-[var(--surface)] to-[var(--background)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center space-y-8 animate-fade-in-up">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Conteúdo à esquerda */}
+            <div className="space-y-8 animate-fade-in-up order-2 lg:order-1">
               {/* Badge */}
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20">
                 <Zap size={16} className="text-[var(--primary)]" />
@@ -224,7 +226,7 @@ export default function LandingPage() {
               </div>
 
               {/* Main Headline */}
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-[var(--foreground)] leading-tight">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-[var(--foreground)] leading-tight">
                 Sua{' '}
                 <span className="text-[var(--primary)] relative inline-block">
                   lojinha virtual
@@ -235,36 +237,36 @@ export default function LandingPage() {
               </h1>
 
               {/* Subheadline */}
-              <p className="text-lg sm:text-xl text-[var(--on-background)] max-w-2xl mx-auto leading-relaxed">
+              <p className="text-lg sm:text-xl text-[var(--on-background)] leading-relaxed">
                 Crie, personalize e venda produtos digitais com sua própria loja virtual. 
                 Sem conhecimento técnico. Sem complicação. Sem mensalidades.
               </p>
 
               {/* Key Benefits */}
-              <div className="flex flex-col sm:flex-row items-center gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div className="flex items-center gap-2 text-sm text-[var(--on-background)]">
-                  <CheckCircle size={20} className="text-green-600" />
+                  <CheckCircle size={20} className="text-green-600 flex-shrink-0" />
                   <span>Setup em 5 minutos</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-[var(--on-background)]">
-                  <CheckCircle size={20} className="text-green-600" />
+                  <CheckCircle size={20} className="text-green-600 flex-shrink-0" />
                   <span>Sem mensalidade</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-[var(--on-background)]">
-                  <CheckCircle size={20} className="text-green-600" />
+                  <CheckCircle size={20} className="text-green-600 flex-shrink-0" />
                   <span>PIX integrado</span>
                 </div>
               </div>
 
               {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                onClick={handleGetStarted}
-                className="px-8 py-4 text-lg shadow-xl hover:shadow-2xl transition-all rounded-full"
-              >
-                Criar minha loja grátis
-                <ArrowRight className="w-5 h-5" />
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button 
+                  onClick={handleGetStarted}
+                  className="px-8 py-4 text-lg shadow-xl hover:shadow-2xl transition-all rounded-full"
+                >
+                  Criar minha loja grátis
+                  <ArrowRight className="w-5 h-5" />
+                </Button>
                 <button 
                   onClick={handleWatchDemo}
                   className="cursor-pointer flex items-center gap-2 px-6 py-4 text-[var(--on-background)] hover:text-[var(--primary)] transition-colors border border-[var(--on-background)]/20 rounded-full hover:border-[var(--primary)]/30 bg-[var(--surface)] hover:bg-[var(--surface)]"
@@ -277,7 +279,7 @@ export default function LandingPage() {
               </div>
 
               {/* Social Proof */}
-              <div className="flex items-center gap-6 text-sm text-[var(--on-background)] justify-center pt-4">
+              <div className="flex items-center gap-6 text-sm text-[var(--on-background)] pt-4">
                 <div className="flex items-center gap-1">
                   <Star size={16} className="text-yellow-500 fill-yellow-500" />
                   <Star size={16} className="text-yellow-500 fill-yellow-500" />
@@ -287,6 +289,18 @@ export default function LandingPage() {
                 </div>
                 <span className="font-medium">4.9/5 de +500 lojas</span>
               </div>
+            </div>
+
+            {/* Imagem à direita */}
+            <div className="relative animate-fade-in-up order-1 lg:order-2">
+              <div className="relative rounded-2xl overflow-hidden">
+                <img 
+                  src="/img_lp.png" 
+                  alt="Ckeet - Plataforma de vendas digitais" 
+                  className="w-full h-auto"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
