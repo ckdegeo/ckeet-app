@@ -99,6 +99,18 @@ export async function GET(request: NextRequest) {
             deliveredContent: true,
             downloadUrl: true
           }
+        },
+        transactions: {
+          where: {
+            status: 'COMPLETED',
+            type: 'SALE'
+          },
+          select: {
+            sellerAmount: true,
+            platformAmount: true,
+            commissionRate: true,
+            commissionFixedFee: true
+          }
         }
       },
       orderBy: {
@@ -149,9 +161,16 @@ export async function GET(request: NextRequest) {
         };
       });
 
+      // Calcular valor líquido que o seller recebeu (da primeira transação completada)
+      const completedTransaction = order.transactions?.[0];
+      const sellerNetAmount = completedTransaction?.sellerAmount || 0;
+      const platformCommission = completedTransaction?.platformAmount || 0;
+
       return {
         ...order,
-        products: productsWithImportInfo
+        products: productsWithImportInfo,
+        sellerNetAmount, // Valor líquido recebido pelo seller
+        platformCommission // Comissão paga à plataforma
       };
     });
 

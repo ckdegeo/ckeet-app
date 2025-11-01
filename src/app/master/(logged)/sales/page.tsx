@@ -29,7 +29,9 @@ interface MasterSale {
   sellerName: string;
   sellerEmail: string;
   storeCommission: number;
+  sellerAmount: number; // Valor que o seller recebeu
   storeId: string;
+  isImported?: boolean; // Se o produto é importado
 }
 export default function Sales() {
   const [sales, setSales] = useState<MasterSale[]>([]);
@@ -204,13 +206,30 @@ export default function Sales() {
       width: 'w-[160px]'
     },
     {
+      key: 'isImported' as keyof MasterSale,
+      label: 'Tipo',
+      width: 'w-[120px]',
+      render: (value: unknown) => {
+        const isImported = value as boolean;
+        return (
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+              isImported ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-green-100 text-green-800 border-green-300'
+            }`}
+          >
+            {isImported ? 'Importado' : 'Próprio'}
+          </span>
+        );
+      }
+    },
+    {
       key: 'customerName' as keyof MasterSale,
       label: 'Cliente',
       width: 'w-[130px]'
     },
     {
       key: 'customerEmail' as keyof MasterSale,
-      label: 'E-mail do Cliente',
+      label: 'E-mail do cliente',
       width: 'w-[180px]'
     },
     {
@@ -249,15 +268,25 @@ export default function Sales() {
     },
     {
       key: 'amount' as keyof MasterSale,
-      label: 'Valor',
-      width: 'w-[100px]',
+      label: 'Total',
+      width: 'w-[110px]',
       render: (value: unknown) => formatCurrency(value as number)
     },
     {
       key: 'storeCommission' as keyof MasterSale,
-      label: 'Comissão',
-      width: 'w-[100px]',
+      label: 'Comissão da plataforma',
+      width: 'w-[130px]',
       render: (value: unknown) => formatCurrency(value as number)
+    },
+    {
+      key: 'sellerAmount' as keyof MasterSale,
+      label: 'Comissão do seller',
+      width: 'w-[110px]',
+      render: (value: unknown) => (
+        <span className="font-medium text-green-600">
+          {formatCurrency(value as number)}
+        </span>
+      )
     }
   ];
 

@@ -81,7 +81,7 @@ export default function Table<T>({
           maxWidth: '100%'
         }}
       >
-        <table style={{minWidth: '1800px', tableLayout: 'fixed'}}>
+        <table style={{minWidth: '2200px', tableLayout: 'fixed'}}>
           {/* Cabeçalho */}
           <thead>
             <tr 

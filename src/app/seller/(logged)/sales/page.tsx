@@ -33,6 +33,8 @@ interface Sale {
   deliveredContent?: string;
   downloadUrl?: string;
   isImported?: boolean;
+  sellerNetAmount?: number; // Valor líquido que o seller recebeu
+  platformCommission?: number; // Comissão da plataforma
   deliverables?: Array<{
     id: string;
     name: string;
@@ -141,6 +143,8 @@ function SalesContent() {
             deliveredContent?: string;
             downloadUrl?: string;
           }>;
+          sellerNetAmount?: number;
+          platformCommission?: number;
         }) => {
           const firstProduct = order.products?.[0];
           const firstPurchase = order.purchases?.[0];
@@ -161,7 +165,9 @@ function SalesContent() {
             createdAt: order.createdAt,
             deliveredContent: firstPurchase?.deliveredContent,
             downloadUrl: firstPurchase?.downloadUrl,
-            isImported: firstProduct?.isImported || false
+            isImported: firstProduct?.isImported || false,
+            sellerNetAmount: order.sellerNetAmount,
+            platformCommission: order.platformCommission
           };
         }) || [];
 
@@ -345,9 +351,35 @@ function SalesContent() {
     },
     {
       key: 'amount' as keyof Sale,
-      label: 'Valor',
-      width: 'w-[100px]',
+      label: 'Total',
+      width: 'w-[110px]',
       render: (value: unknown) => formatCurrency(value as number)
+    },
+    {
+      key: 'platformCommission' as keyof Sale,
+      label: 'Comissão da plataforma',
+      width: 'w-[130px]',
+      render: (value: unknown) => {
+        const commission = (value as number) || 0;
+        return (
+          <span className="text-[var(--foreground-secondary)]">
+            {formatCurrency(commission)}
+          </span>
+        );
+      }
+    },
+    {
+      key: 'sellerNetAmount' as keyof Sale,
+      label: 'Comissão do seller',
+      width: 'w-[120px]',
+      render: (value: unknown) => {
+        const netAmount = (value as number) || 0;
+        return (
+          <span className="font-semibold text-green-600">
+            {formatCurrency(netAmount)}
+          </span>
+        );
+      }
     }
   ];
 

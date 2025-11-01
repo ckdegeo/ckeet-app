@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
       include: {
         store: {
           select: {
+            id: true,
             name: true,
             seller: { select: { id: true, name: true, email: true, phone: true } }
           }
@@ -48,7 +49,11 @@ export async function GET(request: NextRequest) {
         products: {
           select: {
             product: {
-              select: { name: true }
+              select: { 
+                id: true,
+                name: true,
+                price: true
+              }
             }
           }
         },
@@ -57,6 +62,61 @@ export async function GET(request: NextRequest) {
         }
       },
       orderBy: { createdAt: 'desc' }
+    });
+
+    // Buscar todos os ResellListings de todas as lojas para determinar produtos importados
+    const allStoreIds = [...new Set(orders.map(o => o.store?.id).filter(Boolean))] as string[];
+    const resellListings = await prisma.resellListing.findMany({
+      where: {
+        storeId: { in: allStoreIds },
+        isActive: true
+      },
+      include: {
+        sourceProduct: {
+          select: {
+            id: true,
+            name: true,
+            price: true
+          }
+        }
+      }
+    });
+
+    // Buscar todos os produtos das lojas envolvidas
+    const allProducts = await prisma.product.findMany({
+      where: {
+        storeId: { in: allStoreIds }
+      },
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        storeId: true
+      }
+    });
+
+    // Criar mapa de produtos importados por loja (storeId -> Set<productId>)
+    const importedProductsByStore = new Map<string, Set<string>>();
+    
+    // Para cada ResellListing, encontrar o produto do seller correspondente
+    resellListings.forEach(listing => {
+      if (listing.sourceProduct && listing.storeId) {
+        // Encontrar produtos do seller que correspondem ao sourceProduct (mesmo nome e preço)
+        const matchingProducts = allProducts.filter(p => 
+          p.storeId === listing.storeId &&
+          p.name === listing.sourceProduct!.name &&
+          p.price === listing.sourceProduct!.price
+        );
+        
+        // Adicionar os IDs desses produtos ao Set de importados
+        matchingProducts.forEach(product => {
+          if (!importedProductsByStore.has(listing.storeId!)) {
+            importedProductsByStore.set(listing.storeId!, new Set());
+          }
+          const storeSet = importedProductsByStore.get(listing.storeId!);
+          storeSet?.add(product.id);
+        });
+      }
     });
 
     // Montar vendas e totais
@@ -80,7 +140,21 @@ export async function GET(request: NextRequest) {
       }
       refundsTotal += orderRefunds;
 
-      const firstProductName = o.products?.[0]?.product?.name || '-';
+      const firstProduct = o.products?.[0]?.product;
+      const firstProductName = firstProduct?.name || '-';
+      
+      // Determinar se o produto é importado (usando productId direto)
+      let isImported = false;
+      if (firstProduct?.id && o.store?.id) {
+        const storeSet = importedProductsByStore.get(o.store.id);
+        if (storeSet) {
+          isImported = storeSet.has(firstProduct.id);
+        }
+      }
+      
+      // Calcular quanto o seller recebeu (valor total - comissão master)
+      const sellerAmount = o.totalAmount - orderCommission;
+      
       return {
         id: o.id,
         orderNumber: o.orderNumber,
@@ -94,7 +168,9 @@ export async function GET(request: NextRequest) {
         storeName: o.store?.name || '-',
         sellerName: o.store?.seller?.name || '-',
         sellerEmail: o.store?.seller?.email || '-',
-        storeCommission: orderCommission
+        storeCommission: orderCommission,
+        sellerAmount: sellerAmount, // Valor que o seller recebeu
+        isImported: isImported // Se o produto é importado
       };
     });
 
