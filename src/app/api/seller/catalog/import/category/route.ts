@@ -52,16 +52,23 @@ export async function POST(request: NextRequest) {
       // Se não veio categoria destino, criar/reusar automaticamente baseado no nome da categoria do catálogo
       if (!targetCategoryId) {
         const suggestedName = catalogCategory.name ? `${catalogCategory.name} (Catálogo)` : 'Catálogo';
-        // Reutilizar categoria com mesmo nome (case-insensitive) se já existir
+        // Reutilizar categoria com mesmo nome (case-insensitive) se já existir (ativa ou inativa)
         const existingCategory = await prisma.category.findFirst({
           where: {
             storeId: seller.store.id,
             name: { equals: suggestedName, mode: 'insensitive' },
           },
-          select: { id: true },
+          select: { id: true, isActive: true },
         });
         if (existingCategory) {
           targetCategoryId = existingCategory.id;
+          // Se a categoria estiver inativa, reativá-la
+          if (!existingCategory.isActive) {
+            await prisma.category.update({
+              where: { id: existingCategory.id },
+              data: { isActive: true }
+            });
+          }
         } else {
           const last = await prisma.category.findFirst({
             where: { storeId: seller.store.id },
@@ -84,13 +91,19 @@ export async function POST(request: NextRequest) {
         const targetCategory = await prisma.category.findFirst({
           where: {
             id: targetCategoryId,
-            storeId: seller.store.id,
-            isActive: true
+            storeId: seller.store.id
           },
-          select: { id: true }
+          select: { id: true, isActive: true }
         });
         if (!targetCategory) {
           return AuthMiddleware.createErrorResponse('Categoria de destino não encontrada ou não pertence à sua loja', 404);
+        }
+        // Se a categoria estiver inativa, reativá-la automaticamente
+        if (!targetCategory.isActive) {
+          await prisma.category.update({
+            where: { id: targetCategoryId },
+            data: { isActive: true }
+          });
         }
       }
 

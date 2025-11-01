@@ -73,16 +73,16 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Verificar se a categoria tem produtos ativos
-    if (existingCategory.products.length > 0) {
+    // Verificar se é categoria importada (criada automaticamente para imports do catálogo)
+    const isImportedCategory = existingCategory.name.includes('(Catálogo)');
+
+    // Verificar se a categoria tem produtos ativos (apenas para categorias próprias)
+    if (!isImportedCategory && existingCategory.products.length > 0) {
       return NextResponse.json(
         { error: 'Não é possível excluir uma categoria que possui produtos. Remova todos os produtos primeiro.' },
         { status: 400 }
       );
     }
-
-    // Verificar se é categoria importada (criada automaticamente para imports do catálogo)
-    const isImportedCategory = existingCategory.name.includes('(Catálogo)');
 
     if (isImportedCategory) {
       // Categoria importada: HARD DELETE (deletar permanentemente)

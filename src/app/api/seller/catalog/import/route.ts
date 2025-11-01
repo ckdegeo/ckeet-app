@@ -51,13 +51,21 @@ export async function POST(request: NextRequest) {
       const targetCategory = await prisma.category.findFirst({
         where: {
           id: targetCategoryId,
-          storeId: seller.store.id,
-          isActive: true
+          storeId: seller.store.id
         },
-        select: { id: true }
+        select: { id: true, isActive: true }
       });
       if (!targetCategory) {
         return AuthMiddleware.createErrorResponse('Categoria de destino não encontrada ou não pertence à sua loja', 404);
+      }
+
+      // Se a categoria estiver inativa, reativá-la automaticamente
+      // (pode ter sido desativada ao deletar produtos importados anteriormente)
+      if (!targetCategory.isActive) {
+        await prisma.category.update({
+          where: { id: targetCategoryId },
+          data: { isActive: true }
+        });
       }
 
       const result = await ProductService.importCatalogProduct({

@@ -61,6 +61,9 @@ export async function DELETE(request: NextRequest) {
       }
     });
 
+    let isImported = false;
+    let resellListingId: string | null = null;
+
     if (sourceProduct) {
       // Verificar se existe ResellListing para este produto do catálogo nesta loja
       const resellListing = await prisma.resellListing.findFirst({
@@ -71,13 +74,43 @@ export async function DELETE(request: NextRequest) {
       });
 
       if (resellListing) {
-        // Produto importado: HARD DELETE (deletar permanentemente)
-        // Primeiro deletar o ResellListing relacionado
-        await prisma.resellListing.delete({
-          where: { id: resellListing.id }
+        isImported = true;
+        resellListingId = resellListing.id;
+      }
+    }
+
+    if (isImported && resellListingId) {
+      // Produto importado: verificar se tem vendas
+      const orderItemsCount = await prisma.orderItem.count({
+        where: { productId: id }
+      });
+
+      if (orderItemsCount > 0) {
+        // Produto importado COM vendas: SOFT DELETE para manter integridade
+        await prisma.product.update({
+          where: { id },
+          data: { isActive: false }
         });
 
-        // Depois deletar o produto permanentemente
+        // Deletar o ResellListing para permitir reimportação
+        await prisma.resellListing.delete({
+          where: { id: resellListingId }
+        });
+
+        return NextResponse.json({
+          success: true,
+          message: 'Produto importado desativado (possui histórico de vendas)'
+        });
+      }
+
+      // Produto importado SEM vendas: HARD DELETE permanente
+      try {
+        // Deletar o ResellListing primeiro
+        await prisma.resellListing.delete({
+          where: { id: resellListingId }
+        });
+
+        // Deletar o produto permanentemente (CASCADE irá deletar stockLines e deliverables)
         await prisma.product.delete({
           where: { id }
         });
@@ -86,10 +119,23 @@ export async function DELETE(request: NextRequest) {
           success: true,
           message: 'Produto importado removido permanentemente'
         });
+      } catch (deleteError) {
+        console.error('Erro ao deletar produto importado:', deleteError);
+        
+        // Se falhar o hard delete, fazer soft delete como fallback
+        await prisma.product.update({
+          where: { id },
+          data: { isActive: false }
+        });
+
+        return NextResponse.json({
+          success: true,
+          message: 'Produto importado desativado'
+        });
       }
     }
 
-    // Produto normal do seller: SOFT DELETE
+    // Produto PRÓPRIO do seller: SEMPRE SOFT DELETE
     await prisma.product.update({
       where: { id },
       data: {
