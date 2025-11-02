@@ -216,7 +216,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Conteúdo à esquerda */}
-            <div className="space-y-8 animate-fade-in-up order-2 lg:order-1">
+            <div className="space-y-8 animate-fade-in-up">
               {/* Badge */}
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20">
                 <Zap size={16} className="text-[var(--primary)]" />
@@ -262,16 +262,16 @@ export default function LandingPage() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button 
                   onClick={handleGetStarted}
-                  className="px-8 py-4 text-lg shadow-xl hover:shadow-2xl transition-all rounded-full"
+                  className="shadow-xl hover:shadow-2xl transition-all"
                 >
                   Criar minha loja grátis
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight />
                 </Button>
                 <button 
                   onClick={handleWatchDemo}
-                  className="cursor-pointer flex items-center gap-2 px-6 py-4 text-[var(--on-background)] hover:text-[var(--primary)] transition-colors border border-[var(--on-background)]/20 rounded-full hover:border-[var(--primary)]/30 bg-[var(--surface)] hover:bg-[var(--surface)]"
+                  className="cursor-pointer flex items-center gap-2 px-6 text-[var(--on-background)] hover:text-[var(--primary)] transition-colors border border-[var(--on-background)]/20 rounded-full hover:border-[var(--primary)]/30 bg-[var(--surface)] hover:bg-[var(--surface)]"
                 >
-                  <div className="w-10 h-10 bg-[var(--primary)]/10 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center">
                     <Play size={16} className="text-[var(--primary)] ml-0.5" />
                   </div>
                   Ver demonstração
@@ -292,7 +292,7 @@ export default function LandingPage() {
             </div>
 
             {/* Imagem à direita */}
-            <div className="relative animate-fade-in-up order-1 lg:order-2">
+            <div className="hidden lg:block relative animate-fade-in-up">
               <div className="relative rounded-2xl overflow-hidden">
                 <img 
                   src="/img_lp.png" 
@@ -323,36 +323,117 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Easy Creation Section */}
-      <section id="features" className="py-12 lg:py-12 bg-[var(--background)]">
+      {/* No Inventory Needed Section */}
+      <section className="bg-[var(--background)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center space-y-8">
             
             {/* Section Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 border border-green-200">
-              <CheckCircle size={16} className="text-green-600" />
-              <span className="text-sm font-medium text-green-700">
-                100% Gratuito
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20">
+              <Package size={16} className="text-[var(--primary)]" />
+              <span className="text-sm font-medium text-[var(--primary)]">
+                Venda sem estoque próprio
               </span>
             </div>
 
             {/* Main Headline */}
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[var(--foreground)] leading-tight">
-              Crie sua loja em{' '}
+              Você não precisa ter{' '}
               <span className="text-[var(--primary)] relative inline-block">
-                4 passos simples
+                estoque próprio
                 <span className="absolute -bottom-1 left-0 right-0 h-1 bg-[var(--primary)]/20 -z-10"></span>
               </span>
             </h2>
 
-            {/* Subheadline */}
-            <p className="text-lg sm:text-xl text-[var(--on-background)] max-w-3xl mx-auto leading-relaxed">
-              <strong className="text-[var(--primary)]">É completamente GRÁTIS!</strong> Você só paga uma pequena taxa quando vender algo. 
-              Sem mensalidades, sem taxas ocultas, sem pegadinhas.
-            </p>
+            {/* Main Content */}
+            <div className="max-w-4xl mx-auto space-y-6">
+              <p className="text-lg sm:text-xl text-[var(--on-background)] leading-relaxed">
+                <strong className="text-[var(--primary)]">E melhor:</strong> Se você não tiver um produto para começar a vender, nós oferecemos produtos originais Ckeet para você importar e vender com nosso estoque.
+              </p>
+              
+              <p className="text-lg sm:text-xl text-[var(--on-background)] leading-relaxed font-semibold">
+                Isso mesmo, cuidamos de tudo. É só importar e vender.
+              </p>
+            </div>
 
-            {/* Steps Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mt-12">
+            {/* Pricing Info Card */}
+            <div className="max-w-2xl mx-auto mt-8 mb-8">
+              <div className="bg-[var(--surface)] border border-[var(--on-background)]/10 rounded-2xl p-6 lg:p-8 shadow-lg">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-[var(--primary)]/10 rounded-full flex items-center justify-center">
+                    <Package size={24} className="text-[var(--primary)]" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-[var(--foreground)]">
+                    Taxas de produtos importados
+                  </h3>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl lg:text-4xl font-bold text-[var(--primary)]">30%</span>
+                  <span className="text-lg text-[var(--on-background)]">+ R$ 0,50</span>
+                  <span className="text-lg text-[var(--on-background)]">por venda</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Styled Divider */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[var(--primary)]/20 to-transparent h-px"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex items-center justify-center gap-4">
+            <div className="h-px w-20 bg-[var(--primary)]/30"></div>
+            <div className="w-2 h-2 bg-[var(--primary)] rounded-full"></div>
+            <div className="h-px flex-1 max-w-md bg-gradient-to-r from-[var(--primary)]/30 via-[var(--primary)]/50 to-transparent"></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Easy Creation Section */}
+      <section id="features" className="bg-[var(--background)]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+            
+            {/* Conteúdo à esquerda */}
+            <div className="space-y-8">
+              {/* Section Badge */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 border border-green-200">
+                <CheckCircle size={16} className="text-green-600" />
+                <span className="text-sm font-medium text-green-700">
+                  100% Gratuito
+                </span>
+              </div>
+
+              {/* Main Headline */}
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[var(--foreground)] leading-tight">
+                Crie sua loja em{' '}
+                <span className="text-[var(--primary)] relative inline-block">
+                  4 passos simples
+                  <span className="absolute -bottom-1 left-0 right-0 h-1 bg-[var(--primary)]/20 -z-10"></span>
+                </span>
+              </h2>
+
+              {/* Subheadline */}
+              <p className="text-lg sm:text-xl text-[var(--on-background)] leading-relaxed">
+                <strong className="text-[var(--primary)]">É completamente GRÁTIS!</strong> Você só paga uma pequena taxa quando vender algo. 
+                Sem mensalidades, sem taxas ocultas, sem pegadinhas.
+              </p>
+
+              {/* CTA */}
+              <div className="pt-4 mb-8 lg:mb-0">
+                <Button 
+                  onClick={handleGetStarted}
+                  className="shadow-xl hover:shadow-2xl transition-all"
+                >
+                  Criar minha loja grátis agora
+                  <ArrowRight />
+                </Button>
+              </div>
+            </div>
+
+            {/* Cards à direita */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
               {/* Step 1 */}
               <div className="text-center space-y-4 p-6 rounded-2xl bg-[var(--surface)] border border-[var(--on-background)]/10 hover:border-[var(--primary)]/20 transition-all duration-300">
@@ -406,19 +487,6 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-
-            {/* CTA */}
-            <div className="pt-8 justify-center">
-              <div className="flex justify-center">
-                <Button 
-                  onClick={handleGetStarted}
-                  className="px-8 py-4 text-lg shadow-xl hover:shadow-2xl transition-all rounded-full"
-                >
-                  Criar minha loja grátis agora
-                  <ArrowRight className="w-5 h-5" />
-                </Button>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -436,7 +504,7 @@ export default function LandingPage() {
       </div>
 
       {/* System Showcase Section */}
-      <section id="showcase" className="py-12 lg:py-12 bg-[var(--surface)]">
+      <section id="showcase" className="bg-[var(--surface)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center space-y-8 mb-16">
             
@@ -562,7 +630,7 @@ export default function LandingPage() {
           <div className="text-center mt-16 flex justify-center">
             <Button
               onClick={handleGetStarted}
-              className="bg-[var(--primary)] text-[var(--on-primary)] hover:bg-[var(--primary-variant)] px-8 py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+              className="bg-[var(--primary)] text-[var(--on-primary)] hover:bg-[var(--primary-variant)] px-8 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
             >
               Comece a vender agora
               <ArrowRight className="ml-2" size={20} />
@@ -570,14 +638,14 @@ export default function LandingPage() {
           </div>
 
           {/* Divider */}
-          <div className="mt-16 mb-16">
+          <div className="mt-16 mb-16 ">
             <div className="h-px bg-gradient-to-r from-transparent via-[var(--on-background)]/20 to-transparent"></div>
           </div>
         </div>
       </section>
 
       {/* Pricing/Payment Section */}
-      <section className="py-12 lg:py-12 bg-[var(--background)]">
+      <section className="pb-8 bg-[var(--background)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             
@@ -632,7 +700,7 @@ export default function LandingPage() {
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
                   <CheckCircle size={20} className="text-green-600 mt-0.5 flex-shrink-0" />
-                  <span className="text-[var(--on-background)]">Sem mensalidade. Ever.</span>
+                  <span className="text-[var(--on-background)]">Sem mensalidade.</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle size={20} className="text-green-600 mt-0.5 flex-shrink-0" />
@@ -652,7 +720,7 @@ export default function LandingPage() {
                 {/* Large Price Display */}
                 <div className="text-center mb-8">
                   <div className="inline-flex items-baseline gap-2">
-                    <span className="text-6xl font-bold text-[var(--primary)]">5.99</span>
+                    <span className="text-6xl font-bold text-[var(--primary)]">3.49</span>
                     <span className="text-2xl text-[var(--on-background)]/60">%</span>
                   </div>
                   <div className="flex items-center justify-center gap-2 mt-2">
@@ -663,7 +731,7 @@ export default function LandingPage() {
                 </div>
 
                 {/* Example Calculation */}
-                <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-[var(--primary)]/10">
+                <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-[var(--primary)]/10 mb-8">
                   <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">
                     Cálculo
                   </h3>
@@ -673,8 +741,8 @@ export default function LandingPage() {
                       <span className="font-semibold text-[var(--foreground)]">R$ 100,00</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-[var(--on-background)]/60">Taxa (5.99%):</span>
-                      <span className="text-[var(--on-background)]/60">R$ 5,99</span>
+                      <span className="text-[var(--on-background)]/60">Taxa (3.49%):</span>
+                      <span className="text-[var(--on-background)]/60">R$ 3,49</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-[var(--on-background)]/60">Taxa fixa:</span>
@@ -683,7 +751,7 @@ export default function LandingPage() {
                     <div className="h-px bg-[var(--primary)]/20 my-2"></div>
                     <div className="flex justify-between items-center">
                       <span className="text-[var(--on-background)] font-semibold">Você recebe:</span>
-                      <span className="font-bold text-xl text-[var(--primary)]">R$ 93,51</span>
+                      <span className="font-bold text-xl text-[var(--primary)]">R$ 96,01</span>
                     </div>
                   </div>
                 </div>
@@ -691,7 +759,7 @@ export default function LandingPage() {
                 {/* CTA Button */}
                 <Button 
                   onClick={handleGetStarted}
-                  className="w-full mt-6 bg-[var(--primary)] text-[var(--on-primary)] hover:bg-[var(--primary-variant)] py-4 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="w-full bg-[var(--primary)] text-[var(--on-primary)] hover:bg-[var(--primary-variant)] text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   Comece a vender agora
                   <ArrowRight className="ml-2" size={20} />
@@ -718,18 +786,13 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Features Section - Using PricingSection Component */}
-      <section id="pricing">
-        <PricingSection onSelectPlan={handleSelectPlan} />
-      </section>
-
       {/* Testimonials Section - Using TestimonialsSection Component */}
       <section id="testimonials">
         <TestimonialsSection />
       </section>
 
       {/* Divider */}
-      <div className="mt-16 mb-8">
+      <div className="mb-8">
         <div className="h-px bg-gradient-to-r from-transparent via-[var(--on-background)]/20 to-transparent"></div>
       </div>
 
