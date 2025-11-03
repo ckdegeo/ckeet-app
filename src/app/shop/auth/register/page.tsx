@@ -10,8 +10,7 @@ import { useRouter } from "next/navigation";
 import { useCustomerRegister } from "@/lib/hooks/useCustomerRegister";
 import { customerRegisterSchema, type CustomerRegisterData } from "@/lib/validations/authSchemas";
 import { Store } from '@/lib/types';
-import { validateEmail } from "@/lib/utils/validation";
-import toast from "react-hot-toast";
+ 
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -27,21 +26,7 @@ export default function RegisterPage() {
   
   const { isLoading, errors, register } = useCustomerRegister();
 
-  // Validação em tempo real para email
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setEmail(value);
-    
-    // Validar apenas se o email estiver completo (contém @)
-    if (value.includes('@')) {
-      const validation = validateEmail(value);
-      if (!validation.isValid) {
-        toast.error(validation.error || 'Email inválido', {
-          duration: 3000,
-        });
-      }
-    }
-  };
+  // Removido: validação em tempo real do email. Validar apenas no submit.
 
   useEffect(() => {
     fetchStoreData();
@@ -204,7 +189,7 @@ export default function RegisterPage() {
                 label="Email"
                 type="email"
                 value={email}
-                onChange={handleEmailChange}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Digite seu email"
                 required
                 primaryColor={store?.primaryColor}
