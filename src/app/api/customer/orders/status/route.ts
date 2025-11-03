@@ -139,6 +139,17 @@ export async function GET(request: NextRequest) {
       // Atualizar order local
       order.status = 'PAID';
       order.paymentStatus = 'PAID';
+
+      // Disparar notificação Pushcut de aprovado (fallback caso o webhook não chegue)
+      try {
+        const sellerId = order.store?.seller?.id;
+        if (sellerId) {
+          const { NotificationService } = await import('@/lib/services/notificationService');
+          await NotificationService.sendPushcut(sellerId, 'approved');
+        }
+      } catch (err) {
+        console.error('[ORDER STATUS] Erro ao disparar Pushcut approved:', err);
+      }
     } else if (paymentStatus.status === 'rejected' && order.status === 'PENDING') {
       await prisma.order.update({
         where: { id: order.id },
