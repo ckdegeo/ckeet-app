@@ -148,12 +148,20 @@ export async function POST(request: NextRequest) {
 
       // Enviar notificação Pushcut para venda aprovada (fire-and-forget)
       if (updatedOrder.store?.seller?.id) {
+        console.log('📬 [WEBHOOK] Enviando notificação Pushcut para venda aprovada...');
+        console.log('📬 [WEBHOOK] Seller ID:', updatedOrder.store.seller.id);
+        console.log('📬 [WEBHOOK] Order:', updatedOrder.orderNumber, 'Valor:', updatedOrder.totalAmount);
+        
         const { NotificationService } = await import('@/lib/services/notificationService');
-        NotificationService.sendPushcut(updatedOrder.store.seller.id, 'approved', {
-          title: '💰 Venda Aprovada',
-          text: `Pedido ${updatedOrder.orderNumber} no valor de R$ ${updatedOrder.totalAmount.toFixed(2)}`,
-          data: { orderId: updatedOrder.id, orderNumber: updatedOrder.orderNumber, amount: updatedOrder.totalAmount }
-        }).catch(err => console.error('[WEBHOOK] Erro ao enviar Pushcut approved:', err));
+        try {
+          // Apenas disparar a URL cadastrada - sem enviar dados (Pushcut cobra para receber dados)
+          await NotificationService.sendPushcut(updatedOrder.store.seller.id, 'approved');
+          console.log('✅ [WEBHOOK] Notificação Pushcut approved disparada com sucesso');
+        } catch (err) {
+          console.error('❌ [WEBHOOK] Erro ao enviar Pushcut approved:', err);
+        }
+      } else {
+        console.warn('⚠️ [WEBHOOK] Seller ID não encontrado para enviar notificação approved');
       }
 
       // Entregar conteúdo automaticamente
@@ -334,6 +342,34 @@ export async function POST(request: NextRequest) {
         console.error(`❌ [WEBHOOK] ========== ERRO NA ENTREGA ==========`);
         console.error(`❌ [WEBHOOK] Erro:`, deliverError);
         console.error(`❌ [WEBHOOK] Stack:`, deliverError instanceof Error ? deliverError.stack : 'N/A');
+      }
+
+    } else if (
+      paymentStatus.status === 'charged_back' ||
+      (paymentStatus.statusDetail && String(paymentStatus.statusDetail).toLowerCase().includes('chargeback'))
+    ) {
+      console.log('⚠️ [WEBHOOK] Chargeback detectado. Atualizando pedido e disparando notificação...');
+      // Atualiza o pedido como reembolsado para refletir o chargeback
+      await prisma.order.update({
+        where: { id: transaction.orderId },
+        data: {
+          status: 'REFUNDED',
+          paymentStatus: 'REFUNDED'
+        }
+      });
+
+      // Disparar notificação Pushcut de chargeback
+      try {
+        const sellerId = transaction.order.store.seller?.id;
+        if (sellerId) {
+          const { NotificationService } = await import('@/lib/services/notificationService');
+          await NotificationService.sendPushcut(sellerId, 'chargeback');
+          console.log('📬 [WEBHOOK] Notificação Pushcut chargeback disparada');
+        } else {
+          console.warn('⚠️ [WEBHOOK] Seller ID não encontrado para enviar notificação de chargeback');
+        }
+      } catch (err) {
+        console.error('❌ [WEBHOOK] Erro ao disparar notificação de chargeback:', err);
       }
 
     } else if (paymentStatus.status === 'rejected') {

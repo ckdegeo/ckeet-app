@@ -304,14 +304,12 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Enviar notificação Pushcut para venda pendente (fire-and-forget)
+    // Disparar notificação Pushcut para venda pendente - apenas executar URL cadastrada
     if (order.store?.seller?.id) {
       const { NotificationService } = await import('@/lib/services/notificationService');
-      NotificationService.sendPushcut(order.store.seller.id, 'pending', {
-        title: '⏳ Venda Pendente',
-        text: `Novo pedido ${order.orderNumber} no valor de R$ ${order.totalAmount.toFixed(2)}`,
-        data: { orderId: order.id, orderNumber: order.orderNumber, amount: order.totalAmount }
-      }).catch(err => console.error('[ORDER CREATE] Erro ao enviar Pushcut pending:', err));
+      NotificationService.sendPushcut(order.store.seller.id, 'pending').catch(err => 
+        console.error('[ORDER CREATE] Erro ao disparar Pushcut pending:', err)
+      );
     }
 
     // Gerar PIX via Mercado Pago
