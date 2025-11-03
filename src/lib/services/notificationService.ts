@@ -9,8 +9,32 @@ export interface PushcutPayload {
 }
 
 export class NotificationService {
+  // Tipagens locais para evitar uso de 'any' sem depender do client gerado
+  private static get sns() {
+    type SellerNotificationSettings = {
+      sellerId: string;
+      approvedEnabled: boolean;
+      approvedUrl: string | null;
+      pendingEnabled: boolean;
+      pendingUrl: string | null;
+      chargebackEnabled: boolean;
+      chargebackUrl: string | null;
+    };
+
+    type FindUniqueArgs = { where: { sellerId: string } };
+    type UpdateArgs = { where: { sellerId: string }; data: Partial<SellerNotificationSettings> };
+    type CreateArgs = { data: SellerNotificationSettings };
+
+    type Delegate = {
+      findUnique(args: FindUniqueArgs): Promise<SellerNotificationSettings | null>;
+      update(args: UpdateArgs): Promise<SellerNotificationSettings>;
+      create(args: CreateArgs): Promise<SellerNotificationSettings>;
+    };
+
+    return (prisma as unknown as { sellerNotificationSettings: Delegate }).sellerNotificationSettings;
+  }
   static async getSettingsBySellerId(sellerId: string) {
-    return (prisma as any).sellerNotificationSettings.findUnique({ where: { sellerId } });
+    return this.sns.findUnique({ where: { sellerId } });
   }
 
   static async upsertSettingsBySellerId(sellerId: string, settings: {
@@ -21,11 +45,21 @@ export class NotificationService {
     chargebackEnabled?: boolean;
     chargebackUrl?: string | null;
   }) {
-    const existing = await (prisma as any).sellerNotificationSettings.findUnique({ where: { sellerId } });
+    const existing = await this.sns.findUnique({ where: { sellerId } });
     if (existing) {
-      return (prisma as any).sellerNotificationSettings.update({ where: { sellerId }, data: settings });
+      return this.sns.update({ where: { sellerId }, data: settings });
     }
-    return (prisma as any).sellerNotificationSettings.create({ data: { sellerId, ...settings } });
+    return this.sns.create({
+      data: {
+        sellerId,
+        approvedEnabled: settings.approvedEnabled ?? false,
+        approvedUrl: settings.approvedUrl ?? null,
+        pendingEnabled: settings.pendingEnabled ?? false,
+        pendingUrl: settings.pendingUrl ?? null,
+        chargebackEnabled: settings.chargebackEnabled ?? false,
+        chargebackUrl: settings.chargebackUrl ?? null,
+      },
+    });
   }
 
   static async sendPushcut(sellerId: string, type: NotificationType, payload: PushcutPayload = {}) {

@@ -37,12 +37,12 @@ export async function PUT(request: NextRequest) {
 
     // Validação simples das URLs (opcional)
     const urlRegex = /^https?:\/\//i;
-    ['approvedUrl', 'pendingUrl', 'chargebackUrl'].forEach((k) => {
-      const key = k as keyof typeof data;
-      const v = data[key] as unknown as string | null;
-      if (v && !urlRegex.test(v)) {
+    const urlKeys: Array<'approvedUrl' | 'pendingUrl' | 'chargebackUrl'> = ['approvedUrl', 'pendingUrl', 'chargebackUrl'];
+    urlKeys.forEach((key) => {
+      const v = data[key];
+      if (v && typeof v === 'string' && !urlRegex.test(v)) {
         // tornar null se inválida
-        (data as any)[key] = null;
+        data[key] = null;
       }
     });
 
