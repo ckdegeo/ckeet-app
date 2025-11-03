@@ -13,6 +13,14 @@ export async function GET(request: NextRequest) {
     const settings = await NotificationService.getSettingsBySellerId(user.id);
     return NextResponse.json({ settings: settings || null });
   } catch (error) {
+    console.error('[NOTIFICATIONS GET] Erro:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    // Se for erro de tabela não encontrada, sugerir migração
+    if (errorMessage.includes('does not exist') || errorMessage.includes('seller_notification_settings')) {
+      return NextResponse.json({ 
+        error: 'Tabela não encontrada. Execute a migração: npx prisma migrate deploy' 
+      }, { status: 500 });
+    }
     return NextResponse.json({ error: 'Erro ao carregar configurações' }, { status: 500 });
   }
 }
@@ -49,6 +57,14 @@ export async function PUT(request: NextRequest) {
     const saved = await NotificationService.upsertSettingsBySellerId(seller.id, data);
     return NextResponse.json({ message: 'Configurações salvas', settings: saved });
   } catch (error) {
+    console.error('[NOTIFICATIONS PUT] Erro:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    // Se for erro de tabela não encontrada, sugerir migração
+    if (errorMessage.includes('does not exist') || errorMessage.includes('seller_notification_settings')) {
+      return NextResponse.json({ 
+        error: 'Tabela não encontrada. Execute a migração: npx prisma migrate deploy' 
+      }, { status: 500 });
+    }
     return NextResponse.json({ error: 'Erro ao salvar configurações' }, { status: 500 });
   }
 }
