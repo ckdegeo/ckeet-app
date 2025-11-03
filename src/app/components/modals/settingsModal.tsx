@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, User, Shield } from "lucide-react";
+import { X, User, Shield, Bell } from "lucide-react";
 import Button from "../buttons/button";
+import SwitchButton from "../buttons/switchButton";
+import Input from "../inputs/input";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 
@@ -28,6 +30,41 @@ export default function SettingsModal({
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+  
+  // Estados para Notificações (Pushcut)
+  const [notifApprovedEnabled, setNotifApprovedEnabled] = useState(false);
+  const [notifApprovedUrl, setNotifApprovedUrl] = useState("");
+  const [notifPendingEnabled, setNotifPendingEnabled] = useState(false);
+  const [notifPendingUrl, setNotifPendingUrl] = useState("");
+  const [notifChargebackEnabled, setNotifChargebackEnabled] = useState(false);
+  const [notifChargebackUrl, setNotifChargebackUrl] = useState("");
+
+  // Carregar configurações de notificações quando abrir e estiver na aba
+  useEffect(() => {
+    const loadNotifications = async () => {
+      if (!isOpen || activeTab !== 'notifications') return;
+      try {
+        const accessToken = localStorage.getItem('access_token');
+        if (!accessToken) return;
+        const res = await fetch('/api/seller/notifications', {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${accessToken}` },
+        });
+        if (!res.ok) return;
+        const json = await res.json();
+        const s = json.settings;
+        if (s) {
+          setNotifApprovedEnabled(!!s.approvedEnabled);
+          setNotifApprovedUrl(s.approvedUrl || '');
+          setNotifPendingEnabled(!!s.pendingEnabled);
+          setNotifPendingUrl(s.pendingUrl || '');
+          setNotifChargebackEnabled(!!s.chargebackEnabled);
+          setNotifChargebackUrl(s.chargebackUrl || '');
+        }
+      } catch {}
+    };
+    loadNotifications();
+  }, [isOpen, activeTab]);
   
   const { user, refresh } = useAuth();
 
@@ -63,6 +100,8 @@ export default function SettingsModal({
       await handleSaveProfile();
     } else if (activeTab === "security") {
       await handleChangePassword();
+    } else if (activeTab === "notifications") {
+      await handleSaveNotifications();
     }
   };
 
@@ -164,11 +203,46 @@ export default function SettingsModal({
     }
   };
 
+  // Salvar configurações de notificações (API)
+  const handleSaveNotifications = async () => {
+    try {
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) {
+        showErrorToast('Sessão expirada. Faça login novamente.');
+        return;
+      }
+      const res = await fetch('/api/seller/notifications', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          approvedEnabled: notifApprovedEnabled,
+          approvedUrl: notifApprovedUrl || null,
+          pendingEnabled: notifPendingEnabled,
+          pendingUrl: notifPendingUrl || null,
+          chargebackEnabled: notifChargebackEnabled,
+          chargebackUrl: notifChargebackUrl || null,
+        }),
+      });
+      if (!res.ok) {
+        const j = await res.json();
+        throw new Error(j.error || 'Falha ao salvar notificações');
+      }
+      showSuccessToast('Configurações de notificações salvas!');
+      onClose();
+    } catch (error) {
+      showErrorToast(error instanceof Error ? error.message : 'Erro ao salvar notificações');
+    }
+  };
+
   if (!isOpen || !mounted) return null;
 
   const tabs = [
     { id: "profile", label: "Perfil", icon: User },
-    { id: "security", label: "Segurança", icon: Shield }
+    { id: "security", label: "Segurança", icon: Shield },
+    { id: "notifications", label: "Notificações", icon: Bell }
   ];
 
   const modalContent = (
@@ -443,6 +517,74 @@ export default function SettingsModal({
                         disabled:opacity-50
                         disabled:cursor-not-allowed
                       "
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "notifications" && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold text-[var(--foreground)]">
+                  Notificações <span className="text-sm text-gray-500">( Configure suas notificações de Pushcut para eventos da loja.)</span>
+                </h3>
+                <hr className="border-gray-200 my-4" />
+
+                <div className="space-y-6">
+                  {/* Vendas Aprovadas */}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between gap-4">
+                      <label className="text-sm font-medium text-[var(--foreground)]">
+                        Vendas Aprovadas
+                      </label>
+                      <SwitchButton
+                        value={notifApprovedEnabled}
+                        onChange={setNotifApprovedEnabled}
+                      />
+                    </div>
+                    <Input
+                      placeholder="URL Pushcut para vendas aprovadas"
+                      value={notifApprovedUrl}
+                      onChange={(e) => setNotifApprovedUrl(e.target.value)}
+                      disabled={!notifApprovedEnabled}
+                    />
+                  </div>
+
+                  {/* Vendas Pendentes */}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between gap-4">
+                      <label className="text-sm font-medium text-[var(--foreground)]">
+                        Vendas Pendentes
+                      </label>
+                      <SwitchButton
+                        value={notifPendingEnabled}
+                        onChange={setNotifPendingEnabled}
+                      />
+                    </div>
+                    <Input
+                      placeholder="URL Pushcut para vendas pendentes"
+                      value={notifPendingUrl}
+                      onChange={(e) => setNotifPendingUrl(e.target.value)}
+                      disabled={!notifPendingEnabled}
+                    />
+                  </div>
+
+                  {/* Chargebacks */}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between gap-4">
+                      <label className="text-sm font-medium text-[var(--foreground)]">
+                        Chargebacks
+                      </label>
+                      <SwitchButton
+                        value={notifChargebackEnabled}
+                        onChange={setNotifChargebackEnabled}
+                      />
+                    </div>
+                    <Input
+                      placeholder="URL Pushcut para chargebacks"
+                      value={notifChargebackUrl}
+                      onChange={(e) => setNotifChargebackUrl(e.target.value)}
+                      disabled={!notifChargebackEnabled}
                     />
                   </div>
                 </div>

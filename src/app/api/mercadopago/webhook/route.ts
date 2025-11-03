@@ -131,13 +131,30 @@ export async function POST(request: NextRequest) {
     // Accept both 'approved' and 'processed' statuses (PIX)
     if (paymentStatus.status === 'approved' || paymentStatus.status === 'processed') {
       console.log('✅ [WEBHOOK] Pagamento aprovado! Iniciando processo de entrega...');
-      await prisma.order.update({
+      const updatedOrder = await prisma.order.update({
         where: { id: transaction.orderId },
         data: {
           status: 'PAID',
           paymentStatus: 'PAID'
+        },
+        include: {
+          store: {
+            include: {
+              seller: true
+            }
+          }
         }
       });
+
+      // Enviar notificação Pushcut para venda aprovada (fire-and-forget)
+      if (updatedOrder.store?.seller?.id) {
+        const { NotificationService } = await import('@/lib/services/notificationService');
+        NotificationService.sendPushcut(updatedOrder.store.seller.id, 'approved', {
+          title: '💰 Venda Aprovada',
+          text: `Pedido ${updatedOrder.orderNumber} no valor de R$ ${updatedOrder.totalAmount.toFixed(2)}`,
+          data: { orderId: updatedOrder.id, orderNumber: updatedOrder.orderNumber, amount: updatedOrder.totalAmount }
+        }).catch(err => console.error('[WEBHOOK] Erro ao enviar Pushcut approved:', err));
+      }
 
       // Entregar conteúdo automaticamente
       try {

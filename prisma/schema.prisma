@@ -112,8 +112,38 @@ model Seller {
   store           Store?                 // 1 seller = 1 store
   customers       Customer[]             // customers que se registraram na loja deste seller
   paymentConfigs  SellerPaymentConfig[]  // configurações de pagamento por provider
+  notifications   SellerNotificationSettings?
 
   @@map("sellers")
+}
+
+// ===========================================
+// SELLER NOTIFICATION SETTINGS (PUSHCUT)
+// ===========================================
+
+model SellerNotificationSettings {
+  id                      String   @id @default(cuid())
+
+  // Pushcut - Vendas Aprovadas
+  approvedEnabled         Boolean  @default(false)
+  approvedUrl             String?
+
+  // Pushcut - Vendas Pendentes
+  pendingEnabled          Boolean  @default(false)
+  pendingUrl              String?
+
+  // Pushcut - Chargebacks
+  chargebackEnabled       Boolean  @default(false)
+  chargebackUrl           String?
+
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  // Relacionamento 1-1 com Seller
+  sellerId                String   @unique
+  seller                  Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@map("seller_notification_settings")
 }
 
 // ===========================================
