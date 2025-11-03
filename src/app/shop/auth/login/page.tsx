@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useCustomerLogin } from "@/lib/hooks/useCustomerLogin";
 import { loginSchema, type LoginData } from "@/lib/validations/authSchemas";
 import { Store } from '@/lib/types';
+import ForgotPasswordModal from '@/app/components/modals/forgotPasswordModal';
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -16,6 +17,7 @@ export default function LoginPage() {
   const [store, setStore] = useState<Store | null>(null);
   const [loadingStore, setLoadingStore] = useState(true);
   const [subdomain, setSubdomain] = useState<string>('');
+  const [isForgotOpen, setIsForgotOpen] = useState(false);
   const router = useRouter();
   
   const { isLoading, errors, login } = useCustomerLogin();
@@ -185,7 +187,7 @@ export default function LoginPage() {
               </label>
 
               <a
-                href="#"
+              href="#"
                 className="text-sm text-[var(--primary)] hover:opacity-90"
                 style={{
                   '--primary': store?.primaryColor || '#bd253c',
@@ -194,6 +196,7 @@ export default function LoginPage() {
                   '--foreground': '#111827',
                   '--on-background': '#6b7280'
                 } as React.CSSProperties}
+              onClick={(e) => { e.preventDefault(); setIsForgotOpen(true); }}
               >
                 Esqueceu a senha?
               </a>
@@ -218,8 +221,10 @@ export default function LoginPage() {
                   className="w-full"
                   style={{
                     borderColor: store?.primaryColor || '#bd253c',
-                    color: store?.primaryColor || '#bd253c'
-                  }}
+                    color: store?.primaryColor || '#bd253c',
+                    '--primary': store?.primaryColor || '#bd253c',
+                    '--on-primary': '#ffffff'
+                  } as React.CSSProperties}
                 >
                   Cadastre-se
                 </Button>
@@ -228,6 +233,7 @@ export default function LoginPage() {
           </form>
         </div>
       </div>
+      <ForgotPasswordModal isOpen={isForgotOpen} onClose={() => setIsForgotOpen(false)} />
     </div>
   );
 }

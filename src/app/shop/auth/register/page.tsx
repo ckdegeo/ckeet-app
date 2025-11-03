@@ -283,8 +283,10 @@ export default function RegisterPage() {
                   className="w-full"
                   style={{
                     borderColor: store?.primaryColor || '#bd253c',
-                    color: store?.primaryColor || '#bd253c'
-                  }}
+                    color: store?.primaryColor || '#bd253c',
+                    '--primary': store?.primaryColor || '#bd253c',
+                    '--on-primary': '#ffffff'
+                  } as React.CSSProperties}
                 >
                   Faça login
                 </Button>
