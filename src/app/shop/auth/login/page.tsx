@@ -220,8 +220,6 @@ export default function LoginPage() {
                   variant="outline" 
                   className="w-full"
                   style={{
-                    borderColor: store?.primaryColor || '#bd253c',
-                    color: store?.primaryColor || '#bd253c',
                     '--primary': store?.primaryColor || '#bd253c',
                     '--on-primary': '#ffffff'
                   } as React.CSSProperties}
