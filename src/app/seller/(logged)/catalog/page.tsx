@@ -98,16 +98,6 @@ export default function CatalogPage() {
                 aria-label="Aviso de taxa do catálogo"
               />
             </div>
-            <Selector
-              value={niche}
-              onChange={setNiche}
-              options={[
-                { value: 'all', label: 'Todos' },
-                { value: 'cheats', label: 'Cheats' },
-                { value: 'accounts', label: 'Contas' },
-                { value: 'softwares', label: 'Softwares' },
-              ]}
-            />
           </div>
         </div>
       </div>

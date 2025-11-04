@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useCustomerLogin } from "@/lib/hooks/useCustomerLogin";
 import { loginSchema, type LoginData } from "@/lib/validations/authSchemas";
 import { Store } from '@/lib/types';
+import ResendConfirmationModal from '@/app/components/modals/resendConfirmationModal';
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -16,6 +17,7 @@ export default function LoginPage() {
   const [store, setStore] = useState<Store | null>(null);
   const [loadingStore, setLoadingStore] = useState(true);
   const [subdomain, setSubdomain] = useState<string>('');
+  const [isForgotOpen, setIsForgotOpen] = useState(false);
   const router = useRouter();
   
   const { isLoading, errors, login } = useCustomerLogin();
@@ -66,6 +68,20 @@ export default function LoginPage() {
       // Redirecionar para a loja após login bem-sucedido
       router.push('/shop');
     }
+  };
+
+  const handleForgotClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsForgotOpen(true);
+  };
+
+  const handleResendForgot = async (targetEmail: string) => {
+    // Usa a rota genérica já existente para reset de senha via Supabase
+    await fetch('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: targetEmail })
+    });
   };
 
   if (loadingStore) {
@@ -130,7 +146,7 @@ export default function LoginPage() {
               />
             )}
             <h2 className="text-md font-semibold text-[var(--foreground)]">
-              Login do Cliente
+              Login do cliente
             </h2>
           </div>
 
@@ -194,6 +210,7 @@ export default function LoginPage() {
                   '--foreground': '#111827',
                   '--on-background': '#6b7280'
                 } as React.CSSProperties}
+                onClick={handleForgotClick}
               >
                 Esqueceu a senha?
               </a>
@@ -228,6 +245,12 @@ export default function LoginPage() {
           </form>
         </div>
       </div>
+      <ResendConfirmationModal 
+        isOpen={isForgotOpen} 
+        onClose={() => setIsForgotOpen(false)} 
+        onResend={handleResendForgot}
+        initialEmail={email}
+      />
     </div>
   );
 }
