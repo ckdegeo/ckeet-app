@@ -15,6 +15,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isResendModalOpen, setIsResendModalOpen] = useState(false);
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
   const router = useRouter();
 
   const { isLoading, errors, login } = useSellerLogin();
@@ -126,6 +127,7 @@ export default function Login() {
               <a
                 href="#"
                 className="text-sm text-[var(--primary)] hover:opacity-90"
+                onClick={(e) => { e.preventDefault(); setIsForgotModalOpen(true); }}
               >
                 Esqueceu a senha?
               </a>
@@ -145,25 +147,12 @@ export default function Login() {
               </Link>
             </div>
           </form>
-       
-          {/* Botão para reenviar confirmação */}
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => setIsResendModalOpen(true)}
-              className="cursor-pointer font-light text-sm text-[var(--primary)] hover:opacity-90"
-            >
-              Não recebeu o email de confirmação?
-            </button>
-          </div>
         </div>
       </div>
-
-      {/* Modal de Reenvio de Confirmação */}
+      {/* Modal de Recuperação com OTP (sem onResend => usa fluxo interno) */}
       <ResendConfirmationModal
-        isOpen={isResendModalOpen}
-        onClose={() => setIsResendModalOpen(false)}
-        onResend={handleResendConfirmation}
+        isOpen={isForgotModalOpen}
+        onClose={() => setIsForgotModalOpen(false)}
         initialEmail={email}
       />
     </div>
