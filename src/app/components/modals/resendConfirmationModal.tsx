@@ -154,7 +154,7 @@ export default function ResendConfirmationModal(props) {
           {step === 'request' && (
             <>
               <p className="text-[var(--on-background)] text-sm mb-4">
-                Informe seu email. Vamos enviar um código de 6 dígitos para você redefinir a senha.
+                Vamos enviar um código de 6 dígitos para você redefinir a senha.
               </p>
               <Input
                 label="Email"
@@ -215,7 +215,7 @@ export default function ResendConfirmationModal(props) {
 
           {step === 'done' && (
             <p className="text-[var(--on-background)] text-sm">
-              Pronto! Sua senha foi alterada, você já está autenticado e pode acessar sua conta.
+              Sua senha foi alterada, você já está autenticado e pode acessar sua conta.
             </p>
           )}
 
