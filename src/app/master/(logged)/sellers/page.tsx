@@ -8,6 +8,7 @@ import { Store, ShieldX, Shield, UserCheck, ExternalLink } from "lucide-react";
 import { getAccessToken } from '@/lib/utils/authUtils';
 import { showToastWithAutoClose } from '@/lib/utils/toastUtils';
 import BanSellerModal from '@/app/components/modals/banSellerModal';
+import LoadingSpinner from '@/app/components/ui/loadingSpinner';
 
 // Interface para os dados dos sellers
 interface Seller {
@@ -338,7 +339,7 @@ export default function Sellers() {
       {/* Tabela de sellers */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
+          <LoadingSpinner size="medium" />
         </div>
       ) : (
         <Table

@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { Upload, X, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import Button from '../buttons/button';
 import { ImageService } from '@/lib/services/imageService';
+import LoadingSpinner from '@/app/components/ui/loadingSpinner';
 
 // Props do componente ImageUpload
 interface ImageUploadProps {
@@ -207,7 +208,7 @@ export default function ImageUpload({
             )}
             {isUploading && (
               <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                <LoadingSpinner size="small" />
               </div>
             )}
           </div>
@@ -215,10 +216,7 @@ export default function ImageUpload({
           <div className="flex flex-col items-center justify-center p-8 text-center">
             {isUploading ? (
               <div className="flex flex-col items-center gap-3">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
-                <p className="text-sm text-[var(--muted-foreground)]">
-                  Fazendo upload...
-                </p>
+                <LoadingSpinner size="medium" />
               </div>
             ) : (
               <div className="flex flex-col items-center gap-3">

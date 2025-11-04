@@ -12,6 +12,7 @@ import { useCache } from '@/lib/hooks/useCache';
 import NumberCard from '@/app/components/cards/numberCard';
 import Badge from '@/app/components/ui/badge';
 import ContentModal from '@/app/components/modals/contentModal';
+import LoadingSpinner from '@/app/components/ui/loadingSpinner';
 
 interface Transaction {
   id: string;
@@ -531,7 +532,7 @@ export default function OrdersPage() {
   if (storeLoading || ordersLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <LoadingSpinner size="medium" />
       </div>
     );
   }

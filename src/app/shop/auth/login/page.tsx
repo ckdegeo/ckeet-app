@@ -10,6 +10,7 @@ import { useCustomerLogin } from "@/lib/hooks/useCustomerLogin";
 import { loginSchema, type LoginData } from "@/lib/validations/authSchemas";
 import { Store } from '@/lib/types';
 import ResendConfirmationModal from '@/app/components/modals/resendConfirmationModal';
+import LoadingSpinner from '@/app/components/ui/loadingSpinner';
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -85,14 +86,7 @@ export default function LoginPage() {
   };
 
   if (loadingStore) {
-    return (
-      <div className="min-h-screen w-full flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)] mx-auto mb-4"></div>
-          <p className="text-[var(--foreground)]">Carregando...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner fullscreen />;
   }
 
   return (

@@ -11,6 +11,7 @@ import { Save, Settings, Store as StoreIcon, Palette, Image, Globe } from 'lucid
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 import { getAccessToken } from '@/lib/utils/authUtils';
 import { useStoreConfigCache } from '@/lib/hooks/useCache';
+import LoadingSpinner from '@/app/components/ui/loadingSpinner';
 
 // Interface para os dados da loja
 interface StoreConfig {
@@ -304,8 +305,7 @@ function StorePageContent() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)] mx-auto"></div>
-          <p className="mt-4 text-[var(--on-background)]">Carregando configurações da loja...</p>
+          <LoadingSpinner size="medium" />
         </div>
       </div>
     );

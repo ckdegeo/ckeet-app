@@ -8,6 +8,7 @@ import NumberCard from '@/app/components/cards/numberCard';
 import IntegrationCard from '@/app/components/cards/integrationCard';
 import { useMercadoPago } from '@/lib/hooks/useMercadoPago';
 import { useIntegrationDataCache } from '@/lib/hooks/useCache';
+import LoadingSpinner from '@/app/components/ui/loadingSpinner';
 
 function IntegrationsContent() {
   const searchParams = useSearchParams();
@@ -124,15 +125,7 @@ function IntegrationsContent() {
     return (
       <div className="flex items-center justify-center min-h-[500px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[var(--primary)] mx-auto"></div>
-          <h3 className="mt-6 text-lg font-medium text-[var(--foreground)]">
-            Carregando integrações
-          </h3>
-          <div className="mt-4 flex items-center justify-center space-x-1">
-            <div className="w-2 h-2 bg-[var(--primary)] rounded-full animate-bounce"></div>
-            <div className="w-2 h-2 bg-[var(--primary)] rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-            <div className="w-2 h-2 bg-[var(--primary)] rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-          </div>
+          <LoadingSpinner size="large" />
         </div>
       </div>
     );

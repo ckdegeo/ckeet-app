@@ -9,6 +9,7 @@ import StoreNavbar from '../patterns/storeNavbar';
 import Footer from '../patterns/footer';
 import PixModal from '@/app/components/modals/pixModal';
 import { useCustomerLogout } from '@/lib/hooks/useCustomerLogout';
+import LoadingSpinner from '@/app/components/ui/loadingSpinner';
 
 export default function ProductPage() {
   const params = useParams();
@@ -84,8 +85,7 @@ export default function ProductPage() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando produto...</p>
+          <LoadingSpinner size="medium" />
         </div>
       </div>
     );

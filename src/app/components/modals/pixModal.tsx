@@ -5,6 +5,7 @@ import { X, Copy, QrCode, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import Button from '@/app/components/buttons/button';
 import Input from '@/app/components/inputs/input';
 import { showErrorToast, showSuccessToast } from '@/lib/utils/toastUtils';
+import LoadingSpinner from '@/app/components/ui/loadingSpinner';
 
 interface PixModalProps {
   isOpen: boolean;
@@ -350,8 +351,7 @@ export default function PixModal({
           {/* Status de Loading */}
           {isLoading && (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: primaryColor }}></div>
-              <p className="text-[var(--on-background)]">Gerando pagamento...</p>
+              <LoadingSpinner size="medium" />
             </div>
           )}
 

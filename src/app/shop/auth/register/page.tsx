@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { useCustomerRegister } from "@/lib/hooks/useCustomerRegister";
 import { customerRegisterSchema, type CustomerRegisterData } from "@/lib/validations/authSchemas";
 import { Store } from '@/lib/types';
- 
+import LoadingSpinner from '@/app/components/ui/loadingSpinner';
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -83,14 +83,7 @@ export default function RegisterPage() {
   };
 
   if (loadingStore) {
-    return (
-      <div className="min-h-screen w-full flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)] mx-auto mb-4"></div>
-          <p className="text-[var(--foreground)]">Carregando...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner fullscreen />;
   }
 
   if (success) {

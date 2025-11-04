@@ -6,6 +6,7 @@ import { Store, Category, Product } from '@/lib/types';
 import StoreNavbar from './patterns/storeNavbar';
 import Footer from './patterns/footer';
 import { useCustomerLogout } from '@/lib/hooks/useCustomerLogout';
+import LoadingSpinner from '@/app/components/ui/loadingSpinner';
 
 export default function ShopPage() {
   const [loading, setLoading] = useState(true);
@@ -92,7 +93,7 @@ export default function ShopPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <LoadingSpinner size="medium" />
       </div>
     );
   }

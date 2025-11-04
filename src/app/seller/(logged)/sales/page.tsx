@@ -12,6 +12,7 @@ import { AuthGuard } from '@/lib/components/AuthGuard';
 import toast from 'react-hot-toast';
 import Badge from '@/app/components/ui/badge';
 import OrderDetailsModal from '@/app/components/modals/orderDetailsModal';
+import LoadingSpinner from '@/app/components/ui/loadingSpinner';
 
 type PeriodOption = 'today' | 'week' | 'month' | 'year' | 'all';
 
@@ -403,7 +404,7 @@ function SalesContent() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)]"></div>
+        <LoadingSpinner size="medium" />
       </div>
     );
   }

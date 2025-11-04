@@ -25,6 +25,7 @@ import NumberCard from '@/app/components/cards/numberCard';
 import ValueCard from '@/app/components/cards/valueCard';
 import PricingSection from '@/app/components/sections/pricingSection';
 import TestimonialsSection from '@/app/components/sections/testimonialsSection';
+import LoadingSpinner from '@/app/components/ui/loadingSpinner';
 
 const RESERVED_SUBDOMAINS = [
   'www', 'api', 'app', 'admin', 'dashboard', 'seller', 'customer', 
@@ -91,8 +92,7 @@ export default function LandingPage() {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[var(--background)]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--primary)] mx-auto mb-4"></div>
-          <p className="text-[var(--on-background)]">Verificando domínio...</p>
+          <LoadingSpinner size="medium" />
         </div>
       </div>
     );
