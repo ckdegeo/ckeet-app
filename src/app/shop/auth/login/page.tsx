@@ -248,7 +248,6 @@ export default function LoginPage() {
       <ResendConfirmationModal 
         isOpen={isForgotOpen} 
         onClose={() => setIsForgotOpen(false)} 
-        onResend={handleResendForgot}
         initialEmail={email}
       />
     </div>
