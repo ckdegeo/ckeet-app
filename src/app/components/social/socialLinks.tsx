@@ -1,6 +1,9 @@
 'use client';
 
-import { MessageCircle, Youtube, Instagram, Twitter, Send, AtSign } from 'lucide-react';
+import type React from 'react';
+// Ícones de marca
+import { FaDiscord, FaYoutube, FaInstagram, FaXTwitter, FaTelegram } from 'react-icons/fa6';
+import { SiThreads } from 'react-icons/si';
 
 interface SocialLink {
   platform: string;
@@ -72,26 +75,23 @@ export default function SocialLinks({ socials, primaryColor = '#bd253c', seconda
     return null;
   }
 
-  // Função para obter ícone por plataforma
-  const getIcon = (platform: string) => {
-    const iconProps = { size: 20, strokeWidth: 2 };
-    
-    switch (platform) {
-      case 'discord':
-        return <MessageCircle {...iconProps} />;
-      case 'youtube':
-        return <Youtube {...iconProps} />;
-      case 'instagram':
-        return <Instagram {...iconProps} />;
-      case 'twitter':
-        return <Twitter {...iconProps} />;
-      case 'telegram':
-        return <Send {...iconProps} />;
-      case 'threads':
-        return <AtSign {...iconProps} />;
-      default:
-        return null;
-    }
+  // Ícones e cores oficiais por rede
+  const iconFor: Record<string, React.ReactNode> = {
+    discord: <FaDiscord size={18} />,
+    youtube: <FaYoutube size={18} />,
+    instagram: <FaInstagram size={18} />,
+    twitter: <FaXTwitter size={18} />,
+    telegram: <FaTelegram size={18} />,
+    threads: <SiThreads size={18} />,
+  };
+
+  const colorFor: Record<string, { bg: string; hover: string }> = {
+    discord: { bg: '#5865F2', hover: '#4752C4' },
+    youtube: { bg: '#FF0000', hover: '#CC0000' },
+    instagram: { bg: '#E4405F', hover: '#C13584' },
+    twitter: { bg: '#000000', hover: '#111111' }, // X (preto)
+    telegram: { bg: '#26A5E4', hover: '#1C7FB9' },
+    threads: { bg: '#000000', hover: '#111111' },
   };
 
   // Função para abrir link em nova aba
@@ -99,40 +99,42 @@ export default function SocialLinks({ socials, primaryColor = '#bd253c', seconda
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+  // Floating vertical stack on center-right
   return (
-    <div className="flex items-center gap-3">
-      {activeSocials.map((social) => (
-        <button
-          key={social.platform}
-          onClick={() => handleClick(social.url)}
-          className="
-            w-10 h-10
-            rounded-full
-            flex items-center justify-center
-            transition-all duration-200
-            hover:scale-110
-            hover:shadow-lg
-            focus:outline-none
-            focus:ring-2
-            focus:ring-offset-2
-          "
-          style={{
-            backgroundColor: primaryColor,
-            color: '#ffffff',
-            '--hover-bg': secondaryColor,
-          } as React.CSSProperties}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = secondaryColor;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = primaryColor;
-          }}
-          aria-label={`Visitar ${social.platform}`}
-          title={social.platform.charAt(0).toUpperCase() + social.platform.slice(1)}
-        >
-          {getIcon(social.platform)}
-        </button>
-      ))}
+    <div
+      className="fixed right-6 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-3"
+      aria-label="Social links"
+    >
+      {activeSocials.map((social) => {
+        const colors = colorFor[social.platform] || { bg: primaryColor, hover: secondaryColor };
+        return (
+          <button
+            key={social.platform}
+            onClick={() => handleClick(social.url)}
+            className="
+              w-11 h-11
+              rounded-full
+              flex items-center justify-center
+              transition-all duration-200
+              hover:scale-110
+              shadow-md hover:shadow-lg
+              focus:outline-none
+              focus:ring-2 focus:ring-white/60
+            "
+            style={{ backgroundColor: colors.bg, color: '#ffffff' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = colors.hover;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = colors.bg;
+            }}
+            aria-label={`Visitar ${social.platform}`}
+            title={social.platform.charAt(0).toUpperCase() + social.platform.slice(1)}
+          >
+            {iconFor[social.platform]}
+          </button>
+        );
+      })}
     </div>
   );
 }
