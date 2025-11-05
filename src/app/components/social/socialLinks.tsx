@@ -120,6 +120,7 @@ export default function SocialLinks({ socials, primaryColor = '#bd253c', seconda
               shadow-md hover:shadow-lg
               focus:outline-none
               focus:ring-2 focus:ring-white/60
+              cursor-pointer
             "
             style={{ backgroundColor: colors.bg, color: '#ffffff' }}
             onMouseEnter={(e) => {
