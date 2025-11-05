@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { invalidateProductCategoryCaches } from '@/lib/utils/cacheInvalidation';
 import { showErrorToast, showSuccessToast } from '@/lib/utils/toastUtils';
 import ImportSelectCategoryModal from '@/app/components/modals/importSelectCategoryModal';
+import LoadingSpinner from '@/app/components/ui/loadingSpinner';
 
 interface CatalogProductDisplay {
   id: string;
@@ -75,6 +76,17 @@ export default function CatalogPage() {
     setSelectCategoryOpen(true);
   };
 
+  // Exibir loading
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <LoadingSpinner size="medium" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full flex flex-col gap-6">
       {/* Cabeçalho */}
@@ -103,54 +115,70 @@ export default function CatalogPage() {
       </div>
 
       {/* Seções do catálogo */}
-      <div className="flex flex-col gap-6">
-        {sections.map((section) => (
-          <CatalogCategorySection
-            key={section.id}
-            id={section.id}
-            name={section.name}
-            products={section.products}
-            onImport={handleImport}
-            onImportSection={async (catalogCategoryId) => {
-              try {
-                const accessToken = localStorage.getItem('access_token');
-                if (!accessToken) throw new Error('Sessão expirada');
-                const headers = { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' } as const;
-                const res = await fetch('/api/seller/catalog/import/category', {
-                  method: 'POST',
-                  headers,
-                  body: JSON.stringify({ catalogCategoryId })
-                });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error || 'Erro ao importar categoria');
-                const imp = data?.data?.imported ?? 0;
-                const skipped = data?.data?.skipped ?? 0;
-                if (imp > 0) {
-                  showSuccessToast(`Importados ${imp} produto(s).`);
-                  // Invalidar cache antes de redirecionar
-                  try {
-                    const token = localStorage.getItem('access_token');
-                    if (token) {
-                      const payload = JSON.parse(atob(token.split('.')[1]));
-                      const userId = payload.userId || payload.sub;
-                      if (userId) {
-                        invalidateProductCategoryCaches(userId);
+      {sections.length > 0 ? (
+        <div className="flex flex-col gap-6">
+          {sections.map((section) => (
+            <CatalogCategorySection
+              key={section.id}
+              id={section.id}
+              name={section.name}
+              products={section.products}
+              onImport={handleImport}
+              onImportSection={async (catalogCategoryId) => {
+                try {
+                  const accessToken = localStorage.getItem('access_token');
+                  if (!accessToken) throw new Error('Sessão expirada');
+                  const headers = { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' } as const;
+                  const res = await fetch('/api/seller/catalog/import/category', {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ catalogCategoryId })
+                  });
+                  const data = await res.json();
+                  if (!res.ok) throw new Error(data.error || 'Erro ao importar categoria');
+                  const imp = data?.data?.imported ?? 0;
+                  const skipped = data?.data?.skipped ?? 0;
+                  if (imp > 0) {
+                    showSuccessToast(`Importados ${imp} produto(s).`);
+                    // Invalidar cache antes de redirecionar
+                    try {
+                      const token = localStorage.getItem('access_token');
+                      if (token) {
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        const userId = payload.userId || payload.sub;
+                        if (userId) {
+                          invalidateProductCategoryCaches(userId);
+                        }
                       }
+                    } catch (error) {
+                      // Ignorar erro de parsing do token
                     }
-                  } catch (error) {
-                    // Ignorar erro de parsing do token
+                    // levar o seller para ver os produtos importados
+                    router.push('/seller/products');
                   }
-                  // levar o seller para ver os produtos importados
-                  router.push('/seller/products');
+                  if (skipped > 0) showErrorToast(`${skipped} produto(s) ignorados (já importados).`);
+                } catch (e) {
+                  showErrorToast(e instanceof Error ? e.message : 'Erro ao importar categoria');
                 }
-                if (skipped > 0) showErrorToast(`${skipped} produto(s) ignorados (já importados).`);
-              } catch (e) {
-                showErrorToast(e instanceof Error ? e.message : 'Erro ao importar categoria');
-              }
-            }}
-          />
-        ))}
-      </div>
+              }}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-2xl p-12 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-[var(--foreground)] mb-2">
+            Nenhum produto no catálogo
+          </h3>
+          <p className="text-[var(--on-background)]">
+            Produtos do catálogo aparecerão aqui quando estiverem disponíveis
+          </p>
+        </div>
+      )}
 
       {/* Modal de aviso da taxa do catálogo */}
       <CatalogFeeNoticeModal isOpen={showNotice} onClose={() => setShowNotice(false)} />

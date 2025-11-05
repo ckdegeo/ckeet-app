@@ -47,7 +47,7 @@ export default function CatalogFeeNoticeModal({ isOpen, onClose }: CatalogFeeNot
           </p>
           <div className="rounded-xl border border-[var(--on-background)]/30 bg-[var(--background)] p-4">
             <ul className="list-disc pl-5 space-y-1">
-              <li><strong>40%</strong> do valor da venda</li>
+              <li><strong>30%</strong> do valor da venda</li>
               <li><strong>R$ 0,50</strong> por transação</li>
             </ul>
           </div>
