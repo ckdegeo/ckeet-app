@@ -30,6 +30,19 @@ export async function GET(request: NextRequest) {
         secondaryColor: true,
         subdomain: true,
         isActive: true,
+        // Social Media
+        discordUrl: true,
+        discordEnabled: true,
+        youtubeUrl: true,
+        youtubeEnabled: true,
+        instagramUrl: true,
+        instagramEnabled: true,
+        twitterUrl: true,
+        twitterEnabled: true,
+        telegramUrl: true,
+        telegramEnabled: true,
+        threadsUrl: true,
+        threadsEnabled: true,
       },
     });
 

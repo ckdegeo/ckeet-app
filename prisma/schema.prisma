@@ -227,6 +227,20 @@ model Store {
   // Domain Configuration
   subdomain     String   @unique // {subdomain}.ckeet.com
   
+  // Social Media (opcional)
+  discordUrl    String?
+  discordEnabled Boolean @default(false)
+  youtubeUrl    String?
+  youtubeEnabled Boolean @default(false)
+  instagramUrl  String?
+  instagramEnabled Boolean @default(false)
+  twitterUrl    String?
+  twitterEnabled Boolean @default(false)
+  telegramUrl   String?
+  telegramEnabled Boolean @default(false)
+  threadsUrl    String?
+  threadsEnabled Boolean @default(false)
+  
   // Status
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())

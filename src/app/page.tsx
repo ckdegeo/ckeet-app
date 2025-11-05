@@ -17,7 +17,8 @@ import {
   Store,
   LayoutDashboard,
   Package,
-  CreditCard
+  CreditCard,
+  MessageCircle
 } from 'lucide-react';
 import Button from '@/app/components/buttons/button';
 import Input from '@/app/components/inputs/input';
@@ -131,7 +132,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--background)]">
+    <div className="min-h-screen bg-[var(--background)]">  
       {/* Header/Navbar - Modern SaaS Style */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[var(--background)]/80 backdrop-blur-lg border-b border-[var(--on-background)]/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -208,11 +209,28 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Spacer for fixed navbar */}
-      <div className="h-20"></div>
+      {/* Listra vermelha abaixo da navbar (não fixa) */}
+      <div className="mt-20 bg-gradient-to-r from-[var(--primary-variant)] to-[var(--secondary)]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between gap-4 py-2">
+            <p className="text-sm sm:text-base text-white font-medium">
+              Entre em nosso grupo de <strong className="font-">WhatsApp</strong>
+            </p>
+            <Button
+              onClick={() => window.open('https://chat.whatsapp.com/LRmA36FzPlFA3hWK4s82Eg', '_blank')}
+              className="border-white text-white hover:bg-white hover:text-[var(--primary-variant)] px-4 py-2 text-sm rounded-full"
+              variant="outline"
+            >
+              Entrar no grupo
+              <MessageCircle size={16} />
+            </Button>
+          </div>
+        </div>
+      </div>
 
+      
       {/* Hero Headline Section */}
-      <section className="relative overflow-hidden py-12 lg:py-20 bg-gradient-to-b from-[var(--background)] via-[var(--surface)] to-[var(--background)]">
+      <section className="py-10 relative overflow-hidden bg-gradient-to-b from-[var(--background)] via-[var(--surface)] to-[var(--background)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Conteúdo à esquerda */}

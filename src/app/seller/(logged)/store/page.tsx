@@ -8,6 +8,7 @@ import ColorPicker from '@/app/components/inputs/colorPicker';
 import Button from '@/app/components/buttons/button';
 import DomainModal from '@/app/components/modals/domainModal';
 import { Save, Settings, Store as StoreIcon, Palette, Image, Globe } from 'lucide-react';
+import SwitchButton from '@/app/components/buttons/switchButton';
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 import { getAccessToken } from '@/lib/utils/authUtils';
 import { useStoreConfigCache } from '@/lib/hooks/useCache';
@@ -22,6 +23,13 @@ interface StoreConfig {
   storeBannerUrl: string;
   primaryColor: string;
   secondaryColor: string;
+  // Links de redes sociais (frontend apenas)
+  discord?: string;
+  youtube?: string;
+  instagram?: string;
+  twitter?: string;
+  telegram?: string;
+  threads?: string;
 }
 
 // Interface para dados do domínio
@@ -46,6 +54,8 @@ function StorePageContent() {
   // Carregar dados do cache para o estado local
   useEffect(() => {
     if (storeData?.store) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const s: any = storeData.store;
       setStoreConfig({
         storeName: storeData.store.name || '',
         contactEmail: storeData.store.contactEmail || '',
@@ -53,7 +63,24 @@ function StorePageContent() {
         homeBannerUrl: storeData.store.homeBannerUrl || '',
         storeBannerUrl: storeData.store.storeBannerUrl || '',
         primaryColor: storeData.store.primaryColor || '#bd253c',
-        secondaryColor: storeData.store.secondaryColor || '#970b27'
+        secondaryColor: storeData.store.secondaryColor || '#970b27',
+        // Campos sociais
+        discord: s?.discordUrl || '',
+        youtube: s?.youtubeUrl || '',
+        instagram: s?.instagramUrl || '',
+        twitter: s?.twitterUrl || '',
+        telegram: s?.telegramUrl || '',
+        threads: s?.threadsUrl || ''
+      });
+
+      // Define ativação inicial com base no campo "enabled" do banco
+      setSocialEnabled({
+        discord: s?.discordEnabled || false,
+        youtube: s?.youtubeEnabled || false,
+        instagram: s?.instagramEnabled || false,
+        twitter: s?.twitterEnabled || false,
+        telegram: s?.telegramEnabled || false,
+        threads: s?.threadsEnabled || false,
       });
     }
   }, [storeData]);
@@ -65,7 +92,23 @@ function StorePageContent() {
     homeBannerUrl: '',
     storeBannerUrl: '',
     primaryColor: '#bd253c',
-    secondaryColor: '#970b27'
+    secondaryColor: '#970b27',
+    discord: '',
+    youtube: '',
+    instagram: '',
+    twitter: '',
+    telegram: '',
+    threads: ''
+  });
+
+  // Estado de ativação de redes sociais (apenas UI)
+  const [socialEnabled, setSocialEnabled] = useState<Record<string, boolean>>({
+    discord: false,
+    youtube: false,
+    instagram: false,
+    twitter: false,
+    telegram: false,
+    threads: false,
   });
 
   const [domainConfig, setDomainConfig] = useState<DomainConfig>({
@@ -136,6 +179,19 @@ function StorePageContent() {
                 storeBannerUrl: storeConfig.storeBannerUrl,
                 primaryColor: storeConfig.primaryColor,
                 secondaryColor: storeConfig.secondaryColor,
+                // Social Media (opcional)
+                discordUrl: storeConfig.discord,
+                discordEnabled: socialEnabled.discord,
+                youtubeUrl: storeConfig.youtube,
+                youtubeEnabled: socialEnabled.youtube,
+                instagramUrl: storeConfig.instagram,
+                instagramEnabled: socialEnabled.instagram,
+                twitterUrl: storeConfig.twitter,
+                twitterEnabled: socialEnabled.twitter,
+                telegramUrl: storeConfig.telegram,
+                telegramEnabled: socialEnabled.telegram,
+                threadsUrl: storeConfig.threads,
+                threadsEnabled: socialEnabled.threads,
               };
 
       // Salvar configurações da loja
@@ -230,7 +286,7 @@ function StorePageContent() {
           </div>
         </div>
       </div>
-
+      
       {/* Divider */}
       <hr className="border-t border-black/10" />
 
@@ -294,6 +350,55 @@ function StorePageContent() {
             error=""
             folder="store-banner"
           />
+        </div>
+      </div>
+      {/* Divider */}
+      <hr className="border-t border-black/10" />
+      {/* Social */}
+      <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-2xl p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Globe size={20} className="text-[var(--primary)]" />
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">
+            Social <span className="text-sm text-[var(--secondary)]"> (Opcional)</span>
+          </h2>
+        </div>
+
+        {/* Grade bonita com cartões e switch por item */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[
+            { key: 'discord', label: 'Discord', placeholder: 'URL do Discord' },
+            { key: 'youtube', label: 'YouTube', placeholder: 'URL do YouTube' },
+            { key: 'instagram', label: 'Instagram', placeholder: 'URL do Instagram' },
+            { key: 'twitter', label: 'Twitter', placeholder: 'URL do Twitter (X)' },
+            { key: 'telegram', label: 'Telegram', placeholder: 'URL do Telegram' },
+            { key: 'threads', label: 'Threads', placeholder: 'URL do Threads' },
+          ].map((item) => (
+            <div
+              key={item.key}
+              className="relative p-4 border border-[var(--on-background)] rounded-xl bg-[var(--background)]/40 hover:bg-[var(--background)]/60 transition-colors"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <p className="text-sm font-medium text-[var(--foreground)]">{item.label}</p>
+                  <p className="text-xs text-[var(--on-background)]">Ative para exibir na loja</p>
+                </div>
+                <SwitchButton
+                  value={socialEnabled[item.key]}
+                  onChange={(v) => setSocialEnabled((prev) => ({ ...prev, [item.key]: v }))}
+                  size="md"
+                />
+              </div>
+
+               <Input
+                placeholder={item.placeholder}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                value={(storeConfig as any)[item.key] || ''}
+                onChange={handleInputChange(item.key as keyof StoreConfig)}
+                disabled={!socialEnabled[item.key]}
+                className={!socialEnabled[item.key] ? 'opacity-60' : ''}
+              />
+            </div>
+          ))}
         </div>
       </div>
     </div>

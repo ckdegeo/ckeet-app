@@ -81,7 +81,7 @@ export default function CatalogPage() {
       <div className="flex flex-col gap-4 flex-shrink-0">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl font-bold text-[var(--foreground)]">
-            Catálogo
+            Catálogo <span className="text-sm text-[var(--secondary)]">(Importe produtos e venda com nosso estoque)</span>
           </h1>
           <div className="flex items-center gap-2 w-full sm:w-64 justify-end">
             {/* Botão de aviso com pulso */}

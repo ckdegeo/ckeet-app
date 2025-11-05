@@ -227,6 +227,20 @@ export interface Store {
   // Domain Configuration
   subdomain: string;
   
+  // Social Media (opcional)
+  discordUrl?: string;
+  discordEnabled?: boolean;
+  youtubeUrl?: string;
+  youtubeEnabled?: boolean;
+  instagramUrl?: string;
+  instagramEnabled?: boolean;
+  twitterUrl?: string;
+  twitterEnabled?: boolean;
+  telegramUrl?: string;
+  telegramEnabled?: boolean;
+  threadsUrl?: string;
+  threadsEnabled?: boolean;
+  
   // Status
   isActive: boolean;
   createdAt: Date;

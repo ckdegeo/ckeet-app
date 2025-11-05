@@ -7,6 +7,7 @@ import StoreNavbar from './patterns/storeNavbar';
 import Footer from './patterns/footer';
 import { useCustomerLogout } from '@/lib/hooks/useCustomerLogout';
 import LoadingSpinner from '@/app/components/ui/loadingSpinner';
+import SocialLinks from '@/app/components/social/socialLinks';
 
 export default function ShopPage() {
   const [loading, setLoading] = useState(true);
@@ -133,6 +134,28 @@ export default function ShopPage() {
           </div>
         </div>
       )}
+
+      {/* Redes Sociais */}
+      <div className="container mx-auto px-8 py-4 flex justify-center">
+        <SocialLinks
+          socials={{
+            discordUrl: store.discordUrl,
+            discordEnabled: store.discordEnabled,
+            youtubeUrl: store.youtubeUrl,
+            youtubeEnabled: store.youtubeEnabled,
+            instagramUrl: store.instagramUrl,
+            instagramEnabled: store.instagramEnabled,
+            twitterUrl: store.twitterUrl,
+            twitterEnabled: store.twitterEnabled,
+            telegramUrl: store.telegramUrl,
+            telegramEnabled: store.telegramEnabled,
+            threadsUrl: store.threadsUrl,
+            threadsEnabled: store.threadsEnabled,
+          }}
+          primaryColor={store.primaryColor}
+          secondaryColor={store.secondaryColor}
+        />
+      </div>
 
       {/* Conteúdo Principal */}
       <main className="container mx-auto px-8 py-12">

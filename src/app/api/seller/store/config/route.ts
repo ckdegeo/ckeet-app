@@ -39,6 +39,19 @@ export async function GET(request: NextRequest) {
             secondaryColor: true,
             subdomain: true,
             isActive: true,
+            // Social Media
+            discordUrl: true,
+            discordEnabled: true,
+            youtubeUrl: true,
+            youtubeEnabled: true,
+            instagramUrl: true,
+            instagramEnabled: true,
+            twitterUrl: true,
+            twitterEnabled: true,
+            telegramUrl: true,
+            telegramEnabled: true,
+            threadsUrl: true,
+            threadsEnabled: true,
             createdAt: true,
             updatedAt: true,
           }
@@ -72,6 +85,19 @@ export async function GET(request: NextRequest) {
       primaryColor: seller.store.primaryColor,
       secondaryColor: seller.store.secondaryColor,
       subdomain: seller.store.subdomain,
+      // Social Media
+      discordUrl: seller.store.discordUrl,
+      discordEnabled: seller.store.discordEnabled,
+      youtubeUrl: seller.store.youtubeUrl,
+      youtubeEnabled: seller.store.youtubeEnabled,
+      instagramUrl: seller.store.instagramUrl,
+      instagramEnabled: seller.store.instagramEnabled,
+      twitterUrl: seller.store.twitterUrl,
+      twitterEnabled: seller.store.twitterEnabled,
+      telegramUrl: seller.store.telegramUrl,
+      telegramEnabled: seller.store.telegramEnabled,
+      threadsUrl: seller.store.threadsUrl,
+      threadsEnabled: seller.store.threadsEnabled,
     };
 
             return NextResponse.json({
@@ -125,7 +151,20 @@ export async function POST(request: NextRequest) {
       homeBannerUrl, 
       storeBannerUrl, 
       primaryColor, 
-      secondaryColor 
+      secondaryColor,
+      // Social Media (opcional)
+      discordUrl,
+      discordEnabled,
+      youtubeUrl,
+      youtubeEnabled,
+      instagramUrl,
+      instagramEnabled,
+      twitterUrl,
+      twitterEnabled,
+      telegramUrl,
+      telegramEnabled,
+      threadsUrl,
+      threadsEnabled
     } = body;
 
     // Validar dados obrigatórios
@@ -140,22 +179,7 @@ export async function POST(request: NextRequest) {
     const seller = await prisma.seller.findUnique({
       where: { id: user.id },
       include: { 
-        store: {
-          select: {
-            id: true,
-            name: true,
-            contactEmail: true,
-            logoUrl: true,
-            homeBannerUrl: true,
-            storeBannerUrl: true,
-            primaryColor: true,
-            secondaryColor: true,
-            subdomain: true,
-            isActive: true,
-            createdAt: true,
-            updatedAt: true,
-          }
-        }
+        store: true
       }
     });
 
@@ -179,6 +203,19 @@ export async function POST(request: NextRequest) {
                   storeBannerUrl,
                   primaryColor,
                   secondaryColor,
+                  // Social Media (opcional)
+                  discordUrl: discordUrl || null,
+                  discordEnabled: discordEnabled || false,
+                  youtubeUrl: youtubeUrl || null,
+                  youtubeEnabled: youtubeEnabled || false,
+                  instagramUrl: instagramUrl || null,
+                  instagramEnabled: instagramEnabled || false,
+                  twitterUrl: twitterUrl || null,
+                  twitterEnabled: twitterEnabled || false,
+                  telegramUrl: telegramUrl || null,
+                  telegramEnabled: telegramEnabled || false,
+                  threadsUrl: threadsUrl || null,
+                  threadsEnabled: threadsEnabled || false,
                 }
               });
             } else {
@@ -193,6 +230,19 @@ export async function POST(request: NextRequest) {
           secondaryColor,
           subdomain: `loja-${Date.now()}`, // Subdomínio temporário
           sellerId: user.id,
+          // Social Media (opcional)
+          discordUrl: discordUrl || null,
+          discordEnabled: discordEnabled || false,
+          youtubeUrl: youtubeUrl || null,
+          youtubeEnabled: youtubeEnabled || false,
+          instagramUrl: instagramUrl || null,
+          instagramEnabled: instagramEnabled || false,
+          twitterUrl: twitterUrl || null,
+          twitterEnabled: twitterEnabled || false,
+          telegramUrl: telegramUrl || null,
+          telegramEnabled: telegramEnabled || false,
+          threadsUrl: threadsUrl || null,
+          threadsEnabled: threadsEnabled || false,
         }
       });
     }
