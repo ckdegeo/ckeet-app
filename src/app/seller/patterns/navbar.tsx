@@ -1,6 +1,6 @@
 'use client';
 
-import { Search as SearchIcon, Store } from "lucide-react";
+import { Search as SearchIcon, Store, Menu } from "lucide-react";
 import UserMenu from "@/app/components/user/userMenu";
 import IconOnlyButton from "@/app/components/buttons/iconOnlyButton";
 import { useAuth } from "@/lib/hooks/useAuth";
@@ -56,7 +56,17 @@ export default function Navbar({ className = "", title = "Seller" }: NavbarProps
     `}>
       <div className="flex items-center justify-between">
         {/* Left Section - Title and Search */}
-        <div className="flex items-center gap-6 flex-1">
+        <div className="flex items-center gap-4 flex-1">
+          {/* Mobile Menu Button - design igual ao IconOnlyButton */}
+          <IconOnlyButton
+            className="md:hidden"
+            icon={Menu}
+            variant="surface"
+            aria-label="Abrir menu"
+            onClick={() => {
+              window.dispatchEvent(new Event('toggle-mobile-sidebar'));
+            }}
+          />
           {/* Page Title */}
           <div className="hidden md:block">
             <h1 className="text-2xl font-semibold text-[var(--foreground)]">
@@ -67,26 +77,20 @@ export default function Navbar({ className = "", title = "Seller" }: NavbarProps
 
         {/* Right Section - Actions and User */}
         <div className="flex items-center gap-3">
-          {/* Mobile Search Button */}
-          <button className="sm:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors">
-            <SearchIcon size={20} className="text-[var(--foreground)]" />
-          </button>
 
           {/* Store Button */}
           <IconOnlyButton
             icon={Store}
             onClick={() => {
               if (storeSubdomain) {
-                // Navegar para a loja dinâmica do seller
                 const storeUrl = `https://${storeSubdomain}.ckeet.store`;
                 window.open(storeUrl, '_blank');
               } else {
-                // Se não tem subdomínio, redirecionar para configuração da loja
                 window.location.href = '/seller/store';
               }
             }}
             variant="surface"
-            title={storeSubdomain ? `Visualizar minha loja (${storeSubdomain}.ckeet.store)` : "Configurar loja"}
+            title={storeSubdomain ? `Visualizar minha loja (${storeSubdomain}.ckeet.store)` : 'Configurar loja'}
           />
 
           {/* User Menu */}

@@ -126,16 +126,17 @@ export default function Sidebar({ className = "" }: SidebarProps) {
     }
   };
 
+  // Ouvir evento global vindo da navbar para alternar a sidebar no mobile
+  useEffect(() => {
+    const handler = () => setIsMobileOpen((prev) => !prev);
+    window.addEventListener('toggle-mobile-sidebar' as unknown as keyof WindowEventMap, handler as EventListener);
+    return () => {
+      window.removeEventListener('toggle-mobile-sidebar' as unknown as keyof WindowEventMap, handler as EventListener);
+    };
+  }, []);
+
   return (
     <>
-      {/* Mobile Menu Button */}
-      <Button
-        onClick={toggleMobile}
-        className="fixed top-4 left-4 z-50 md:hidden bg-[var(--primary)] text-[var(--on-primary)] hover:bg-[var(--primary-variant)] shadow-lg p-2 min-w-0 w-auto h-auto"
-      >
-        {isMobileOpen ? <X size={20} /> : <Menu size={20} />}
-      </Button>
-
       {/* Mobile Overlay */}
       {isMobileOpen && (
         <div
