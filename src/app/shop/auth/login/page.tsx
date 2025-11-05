@@ -149,7 +149,7 @@ export default function LoginPage() {
         
           <form onSubmit={handleSubmit} className="space-y-6">
             <Input
-              label="Email"
+              label="E-mail"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -228,9 +228,10 @@ export default function LoginPage() {
                   variant="outline" 
                   className="w-full"
                   style={{
-                    borderColor: store?.primaryColor || '#bd253c',
-                    color: store?.primaryColor || '#bd253c'
-                  }}
+                    // Usa variáveis para que o hover do variant funcione
+                    '--primary': store?.primaryColor || '#bd253c',
+                    '--on-primary': '#ffffff'
+                  } as React.CSSProperties}
                 >
                   Cadastre-se
                 </Button>
