@@ -131,8 +131,68 @@ export default function LandingPage() {
     }
   };
 
+  // Schema.org JSON-LD para SEO
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Ckeet",
+    "applicationCategory": "BusinessApplication",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "BRL",
+      "description": "Plataforma gratuita com taxa de 3.49% + R$ 0,50 por venda"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "ratingCount": "500",
+      "bestRating": "5",
+      "worstRating": "1"
+    },
+    "description": "Crie sua loja virtual em minutos com Ckeet. Venda produtos digitais sem mensalidade, apenas 3.49% + R$ 0,50 por venda. Integração com PIX via Mercado Pago.",
+    "operatingSystem": "Web",
+    "url": "https://ckeet.store",
+    "screenshot": "https://ckeet.store/img_lp.png",
+    "featureList": [
+      "Criação de loja virtual em minutos",
+      "Sem mensalidade",
+      "Integração com PIX via Mercado Pago",
+      "Gestão de produtos digitais",
+      "Dashboard completo",
+      "Domínio personalizado"
+    ],
+    "author": {
+      "@type": "Organization",
+      "name": "Ckeet"
+    }
+  };
+
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Ckeet",
+    "url": "https://ckeet.store",
+    "logo": "https://ckeet.store/logo.png",
+    "description": "Plataforma para criação e gestão de lojas virtuais de produtos digitais",
+    "sameAs": [
+      "https://www.instagram.com/ckeet",
+      "https://twitter.com/ckeet"
+    ]
+  };
+
   return (
-    <div className="min-h-screen bg-[var(--background)]">  
+    <div className="min-h-screen bg-[var(--background)]">
+      {/* Schema.org JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+      />
+      
       {/* Header/Navbar - Modern SaaS Style */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[var(--background)]/80 backdrop-blur-lg border-b border-[var(--on-background)]/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -142,7 +202,7 @@ export default function LandingPage() {
               <div className="relative">
                 <Image
                   src="/logo.png"
-                  alt="Ckeet"
+                  alt="Ckeet - Plataforma de lojas virtuais"
                   width={120}
                   height={32}
                   className="h-8 w-auto"
@@ -230,7 +290,7 @@ export default function LandingPage() {
 
       
       {/* Hero Headline Section */}
-      <section className="py-10 relative overflow-hidden bg-gradient-to-b from-[var(--background)] via-[var(--surface)] to-[var(--background)]">
+      <section aria-label="Apresentação principal" className="py-10 relative overflow-hidden bg-gradient-to-b from-[var(--background)] via-[var(--surface)] to-[var(--background)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Conteúdo à esquerda */}
@@ -312,10 +372,13 @@ export default function LandingPage() {
             {/* Imagem à direita */}
             <div className="hidden lg:block relative animate-fade-in-up">
               <div className="relative rounded-2xl overflow-hidden">
-                <img 
+                <Image 
                   src="/img_lp.png" 
-                  alt="Ckeet - Plataforma de vendas digitais" 
+                  alt="Dashboard da plataforma Ckeet mostrando gestão de loja virtual, produtos e vendas" 
+                  width={800}
+                  height={600}
                   className="w-full h-auto"
+                  priority
                 />
               </div>
             </div>
@@ -342,7 +405,7 @@ export default function LandingPage() {
       </div>
 
       {/* No Inventory Needed Section */}
-      <section className="bg-[var(--background)]">
+      <section aria-label="Venda sem estoque próprio" className="bg-[var(--background)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center space-y-8">
             
@@ -409,7 +472,7 @@ export default function LandingPage() {
       </div>
 
       {/* Easy Creation Section */}
-      <section id="features" className="bg-[var(--background)]">
+      <section id="features" aria-label="Recursos e funcionalidades" className="bg-[var(--background)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
             
@@ -522,7 +585,7 @@ export default function LandingPage() {
       </div>
 
       {/* System Showcase Section */}
-      <section id="showcase" className="bg-[var(--surface)]">
+      <section id="showcase" aria-label="Demonstração do sistema" className="bg-[var(--surface)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center space-y-8 mb-16">
             
@@ -663,7 +726,7 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing/Payment Section */}
-      <section className="pb-8 bg-[var(--background)]">
+      <section aria-label="Preços e taxas" className="pb-8 bg-[var(--background)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             
@@ -697,7 +760,7 @@ export default function LandingPage() {
                   <div className="relative w-12 h-12 bg-[var(--background)] rounded-lg flex items-center justify-center p-2">
                     <Image
                       src="/mercado-pago.png"
-                      alt="Mercado Pago"
+                      alt="Logo do Mercado Pago - Gateway de pagamento"
                       width={48}
                       height={48}
                       className="object-contain"
@@ -805,7 +868,7 @@ export default function LandingPage() {
       </div>
 
       {/* Testimonials Section - Using TestimonialsSection Component */}
-      <section id="testimonials">
+      <section id="testimonials" aria-label="Depoimentos de clientes">
         <TestimonialsSection />
       </section>
 
@@ -815,14 +878,14 @@ export default function LandingPage() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-[var(--surface)] py-8">
+      <footer role="contentinfo" className="bg-[var(--surface)] py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             {/* Logo */}
             <div className="flex items-center gap-2">
               <Image
                 src="/logo.png"
-                alt="Ckeet"
+                alt="Logo Ckeet - Plataforma de lojas virtuais"
                 width={100}
                 height={28}
                 className="h-7 w-auto"
