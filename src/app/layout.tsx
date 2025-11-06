@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     description: "Crie sua loja virtual em minutos sem mensalidade. Venda produtos digitais com PIX integrado. Setup em 5 minutos, apenas 3.49% + R$ 0,50 por venda.",
     images: [
       {
-        url: "https://ckeet.store/img_lp.png",
+        url: "https://ckeet.store/init_banner.png",
         width: 1200,
         height: 630,
         alt: "Ckeet - Plataforma de vendas digitais",
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Ckeet - Crie sua loja virtual em minutos",
     description: "Venda produtos digitais sem mensalidade. Setup em 5 minutos, PIX integrado via Mercado Pago.",
-    images: ["https://ckeet.store/img_lp.png"],
+    images: ["https://ckeet.store/init_banner.png"],
     creator: "@ckeet",
   },
   alternates: {
