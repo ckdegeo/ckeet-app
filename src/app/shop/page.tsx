@@ -303,8 +303,9 @@ export default function ShopPage() {
                   >
                     {category.name}
                   </h2>
+                  {/* Divider decorativo - oculto em mobile, visível em desktop */}
                   <div 
-                    className="h-0.5 sm:h-1 rounded-full min-w-[40px] sm:min-w-[60px] flex-shrink-0"
+                    className="hidden sm:block h-1 rounded-full min-w-[60px] flex-shrink-0"
                     style={{ 
                       backgroundColor: `${appearance.categoryTitle.lineColor || store.primaryColor || '#bd253c'}20`,
                     }}
