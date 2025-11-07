@@ -110,10 +110,8 @@ export default function Table<T>({
           {/* Cabeçalho */}
           <thead>
             <tr 
-              className="border-b"
-              style={useDefaultStyles ? {
-                borderColor: 'var(--border)'
-              } : {
+              className={useDefaultStyles ? '' : 'border-b'}
+              style={useDefaultStyles ? {} : {
                 borderColor: borderColor ? `${borderColor}40` : `${primaryColor}20`
               }}
             >
@@ -154,10 +152,8 @@ export default function Table<T>({
 
           {/* Corpo */}
           <tbody 
-            className="divide-y"
-            style={useDefaultStyles ? {
-              borderColor: 'var(--border)'
-            } : {
+            className={useDefaultStyles ? '' : 'divide-y'}
+            style={useDefaultStyles ? {} : {
               borderColor: borderColor ? `${borderColor}30` : `${primaryColor}10`
             }}
           >
@@ -189,14 +185,15 @@ export default function Table<T>({
                   {columns.map((column, colIndex) => (
                     <td
                       key={colIndex}
-                      className={`px-4 py-4 text-sm border-r ${
+                      className={`px-4 py-4 text-sm ${
+                        useDefaultStyles ? '' : 'border-r'
+                      } ${
                         useDefaultStyles ? 'text-[var(--foreground)]' : ''
                       }`}
                       style={useDefaultStyles ? {
                         width: column.width || 'auto',
                         wordWrap: 'break-word',
-                        overflowWrap: 'break-word',
-                        borderColor: 'var(--border)'
+                        overflowWrap: 'break-word'
                       } : { 
                         color: titleColor ? `${titleColor}E6` : '#374151', // 90% opacity
                         width: column.width || 'auto',
