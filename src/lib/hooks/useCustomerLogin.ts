@@ -43,13 +43,8 @@ export function useCustomerLogin(): UseCustomerLoginReturn {
           return false;
         }
 
-        // Erro geral - verificar se é erro de email não confirmado
-        let errorMessage = result.error || 'Erro ao fazer login';
-        
-        // Verificar se é erro de email não confirmado
-        if (errorMessage.includes('Email not confirmed') || errorMessage.includes('email não confirmado')) {
-          errorMessage = 'Seu email ainda não foi confirmado. Verifique sua caixa de entrada e clique no link de confirmação.';
-        }
+        // Erro geral
+        const errorMessage = result.error || 'Erro ao fazer login';
         
         // Se for erro de rate limit (429), mostrar toast mais longo
         const duration = response.status === 429 ? 8000 : 4000;

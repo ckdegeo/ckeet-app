@@ -7,12 +7,14 @@ import ImageUpload from '@/app/components/images/imageUpload';
 import ColorPicker from '@/app/components/inputs/colorPicker';
 import Button from '@/app/components/buttons/button';
 import DomainModal from '@/app/components/modals/domainModal';
-import { Save, Settings, Store as StoreIcon, Palette, Image, Globe } from 'lucide-react';
+import { Save, Settings, Store as StoreIcon, Palette, Image, Globe, Square, Circle, MousePointer } from 'lucide-react';
 import SwitchButton from '@/app/components/buttons/switchButton';
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 import { getAccessToken } from '@/lib/utils/authUtils';
 import { useStoreConfigCache } from '@/lib/hooks/useCache';
 import LoadingSpinner from '@/app/components/ui/loadingSpinner';
+import Tabs from '@/app/components/tabs/tabs';
+import Selector from '@/app/components/selectors/selector';
 
 // Interface para os dados da loja
 interface StoreConfig {
@@ -23,6 +25,7 @@ interface StoreConfig {
   storeBannerUrl: string;
   primaryColor: string;
   secondaryColor: string;
+  showStoreName: boolean;
   // Links de redes sociais (frontend apenas)
   discord?: string;
   youtube?: string;
@@ -37,9 +40,31 @@ interface DomainConfig {
   subdomain: string;
 }
 
+// Interface para configurações de aparência
+interface ComponentStyle {
+  rounded: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+  hasBorder: boolean;
+  borderColor: string;
+}
+
+interface BannerConfig extends ComponentStyle {
+  hoverEffect: 'none' | 'scale' | 'brightness' | 'opacity' | 'shadow';
+  hoverEnabled: boolean;
+  redirectUrl: string;
+  redirectEnabled: boolean;
+}
+
+interface AppearanceConfig {
+  buttons: ComponentStyle;
+  productCards: ComponentStyle;
+  banner: BannerConfig;
+  storeBackground: string;
+}
+
 function StorePageContent() {
   const searchParams = useSearchParams();
   const [isDomainModalOpen, setIsDomainModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('appearance');
 
   // Usar cache para carregar dados da loja
   const { data: storeData, loading: storeLoading, error: storeError, refresh: refreshStoreData } = useStoreConfigCache();
@@ -64,6 +89,7 @@ function StorePageContent() {
         storeBannerUrl: storeData.store.storeBannerUrl || '',
         primaryColor: storeData.store.primaryColor || '#bd253c',
         secondaryColor: storeData.store.secondaryColor || '#970b27',
+        showStoreName: s?.showStoreName !== undefined ? s.showStoreName : true,
         // Campos sociais
         discord: s?.discordUrl || '',
         youtube: s?.youtubeUrl || '',
@@ -93,6 +119,7 @@ function StorePageContent() {
     storeBannerUrl: '',
     primaryColor: '#bd253c',
     secondaryColor: '#970b27',
+    showStoreName: true,
     discord: '',
     youtube: '',
     instagram: '',
@@ -113,6 +140,30 @@ function StorePageContent() {
 
   const [domainConfig, setDomainConfig] = useState<DomainConfig>({
     subdomain: ''
+  });
+
+  // Estado para configurações de aparência
+  const [appearanceConfig, setAppearanceConfig] = useState<AppearanceConfig>({
+    buttons: {
+      rounded: 'full',
+      hasBorder: false,
+      borderColor: '#000000',
+    },
+    productCards: {
+      rounded: '2xl',
+      hasBorder: true,
+      borderColor: '#e5e7eb',
+    },
+    banner: {
+      rounded: '2xl',
+      hasBorder: false,
+      borderColor: '#000000',
+      hoverEffect: 'none',
+      hoverEnabled: false,
+      redirectUrl: '',
+      redirectEnabled: false,
+    },
+    storeBackground: '#f9fafb', // gray-50
   });
 
   const handleInputChange = (field: keyof StoreConfig) => (
@@ -155,7 +206,12 @@ function StorePageContent() {
 
       const missingFields = requiredFields.filter(({ field }) => {
         const value = storeConfig[field as keyof StoreConfig];
-        return !value || value.trim() === '';
+        // showStoreName é boolean, não precisa de trim
+        if (field === 'showStoreName') {
+          return false; // showStoreName não é obrigatório para validação
+        }
+        // Para strings, verificar se está vazio
+        return !value || (typeof value === 'string' && value.trim() === '');
       });
 
       if (missingFields.length > 0) {
@@ -179,6 +235,7 @@ function StorePageContent() {
                 storeBannerUrl: storeConfig.storeBannerUrl,
                 primaryColor: storeConfig.primaryColor,
                 secondaryColor: storeConfig.secondaryColor,
+                showStoreName: storeConfig.showStoreName,
                 // Social Media (opcional)
                 discordUrl: storeConfig.discord,
                 discordEnabled: socialEnabled.discord,
@@ -231,21 +288,20 @@ function StorePageContent() {
   };
 
 
-  // Conteúdo das configurações da loja
-  const storeContent = (
+  // Conteúdo obrigatório (acima do divider)
+  const requiredContent = (
     <div className="space-y-6">
-      {/* Grid de 2 colunas para Informações Básicas e Cores */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Informações Básicas */}
-        <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <StoreIcon size={20} className="text-[var(--primary)]" />
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">
-              Informações básicas
-            </h2> 
-          </div>
-          
-          <div className="space-y-4">
+      {/* Informações Básicas */}
+      <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-2xl p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <StoreIcon size={20} className="text-[var(--primary)]" />
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">
+            Informações básicas
+          </h2> 
+        </div>
+        
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               label="Nome da loja"
               placeholder="Digite o nome da sua loja"
@@ -261,18 +317,35 @@ function StorePageContent() {
               onChange={handleInputChange('contactEmail')}
             />
           </div>
-        </div>
 
-        {/* Personalização de Cores */}
-        <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-2xl p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Palette size={20} className="text-[var(--primary)]" />
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">
-              Cores da loja
-            </h2>
+          {/* Visibilidade do Nome da Loja */}
+          <div className="p-4 border border-[var(--on-background)] rounded-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-[var(--foreground)]">Exibir nome da loja na navbar</p>
+                <p className="text-xs text-[var(--on-background)]">Ative para exibir o nome da loja na navbar</p>
+              </div>
+              <SwitchButton
+                value={storeConfig.showStoreName}
+                onChange={(v) => setStoreConfig(prev => ({ ...prev, showStoreName: v }))}
+                size="md"
+              />
+            </div>
           </div>
-          
-          <div className="space-y-4">
+        </div>
+      </div>
+
+      {/* Personalização de Cores */}
+      <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-2xl p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Palette size={20} className="text-[var(--primary)]" />
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">
+            Cores da loja
+          </h2>
+        </div>
+        
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <ColorPicker
               label="Cor primária"
               value={storeConfig.primaryColor}
@@ -286,13 +359,10 @@ function StorePageContent() {
           </div>
         </div>
       </div>
-      
-      {/* Divider */}
-      <hr className="border-t border-black/10" />
 
       {/* Seção de Imagens */}
       <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-2xl p-6">
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-6">
           <Image size={20} className="text-[var(--primary)]" />
           <h2 className="text-lg font-semibold text-[var(--foreground)]">
             Imagens
@@ -300,61 +370,330 @@ function StorePageContent() {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <ImageUpload
-            label="Logotipo da loja"
-            value={storeConfig.logoUrl ? { url: storeConfig.logoUrl } : null}
-            onChange={(file, url) => {
-              if (file && url) {
-                setStoreConfig(prev => ({ ...prev, logoUrl: url }));
-              } else if (file === null) {
-                // Quando file é null, significa que a imagem foi removida
-                setStoreConfig(prev => ({ ...prev, logoUrl: '' }));
-              }
-            }}
-            placeholder="Arraste seu logotipo aqui ou clique para selecionar"
-            maxSize={5}
-            error=""
-            folder="logos"
-          />
-          
-          <ImageUpload
-            label="Banner da tela inicial"
-            value={storeConfig.homeBannerUrl ? { url: storeConfig.homeBannerUrl } : null}
-            onChange={(file, url) => {
-              if (file && url) {
-                setStoreConfig(prev => ({ ...prev, homeBannerUrl: url }));
-              } else if (file === null) {
-                // Quando file é null, significa que a imagem foi removida
-                setStoreConfig(prev => ({ ...prev, homeBannerUrl: '' }));
-              }
-            }}
-            placeholder="Arraste o banner da tela inicial aqui"
-            maxSize={10}
-            error=""
-            folder="home-banner"
-          />
-          
-          <ImageUpload
-            label="Banner da loja"
-            value={storeConfig.storeBannerUrl ? { url: storeConfig.storeBannerUrl } : null}
-            onChange={(file, url) => {
-              if (file && url) {
-                setStoreConfig(prev => ({ ...prev, storeBannerUrl: url }));
-              } else if (file === null) {
-                // Quando file é null, significa que a imagem foi removida
-                setStoreConfig(prev => ({ ...prev, storeBannerUrl: '' }));
-              }
-            }}
-            placeholder="Arraste o banner da loja aqui"
-            maxSize={10}
-            error=""
-            folder="store-banner"
+          {/* Logotipo da Loja */}
+          <div className="p-5 border border-[var(--on-background)] rounded-xl bg-[var(--background)]/40 hover:bg-[var(--background)]/60 transition-colors">
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-[var(--foreground)] mb-1">
+                Logotipo da loja
+              </h3>
+              <p className="text-xs text-[var(--on-background)]">
+                Imagem quadrada recomendada. Máximo 5MB
+              </p>
+            </div>
+            <ImageUpload
+              label=""
+              value={storeConfig.logoUrl ? { url: storeConfig.logoUrl } : null}
+              onChange={(file, url) => {
+                if (file && url) {
+                  setStoreConfig(prev => ({ ...prev, logoUrl: url }));
+                } else if (file === null) {
+                  setStoreConfig(prev => ({ ...prev, logoUrl: '' }));
+                }
+              }}
+              placeholder="Arraste seu logotipo aqui ou clique para selecionar"
+              maxSize={5}
+              error=""
+              folder="logos"
+            />
+          </div>
+
+          {/* Banner da Tela Inicial */}
+          <div className="p-5 border border-[var(--on-background)] rounded-xl bg-[var(--background)]/40 hover:bg-[var(--background)]/60 transition-colors">
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-[var(--foreground)] mb-1">
+                Banner da tela inicial
+              </h3>
+              <p className="text-xs text-[var(--on-background)]">
+                Banner exibido nas páginas de login e registro. Máximo 10MB
+              </p>
+            </div>
+            <ImageUpload
+              label=""
+              value={storeConfig.homeBannerUrl ? { url: storeConfig.homeBannerUrl } : null}
+              onChange={(file, url) => {
+                if (file && url) {
+                  setStoreConfig(prev => ({ ...prev, homeBannerUrl: url }));
+                } else if (file === null) {
+                  setStoreConfig(prev => ({ ...prev, homeBannerUrl: '' }));
+                }
+              }}
+              placeholder="Arraste o banner da tela inicial aqui"
+              maxSize={10}
+              error=""
+              folder="home-banner"
+            />
+          </div>
+
+          {/* Banner da Loja */}
+          <div className="p-5 border border-[var(--on-background)] rounded-xl bg-[var(--background)]/40 hover:bg-[var(--background)]/60 transition-colors">
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-[var(--foreground)] mb-1">
+                Banner da loja
+              </h3>
+              <p className="text-xs text-[var(--on-background)]">
+                Banner principal exibido na página da loja. Máximo 10MB
+              </p>
+            </div>
+            <ImageUpload
+              label=""
+              value={storeConfig.storeBannerUrl ? { url: storeConfig.storeBannerUrl } : null}
+              onChange={(file, url) => {
+                if (file && url) {
+                  setStoreConfig(prev => ({ ...prev, storeBannerUrl: url }));
+                } else if (file === null) {
+                  setStoreConfig(prev => ({ ...prev, storeBannerUrl: '' }));
+                }
+              }}
+              placeholder="Arraste o banner da loja aqui"
+              maxSize={10}
+              error=""
+              folder="store-banner"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Opções de arredondamento
+  const roundedOptions = [
+    { value: 'none', label: 'Sem arredondamento' },
+    { value: 'sm', label: 'Pequeno (sm)' },
+    { value: 'md', label: 'Médio (md)' },
+    { value: 'lg', label: 'Grande (lg)' },
+    { value: 'xl', label: 'Extra Grande (xl)' },
+    { value: '2xl', label: '2x Grande (2xl)' },
+    { value: 'full', label: 'Completo (full)' },
+  ];
+
+  // Função para atualizar estilo de componente
+  const updateComponentStyle = (
+    component: 'buttons' | 'productCards' | 'banner',
+    field: keyof ComponentStyle | keyof BannerConfig,
+    value: string | boolean
+  ) => {
+    setAppearanceConfig(prev => ({
+      ...prev,
+      [component]: {
+        ...prev[component],
+        [field]: value,
+      },
+    }));
+  };
+
+  // Conteúdo da Tab Aparência
+  const appearanceContent = (
+    <div className="space-y-6">
+      {/* Background da Loja */}
+      <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-2xl p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Square size={20} className="text-[var(--primary)]" />
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">
+            Background da loja
+          </h2>
+        </div>
+        
+        <div className="space-y-4">
+          <ColorPicker
+            label="Cor de fundo"
+            value={appearanceConfig.storeBackground}
+            onChange={(color) => setAppearanceConfig(prev => ({ ...prev, storeBackground: color }))}
           />
         </div>
       </div>
-      {/* Divider */}
-      <hr className="border-t border-black/10" />
-      {/* Social */}
+
+      {/* Banner da Loja */}
+      <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-2xl p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Image size={20} className="text-[var(--primary)]" />
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">
+            Banner da loja
+          </h2>
+        </div>
+        
+        <div className="space-y-4">
+          <Selector
+            label="Arredondamento"
+            options={roundedOptions}
+            value={appearanceConfig.banner.rounded}
+            onChange={(value) => updateComponentStyle('banner', 'rounded', value)}
+          />
+          
+          <div className="p-4 border border-[var(--on-background)] rounded-xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-[var(--foreground)]">Borda</p>
+                <p className="text-xs text-[var(--on-background)]">Ative para exibir borda no banner</p>
+              </div>
+              <SwitchButton
+                value={appearanceConfig.banner.hasBorder}
+                onChange={(v) => updateComponentStyle('banner', 'hasBorder', v)}
+                size="md"
+              />
+            </div>
+
+            {appearanceConfig.banner.hasBorder && (
+              <div className="pt-2 border-t border-[var(--on-background)]/20">
+                <ColorPicker
+                  label="Cor da borda"
+                  value={appearanceConfig.banner.borderColor}
+                  onChange={(color) => updateComponentStyle('banner', 'borderColor', color)}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Efeito Hover */}
+          <div className="p-4 border border-[var(--on-background)] rounded-xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-[var(--foreground)]">Efeito hover</p>
+                <p className="text-xs text-[var(--on-background)]">Ative para exibir efeito ao passar o mouse</p>
+              </div>
+              <SwitchButton
+                value={appearanceConfig.banner.hoverEnabled}
+                onChange={(v) => updateComponentStyle('banner', 'hoverEnabled', v)}
+                size="md"
+              />
+            </div>
+
+            {appearanceConfig.banner.hoverEnabled && (
+              <div className="pt-2 border-t border-[var(--on-background)]/20">
+                <Selector
+                  label="Tipo de efeito hover"
+                  options={[
+                    { value: 'none', label: 'Nenhum' },
+                    { value: 'scale', label: 'Aumentar (Scale)' },
+                    { value: 'brightness', label: 'Brilho (Brightness)' },
+                    { value: 'opacity', label: 'Opacidade' },
+                    { value: 'shadow', label: 'Sombra (Shadow)' },
+                  ]}
+                  value={appearanceConfig.banner.hoverEffect}
+                  onChange={(value) => updateComponentStyle('banner', 'hoverEffect', value)}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Redirect Link */}
+          <div className="p-4 border border-[var(--on-background)] rounded-xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-[var(--foreground)]">Link de redirecionamento</p>
+                <p className="text-xs text-[var(--on-background)]">Ative para redirecionar ao clicar no banner</p>
+              </div>
+              <SwitchButton
+                value={appearanceConfig.banner.redirectEnabled}
+                onChange={(v) => updateComponentStyle('banner', 'redirectEnabled', v)}
+                size="md"
+              />
+            </div>
+
+            {appearanceConfig.banner.redirectEnabled && (
+              <div className="pt-2 border-t border-[var(--on-background)]/20">
+                <Input
+                  label="URL de redirecionamento"
+                  placeholder="https://exemplo.com"
+                  value={appearanceConfig.banner.redirectUrl}
+                  onChange={(e) => updateComponentStyle('banner', 'redirectUrl', e.target.value)}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Botões da Loja */}
+      <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-2xl p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <MousePointer size={20} className="text-[var(--primary)]" />
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">
+            Botões da loja
+          </h2>
+        </div>
+        
+        <div className="space-y-4">
+          <Selector
+            label="Arredondamento"
+            options={roundedOptions}
+            value={appearanceConfig.buttons.rounded}
+            onChange={(value) => updateComponentStyle('buttons', 'rounded', value)}
+          />
+          
+          <div className="p-4 border border-[var(--on-background)] rounded-xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-[var(--foreground)]">Borda</p>
+                <p className="text-xs text-[var(--on-background)]">Ative para exibir borda nos botões</p>
+              </div>
+              <SwitchButton
+                value={appearanceConfig.buttons.hasBorder}
+                onChange={(v) => updateComponentStyle('buttons', 'hasBorder', v)}
+                size="md"
+              />
+            </div>
+
+            {appearanceConfig.buttons.hasBorder && (
+              <div className="pt-2 border-t border-[var(--on-background)]/20">
+                <ColorPicker
+                  label="Cor da borda"
+                  value={appearanceConfig.buttons.borderColor}
+                  onChange={(color) => updateComponentStyle('buttons', 'borderColor', color)}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Cards de Produtos */}
+      <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-2xl p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Square size={20} className="text-[var(--primary)]" />
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">
+            Cards de produtos
+          </h2>
+        </div>
+        
+        <div className="space-y-4">
+          <Selector
+            label="Arredondamento"
+            options={roundedOptions}
+            value={appearanceConfig.productCards.rounded}
+            onChange={(value) => updateComponentStyle('productCards', 'rounded', value)}
+          />
+          
+          <div className="p-4 border border-[var(--on-background)] rounded-xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-[var(--foreground)]">Borda</p>
+                <p className="text-xs text-[var(--on-background)]">Ative para exibir borda nos cards</p>
+              </div>
+              <SwitchButton
+                value={appearanceConfig.productCards.hasBorder}
+                onChange={(v) => updateComponentStyle('productCards', 'hasBorder', v)}
+                size="md"
+              />
+            </div>
+
+            {appearanceConfig.productCards.hasBorder && (
+              <div className="pt-2 border-t border-[var(--on-background)]/20">
+                <ColorPicker
+                  label="Cor da borda"
+                  value={appearanceConfig.productCards.borderColor}
+                  onChange={(color) => updateComponentStyle('productCards', 'borderColor', color)}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Conteúdo da Tab Social
+  const socialContent = (
+    <div className="space-y-6">
       <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-4">
           <Globe size={20} className="text-[var(--primary)]" />
@@ -458,8 +797,31 @@ function StorePageContent() {
         </div>
       </div>
 
-      {/* Conteúdo da Loja */}
-      {storeContent}
+      {/* Conteúdo Obrigatório */}
+      {requiredContent}
+
+      {/* Divider */}
+      <hr className="border-t border-black/10" />
+
+      {/* Tabs Opcionais */}
+      <Tabs
+        items={[
+          {
+            id: 'appearance',
+            label: 'Aparência',
+            icon: Palette,
+            content: appearanceContent,
+          },
+          {
+            id: 'social',
+            label: 'Social',
+            icon: Globe,
+            content: socialContent,
+          },
+        ]}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+      />
 
       {/* Modal de Domínio */}
       <DomainModal

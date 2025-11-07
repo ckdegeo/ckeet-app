@@ -9,7 +9,6 @@ import { useRouter } from "next/navigation";
 import { useCustomerLogin } from "@/lib/hooks/useCustomerLogin";
 import { loginSchema, type LoginData } from "@/lib/validations/authSchemas";
 import { Store } from '@/lib/types';
-import ResendConfirmationModal from '@/app/components/modals/resendConfirmationModal';
 import LoadingSpinner from '@/app/components/ui/loadingSpinner';
 
 export default function LoginPage() {
@@ -18,7 +17,6 @@ export default function LoginPage() {
   const [store, setStore] = useState<Store | null>(null);
   const [loadingStore, setLoadingStore] = useState(true);
   const [subdomain, setSubdomain] = useState<string>('');
-  const [isForgotOpen, setIsForgotOpen] = useState(false);
   const router = useRouter();
   
   const { isLoading, errors, login } = useCustomerLogin();
@@ -73,16 +71,8 @@ export default function LoginPage() {
 
   const handleForgotClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    setIsForgotOpen(true);
-  };
-
-  const handleResendForgot = async (targetEmail: string) => {
-    // Usa a rota genérica já existente para reset de senha via Supabase
-    await fetch('/api/auth/forgot-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: targetEmail })
-    });
+    // Redirecionar para página de recuperação de senha
+    window.location.href = '/api/auth/forgot-password';
   };
 
   if (loadingStore) {
@@ -240,11 +230,6 @@ export default function LoginPage() {
           </form>
         </div>
       </div>
-      <ResendConfirmationModal 
-        isOpen={isForgotOpen} 
-        onClose={() => setIsForgotOpen(false)} 
-        initialEmail={email}
-      />
     </div>
   );
 }

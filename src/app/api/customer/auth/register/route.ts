@@ -88,10 +88,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Registrar no Supabase Auth
+    // Para customers, não exigimos confirmação de email (configurado no Supabase dashboard)
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo: undefined, // Não redirecionar para confirmação
         data: {
           user_type: 'customer',
           name,
@@ -120,7 +122,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Conta criada com sucesso! Verifique seu email para confirmar a conta.',
+      message: 'Conta criada com sucesso!',
       user: {
         id: authData.user!.id,
         email: authData.user!.email,
@@ -128,14 +130,11 @@ export async function POST(request: NextRequest) {
         user_type: 'customer',
         customer_id: customer.id,
       },
-      // Nota: Tokens só são retornados se email_confirmed_at não for null
-      ...(authData.session && {
-        tokens: {
-          access_token: authData.session.access_token,
-          refresh_token: authData.session.refresh_token,
-          expires_at: authData.session.expires_at,
-        },
-      }),
+      tokens: {
+        access_token: authData.session?.access_token || '',
+        refresh_token: authData.session?.refresh_token || '',
+        expires_at: authData.session?.expires_at || 0,
+      },
     });
 
   } catch (error) {
