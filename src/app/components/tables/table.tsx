@@ -28,6 +28,10 @@ interface TableProps<T> {
   emptyMessage?: string;
   primaryColor?: string;
   secondaryColor?: string;
+  titleColor?: string;
+  backgroundColor?: string;
+  borderColor?: string;
+  rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
 }
 
 export default function Table<T>({
@@ -37,7 +41,11 @@ export default function Table<T>({
   itemsPerPage = 10,
   emptyMessage = "Nenhum item encontrado",
   primaryColor = '#bd253c',
-  secondaryColor = '#970b27'
+  secondaryColor = '#970b27',
+  titleColor,
+  backgroundColor,
+  borderColor,
+  rounded = '2xl'
 }: TableProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
   const pathname = usePathname();
@@ -64,19 +72,36 @@ export default function Table<T>({
     }
   };
 
+  // Função auxiliar para obter classes de arredondamento
+  const getRoundedClass = (roundedValue?: string) => {
+    if (!roundedValue || useDefaultStyles) return 'rounded-2xl';
+    const roundedMap: Record<string, string> = {
+      'none': 'rounded-none',
+      'sm': 'rounded-sm',
+      'md': 'rounded-md',
+      'lg': 'rounded-lg',
+      'xl': 'rounded-xl',
+      '2xl': 'rounded-2xl',
+      'full': 'rounded-full',
+    };
+    return roundedMap[roundedValue] || 'rounded-2xl';
+  };
+
   return (
     <div className="w-full flex flex-col gap-4 min-w-0">
       {/* Container da tabela com scroll horizontal */}
       <div 
-        className={`w-full max-w-full overflow-x-auto overflow-y-visible rounded-2xl border relative isolate ${
+        className={`w-full max-w-full overflow-x-auto overflow-y-visible border relative isolate ${
+          getRoundedClass(rounded)
+        } ${
           useDefaultStyles ? 'bg-[var(--surface)]' : ''
         }`}
         style={{
           ...(useDefaultStyles ? {
             borderColor: 'var(--border)'
           } : {
-            borderColor: `${primaryColor}20`,
-            backgroundColor: 'white'
+            borderColor: borderColor || `${primaryColor}20`,
+            backgroundColor: backgroundColor || 'white'
           }),
           maxWidth: '100%'
         }}
@@ -103,8 +128,8 @@ export default function Table<T>({
                   style={useDefaultStyles ? {
                     width: column.width || 'auto'
                   } : { 
-                    color: primaryColor,
-                    backgroundColor: `${primaryColor}05`,
+                    color: titleColor || primaryColor,
+                    backgroundColor: backgroundColor ? `${backgroundColor}05` : `${primaryColor}05`,
                     width: column.width || 'auto'
                   }}
                 >

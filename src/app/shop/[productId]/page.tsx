@@ -323,7 +323,14 @@ export default function ProductPage() {
           {/* Informações do Produto */}
           <div className="flex flex-col">
             {/* Header do Produto */}
-            <div className="pb-6 border-b border-gray-200">
+            <div 
+              className="pb-6 border-b"
+              style={{ 
+                borderColor: appearance.productCards.hasBorder 
+                  ? appearance.productCards.borderColor 
+                  : '#e5e7eb'
+              }}
+            >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <h1 
@@ -404,52 +411,144 @@ export default function ProductPage() {
 
             {/* Descrição */}
             {product.description && (
-              <div className="py-6 border-b border-gray-200">
-                <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">
+              <div 
+                className="py-6 border-b"
+                style={{ 
+                  borderColor: appearance.productCards.hasBorder 
+                    ? appearance.productCards.borderColor 
+                    : '#e5e7eb'
+                }}
+              >
+                <h2 
+                  className="text-sm font-semibold uppercase tracking-wide mb-3"
+                  style={{ 
+                    color: appearance.productCards.titleColor || '#111827' 
+                  }}
+                >
                   Sobre o produto
                 </h2>
-                <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
+                <p 
+                  className="text-sm leading-relaxed whitespace-pre-wrap"
+                  style={{ 
+                    color: appearance.productCards.titleColor || '#374151' 
+                  }}
+                >
                   {product.description}
                 </p>
               </div>
             )}
 
             {/* Features */}
-            <div className="py-6 border-b border-gray-200">
-              <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-4">
+            <div 
+              className="py-6 border-b"
+              style={{ 
+                borderColor: appearance.productCards.hasBorder 
+                  ? appearance.productCards.borderColor 
+                  : '#e5e7eb'
+              }}
+            >
+              <h2 
+                className="text-sm font-semibold uppercase tracking-wide mb-4"
+                style={{ 
+                  color: appearance.productCards.titleColor || '#111827' 
+                }}
+              >
                 Vantagens
               </h2>
               <div className="space-y-3">
                 {/* Entrega instantânea */}
-                <div className="flex items-center gap-4 p-4 bg-green-50 rounded-xl border border-green-100 hover:bg-green-100 transition-colors">
-                  <div className="flex-shrink-0 w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                <div 
+                  className="flex items-center gap-4 p-4 rounded-xl border transition-colors hover:opacity-90"
+                  style={{
+                    backgroundColor: appearance.productCards.backgroundColor ? `${appearance.productCards.backgroundColor}20` : 'transparent',
+                    borderColor: appearance.productCards.hasBorder 
+                      ? `${appearance.productCards.borderColor}40` 
+                      : 'transparent',
+                  }}
+                >
+                  <div 
+                    className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: store.secondaryColor || '#970b27' }}
+                  >
                     <Zap className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Entrega instantânea</h3>
-                    <p className="text-sm text-gray-600">Receba seu produto imediatamente após o pagamento</p>
+                    <h3 
+                      className="font-semibold"
+                      style={{ color: appearance.productCards.titleColor || '#111827' }}
+                    >
+                      Entrega instantânea
+                    </h3>
+                    <p 
+                      className="text-sm"
+                      style={{ color: appearance.productCards.titleColor || '#6b7280' }}
+                    >
+                      Receba seu produto imediatamente após o pagamento
+                    </p>
                   </div>
                 </div>
 
                 {/* Suporte 24/7 */}
-                <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl border border-blue-100 hover:bg-blue-100 transition-colors">
-                  <div className="flex-shrink-0 w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                <div 
+                  className="flex items-center gap-4 p-4 rounded-xl border transition-colors hover:opacity-90"
+                  style={{
+                    backgroundColor: appearance.productCards.backgroundColor ? `${appearance.productCards.backgroundColor}20` : 'transparent',
+                    borderColor: appearance.productCards.hasBorder 
+                      ? `${appearance.productCards.borderColor}40` 
+                      : 'transparent',
+                  }}
+                >
+                  <div 
+                    className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: store.secondaryColor || '#970b27' }}
+                  >
                     <Headphones className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Suporte 24/7</h3>
-                    <p className="text-sm text-gray-600">Nossa equipe está sempre disponível para ajudar</p>
+                    <h3 
+                      className="font-semibold"
+                      style={{ color: appearance.productCards.titleColor || '#111827' }}
+                    >
+                      Suporte 24/7
+                    </h3>
+                    <p 
+                      className="text-sm"
+                      style={{ color: appearance.productCards.titleColor || '#6b7280' }}
+                    >
+                      Nossa equipe está sempre disponível para ajudar
+                    </p>
                   </div>
                 </div>
 
                 {/* Processado por MercadoPago */}
-                <div className="flex items-center gap-4 p-4 bg-purple-50 rounded-xl border border-purple-100 hover:bg-purple-100 transition-colors">
-                  <div className="flex-shrink-0 w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+                <div 
+                  className="flex items-center gap-4 p-4 rounded-xl border transition-colors hover:opacity-90"
+                  style={{
+                    backgroundColor: appearance.productCards.backgroundColor ? `${appearance.productCards.backgroundColor}20` : 'transparent',
+                    borderColor: appearance.productCards.hasBorder 
+                      ? `${appearance.productCards.borderColor}40` 
+                      : 'transparent',
+                  }}
+                >
+                  <div 
+                    className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: store.secondaryColor || '#970b27' }}
+                  >
                     <Shield className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Mercado Pago</h3>
-                    <p className="text-sm text-gray-600">Pagamento seguro e confiável</p>
+                    <h3 
+                      className="font-semibold"
+                      style={{ color: appearance.productCards.titleColor || '#111827' }}
+                    >
+                      Mercado Pago
+                    </h3>
+                    <p 
+                      className="text-sm"
+                      style={{ color: appearance.productCards.titleColor || '#6b7280' }}
+                    >
+                      Pagamento seguro e confiável
+                    </p>
                   </div>
                 </div>
               </div>

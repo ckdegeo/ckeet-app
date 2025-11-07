@@ -728,14 +728,22 @@ export default function OrdersPage() {
             value={ordersLoading ? '...' : stats.totalOrders}
             icon={CheckCircle}
             background="transparent"
-            className={`shadow-sm border border-gray-100 ${ordersLoading ? 'opacity-75' : ''}`}
+            className={`shadow-sm ${ordersLoading ? 'opacity-75' : ''} ${
+              getRoundedClass(appearance.productCards.rounded)
+            } ${
+              appearance.productCards.hasBorder ? 'border' : 'border'
+            }`}
             style={{
               '--primary': store.primaryColor || '#bd253c',
               '--secondary': store.secondaryColor || '#970b27',
-              '--background': '#ffffff',
-              '--foreground': '#111827',
+              '--background': appearance.productCards.backgroundColor || '#ffffff',
+              '--foreground': appearance.productCards.titleColor || '#111827',
               '--on-background': '#6b7280',
-              '--on-primary': '#ffffff'
+              '--on-primary': '#ffffff',
+              backgroundColor: appearance.productCards.backgroundColor || '#ffffff',
+              borderColor: appearance.productCards.hasBorder 
+                ? appearance.productCards.borderColor 
+                : '#e5e7eb',
             } as React.CSSProperties}
           />
 
@@ -744,14 +752,22 @@ export default function OrdersPage() {
             value={ordersLoading ? '...' : stats.paidOrders}
             icon={Download}
             background="transparent"
-            className={`shadow-sm border border-gray-100 ${ordersLoading ? 'opacity-75' : ''}`}
+            className={`shadow-sm ${ordersLoading ? 'opacity-75' : ''} ${
+              getRoundedClass(appearance.productCards.rounded)
+            } ${
+              appearance.productCards.hasBorder ? 'border' : 'border'
+            }`}
             style={{
               '--primary': store.secondaryColor || '#970b27',
               '--secondary': store.primaryColor || '#bd253c',
-              '--background': '#ffffff',
-              '--foreground': '#111827',
+              '--background': appearance.productCards.backgroundColor || '#ffffff',
+              '--foreground': appearance.productCards.titleColor || '#111827',
               '--on-background': '#6b7280',
-              '--on-primary': '#ffffff'
+              '--on-primary': '#ffffff',
+              backgroundColor: appearance.productCards.backgroundColor || '#ffffff',
+              borderColor: appearance.productCards.hasBorder 
+                ? appearance.productCards.borderColor 
+                : '#e5e7eb',
             } as React.CSSProperties}
           />
 
@@ -760,25 +776,57 @@ export default function OrdersPage() {
             value={ordersLoading ? '...' : stats.totalDownloads}
             icon={Eye}
             background="transparent"
-            className={`shadow-sm border border-gray-100 ${ordersLoading ? 'opacity-75' : ''}`}
+            className={`shadow-sm ${ordersLoading ? 'opacity-75' : ''} ${
+              getRoundedClass(appearance.productCards.rounded)
+            } ${
+              appearance.productCards.hasBorder ? 'border' : 'border'
+            }`}
             style={{
               '--primary': store.primaryColor || '#bd253c',
               '--secondary': store.secondaryColor || '#970b27',
-              '--background': '#ffffff',
-              '--foreground': '#111827',
+              '--background': appearance.productCards.backgroundColor || '#ffffff',
+              '--foreground': appearance.productCards.titleColor || '#111827',
               '--on-background': '#6b7280',
-              '--on-primary': '#ffffff'
+              '--on-primary': '#ffffff',
+              backgroundColor: appearance.productCards.backgroundColor || '#ffffff',
+              borderColor: appearance.productCards.hasBorder 
+                ? appearance.productCards.borderColor 
+                : '#e5e7eb',
             } as React.CSSProperties}
           />
         </div>
 
         {/* Tabela de Pedidos */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-100">
+        <div 
+          className={`shadow-sm overflow-hidden ${
+            getRoundedClass(appearance.productCards.rounded)
+          } ${
+            appearance.productCards.hasBorder ? 'border' : 'border'
+          }`}
+          style={{
+            backgroundColor: appearance.productCards.backgroundColor || '#ffffff',
+            borderColor: appearance.productCards.hasBorder 
+              ? appearance.productCards.borderColor 
+              : '#e5e7eb',
+          }}
+        >
+          <div 
+            className="p-6 border-b"
+            style={{
+              borderColor: appearance.productCards.hasBorder 
+                ? appearance.productCards.borderColor 
+                : '#e5e7eb',
+            }}
+          >
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Comprados</h2>
+                  <h2 
+                    className="text-xl font-semibold"
+                    style={{ color: appearance.productCards.titleColor || '#111827' }}
+                  >
+                    Comprados
+                  </h2>
                 </div>
                 
                 {/* Botão de Refresh */}
@@ -820,6 +868,10 @@ export default function OrdersPage() {
               emptyMessage="Nenhum pedido encontrado. Faça sua primeira compra!"
               primaryColor={store.primaryColor}
               secondaryColor={store.secondaryColor}
+              titleColor={appearance.productCards.titleColor}
+              backgroundColor={appearance.productCards.backgroundColor}
+              borderColor={appearance.productCards.hasBorder ? appearance.productCards.borderColor : undefined}
+              rounded={appearance.productCards.rounded}
             />
           </div>
         </div>
