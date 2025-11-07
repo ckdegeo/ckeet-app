@@ -880,6 +880,7 @@ export default function OrdersPage() {
                   secondaryColor={store.secondaryColor}
                   borderColor={appearance.productCards.hasBorder ? appearance.productCards.borderColor : undefined}
                   backgroundColor={appearance.productCards.backgroundColor}
+                  titleColor={appearance.productCards.titleColor}
                 />
               </div>
             </div>

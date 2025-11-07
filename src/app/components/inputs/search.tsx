@@ -11,6 +11,7 @@ interface SearchProps extends InputHTMLAttributes<HTMLInputElement> {
   secondaryColor?: string;
   borderColor?: string;
   backgroundColor?: string;
+  titleColor?: string;
 }
 
 export default function Search({
@@ -21,6 +22,7 @@ export default function Search({
   secondaryColor = '#970b27',
   borderColor,
   backgroundColor,
+  titleColor,
   ...props
 }: SearchProps) {
   return (
@@ -32,6 +34,13 @@ export default function Search({
       )}
       
       <div className="relative w-full">
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            input[type="search"]::placeholder {
+              color: ${titleColor ? `${titleColor}80` : '#9ca3af'} !important;
+            }
+          `
+        }} />
         <input
           type="search"
           {...props}
@@ -40,8 +49,6 @@ export default function Search({
             pl-11 pr-4 py-3
             rounded-full
             border
-            text-gray-900
-            placeholder:text-gray-500
             transition-all
             outline-none
             focus:border-opacity-100
@@ -53,6 +60,7 @@ export default function Search({
           style={{
             backgroundColor: backgroundColor || '#ffffff',
             borderColor: error ? '#ef4444' : (borderColor || '#d1d5db'),
+            color: titleColor ? `${titleColor}E6` : '#111827', // 90% opacity
             '--tw-ring-color': primaryColor,
           } as React.CSSProperties}
           onFocus={(e) => {
@@ -66,7 +74,7 @@ export default function Search({
         />
         <div 
           className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
-          style={{ color: borderColor || '#6b7280' }}
+          style={{ color: titleColor ? `${titleColor}E6` : (borderColor || '#6b7280') }}
         >
           <SearchIcon size={18} />
         </div>

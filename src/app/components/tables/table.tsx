@@ -198,7 +198,7 @@ export default function Table<T>({
                         overflowWrap: 'break-word',
                         borderColor: 'var(--border)'
                       } : { 
-                        color: '#374151',
+                        color: titleColor ? `${titleColor}E6` : '#374151', // 90% opacity
                         width: column.width || 'auto',
                         wordWrap: 'break-word',
                         overflowWrap: 'break-word',
@@ -278,7 +278,9 @@ export default function Table<T>({
                   className={`px-6 py-8 text-center text-sm ${
                     useDefaultStyles ? 'text-[var(--foreground-secondary)]' : ''
                   }`}
-                  style={useDefaultStyles ? {} : { color: '#6b7280' }}
+                  style={useDefaultStyles ? {} : { 
+                    color: titleColor ? `${titleColor}E6` : '#6b7280' // 90% opacity
+                  }}
                 >
                   {emptyMessage}
                 </td>

@@ -41,7 +41,14 @@ export default function NumberCard({
     >
       {/* Header com título e ícone */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-[var(--on-background)]">
+        <h3 
+          className="text-sm font-medium"
+          style={{ 
+            color: style?.['--foreground'] 
+              ? `${style['--foreground']}E6` // 90% opacity (E6 = 230/255 ≈ 0.9)
+              : 'var(--on-background)'
+          }}
+        >
           {title}
         </h3>
         <div className="p-2 bg-[var(--primary)] rounded-full">
@@ -51,7 +58,14 @@ export default function NumberCard({
 
       {/* Valor principal */}
       <div className="mb-2">
-        <p className="text-2xl font-bold text-[var(--foreground)]">
+        <p 
+          className="text-2xl font-bold"
+          style={{ 
+            color: style?.['--foreground'] 
+              ? `${style['--foreground']}E6` // 90% opacity
+              : 'var(--foreground)'
+          }}
+        >
           {value.toLocaleString('pt-BR')}
         </p>
       </div>
@@ -70,7 +84,14 @@ export default function NumberCard({
           >
                          {changeType === 'increase' ? '+' : '-'}{Math.abs(Number(change))}%
           </span>
-          <span className="text-sm text-[var(--on-background)]">
+          <span 
+            className="text-sm"
+            style={{ 
+              color: style?.['--foreground'] 
+                ? `${style['--foreground']}E6` // 90% opacity
+                : 'var(--on-background)'
+            }}
+          >
             vs mês anterior
           </span>
         </div>
