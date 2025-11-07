@@ -20,6 +20,9 @@ interface AppearanceConfig {
     rounded: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
     hasBorder: boolean;
     borderColor: string;
+    backgroundColor?: string;
+    titleColor?: string;
+    priceColor?: string;
   };
   banner: {
     rounded: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
@@ -31,6 +34,10 @@ interface AppearanceConfig {
     redirectEnabled: boolean;
   };
   storeBackground: string;
+  categoryTitle: {
+    titleColor: string;
+    lineColor: string;
+  };
 }
 
 export default function ShopPage() {
@@ -177,6 +184,9 @@ export default function ShopPage() {
       rounded: '2xl',
       hasBorder: true,
       borderColor: '#e5e7eb',
+      backgroundColor: '#ffffff',
+      titleColor: '#111827',
+      priceColor: '#111827',
     },
     banner: {
       rounded: '2xl',
@@ -188,6 +198,10 @@ export default function ShopPage() {
       redirectEnabled: false,
     },
     storeBackground: '#f9fafb',
+    categoryTitle: {
+      titleColor: '#111827',
+      lineColor: '#bd253c',
+    },
   };
 
   const appearance = appearanceConfig || defaultAppearance;
@@ -284,13 +298,13 @@ export default function ShopPage() {
                 <div className="flex items-center gap-4 mb-8">
                   <h2 
                     className="text-3xl font-bold"
-                    style={{ color: store.primaryColor || '#bd253c' }}
+                    style={{ color: appearance.categoryTitle.titleColor || store.primaryColor || '#bd253c' }}
                   >
                     {category.name}
                   </h2>
                   <div 
                     className="flex-1 h-1 rounded-full"
-                    style={{ backgroundColor: `${store.primaryColor || '#bd253c'}20` }}
+                    style={{ backgroundColor: `${appearance.categoryTitle.lineColor || store.primaryColor || '#bd253c'}20` }}
                   ></div>
                 </div>
 
@@ -303,12 +317,13 @@ export default function ShopPage() {
                       <div
                         key={product.id}
                         onClick={() => handleProductClick(product.id)}
-                        className={`group bg-white shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden transform hover:-translate-y-1 cursor-pointer ${
+                        className={`group shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden transform hover:-translate-y-1 cursor-pointer ${
                           getRoundedClass(appearance.productCards.rounded)
                         } ${
                           appearance.productCards.hasBorder ? 'border' : 'border border-gray-100'
                         } hover:border-transparent`}
                         style={{
+                          backgroundColor: appearance.productCards.backgroundColor || '#ffffff',
                           borderColor: appearance.productCards.hasBorder 
                             ? appearance.productCards.borderColor 
                             : undefined,
@@ -334,14 +349,17 @@ export default function ShopPage() {
 
                         {/* Conteúdo */}
                         <div className="p-3">
-                          <h3 className="text-base font-medium text-gray-900 mb-1.5 line-clamp-2 group-hover:text-gray-700 transition-colors">
+                          <h3 
+                            className="text-base font-medium mb-1.5 line-clamp-2 group-hover:opacity-80 transition-colors"
+                            style={{ color: appearance.productCards.titleColor || '#111827' }}
+                          >
                             {product.name}
                           </h3>
                           
                           <div className="flex items-center justify-between mb-2">
                             <span 
                               className="text-lg font-bold"
-                              style={{ color: store.primaryColor || '#bd253c' }}
+                              style={{ color: appearance.productCards.priceColor || store.primaryColor || '#bd253c' }}
                             >
                               R$ {product.price.toFixed(2)}
                             </span>

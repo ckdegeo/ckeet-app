@@ -253,6 +253,9 @@ export interface Store {
       rounded: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
       hasBorder: boolean;
       borderColor: string;
+      backgroundColor?: string;
+      titleColor?: string;
+      priceColor?: string;
     };
     banner: {
       rounded: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
@@ -264,6 +267,10 @@ export interface Store {
       redirectEnabled: boolean;
     };
     storeBackground: string;
+    categoryTitle: {
+      titleColor: string;
+      lineColor: string;
+    };
   };
   
   // Status

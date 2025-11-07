@@ -45,6 +45,9 @@ interface ComponentStyle {
   rounded: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
   hasBorder: boolean;
   borderColor: string;
+  backgroundColor?: string;
+  titleColor?: string;
+  priceColor?: string;
 }
 
 interface BannerConfig extends ComponentStyle {
@@ -59,6 +62,10 @@ interface AppearanceConfig {
   productCards: ComponentStyle;
   banner: BannerConfig;
   storeBackground: string;
+  categoryTitle: {
+    titleColor: string;
+    lineColor: string;
+  };
 }
 
 function StorePageContent() {
@@ -158,6 +165,9 @@ function StorePageContent() {
       rounded: '2xl',
       hasBorder: true,
       borderColor: '#e5e7eb',
+      backgroundColor: '#ffffff',
+      titleColor: '#111827',
+      priceColor: '#111827',
     },
     banner: {
       rounded: '2xl',
@@ -169,6 +179,10 @@ function StorePageContent() {
       redirectEnabled: false,
     },
     storeBackground: '#f9fafb', // gray-50
+    categoryTitle: {
+      titleColor: '#111827',
+      lineColor: '#bd253c',
+    },
   });
 
   const handleInputChange = (field: keyof StoreConfig) => (
@@ -456,7 +470,7 @@ function StorePageContent() {
     </div>
   );
 
-  // Opções de arredondamento
+  // Opções de arredondamento (para botões e banner)
   const roundedOptions = [
     { value: 'none', label: 'Sem arredondamento' },
     { value: 'sm', label: 'Pequeno (sm)' },
@@ -465,6 +479,16 @@ function StorePageContent() {
     { value: 'xl', label: 'Extra Grande (xl)' },
     { value: '2xl', label: '2x Grande (2xl)' },
     { value: 'full', label: 'Completo (full)' },
+  ];
+
+  // Opções de arredondamento para cards de produtos (sem "full")
+  const roundedOptionsForCards = [
+    { value: 'none', label: 'Sem arredondamento' },
+    { value: 'sm', label: 'Pequeno (sm)' },
+    { value: 'md', label: 'Médio (md)' },
+    { value: 'lg', label: 'Grande (lg)' },
+    { value: 'xl', label: 'Extra Grande (xl)' },
+    { value: '2xl', label: '2x Grande (2xl)' },
   ];
 
   // Função para atualizar estilo de componente
@@ -659,7 +683,7 @@ function StorePageContent() {
         <div className="space-y-4">
           <Selector
             label="Arredondamento"
-            options={roundedOptions}
+            options={roundedOptionsForCards}
             value={appearanceConfig.productCards.rounded}
             onChange={(value) => updateComponentStyle('productCards', 'rounded', value)}
           />
@@ -687,6 +711,66 @@ function StorePageContent() {
               </div>
             )}
           </div>
+
+          {/* Cor do Card */}
+          <div className="p-4 border border-[var(--on-background)] rounded-xl space-y-4">
+            <ColorPicker
+              label="Cor de fundo do card"
+              value={appearanceConfig.productCards.backgroundColor || '#ffffff'}
+              onChange={(color) => updateComponentStyle('productCards', 'backgroundColor', color)}
+            />
+          </div>
+
+          {/* Cores das Fontes */}
+          <div className="p-4 border border-[var(--on-background)] rounded-xl space-y-4">
+            <div className="space-y-4">
+              <ColorPicker
+                label="Cor da fonte do título"
+                value={appearanceConfig.productCards.titleColor || '#111827'}
+                onChange={(color) => updateComponentStyle('productCards', 'titleColor', color)}
+              />
+              <ColorPicker
+                label="Cor da fonte do preço"
+                value={appearanceConfig.productCards.priceColor || '#111827'}
+                onChange={(color) => updateComponentStyle('productCards', 'priceColor', color)}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Título da Categoria */}
+      <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-2xl p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Square size={20} className="text-[var(--primary)]" />
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">
+            Título da categoria
+          </h2>
+        </div>
+        
+        <div className="space-y-4">
+          <ColorPicker
+            label="Cor da fonte do título"
+            value={appearanceConfig.categoryTitle.titleColor}
+            onChange={(color) => setAppearanceConfig(prev => ({
+              ...prev,
+              categoryTitle: {
+                ...prev.categoryTitle,
+                titleColor: color,
+              },
+            }))}
+          />
+          <ColorPicker
+            label="Cor da linha decorativa"
+            value={appearanceConfig.categoryTitle.lineColor}
+            onChange={(color) => setAppearanceConfig(prev => ({
+              ...prev,
+              categoryTitle: {
+                ...prev.categoryTitle,
+                lineColor: color,
+              },
+            }))}
+          />
         </div>
       </div>
     </div>

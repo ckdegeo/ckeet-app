@@ -13,6 +13,11 @@ interface UserMenuProps {
   userEmail?: string;
   userAvatar?: string;
   onLogout?: () => void;
+  appearanceConfig?: {
+    rounded: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+    hasBorder: boolean;
+    borderColor: string;
+  };
 }
 
 export default function UserMenu({ 
@@ -20,8 +25,32 @@ export default function UserMenu({
   userName,
   userEmail,
   userAvatar,
-  onLogout
+  onLogout,
+  appearanceConfig
 }: UserMenuProps) {
+  // Função auxiliar para obter classes de arredondamento (apenas se appearanceConfig for fornecido)
+  const getRoundedClass = (rounded: string) => {
+    const roundedMap: Record<string, string> = {
+      'none': 'rounded-none',
+      'sm': 'rounded-sm',
+      'md': 'rounded-md',
+      'lg': 'rounded-lg',
+      'xl': 'rounded-xl',
+      '2xl': 'rounded-2xl',
+      'full': 'rounded-full',
+    };
+    return roundedMap[rounded] || 'rounded-full';
+  };
+
+  // Configurações padrão se não houver (apenas se appearanceConfig for fornecido)
+  const defaultAppearance = {
+    rounded: 'full' as const,
+    hasBorder: false,
+    borderColor: '#000000',
+  };
+
+  // Aplicar configurações apenas se appearanceConfig for fornecido (usado na loja pública)
+  const buttonAppearance = appearanceConfig || defaultAppearance;
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [sellerName, setSellerName] = useState<string>("");
@@ -114,7 +143,14 @@ export default function UserMenu({
               {!isMaster && (
                 <Button
                   onClick={handleSettingsClick}
-                  className="w-full justify-start bg-[var(--surface)] text-[var(--on-surface)] hover:bg-gray-100 py-2"
+                  className={`w-full justify-start bg-[var(--surface)] text-[var(--on-surface)] hover:bg-gray-100 py-2 ${
+                    appearanceConfig ? getRoundedClass(buttonAppearance.rounded) : ''
+                  } ${
+                    appearanceConfig && buttonAppearance.hasBorder ? 'border' : ''
+                  }`}
+                  style={appearanceConfig && buttonAppearance.hasBorder ? {
+                    borderColor: buttonAppearance.borderColor,
+                  } : {}}
                 >
                   <Settings size={16} />
                   <span className="text-sm font-medium">Configurações</span>
@@ -122,7 +158,14 @@ export default function UserMenu({
               )}
               <Button
                 onClick={handleLogoutClick}
-                className="w-full justify-start bg-[var(--error)] text-[var(--on-error)] py-2"
+                className={`w-full justify-start bg-[var(--error)] text-[var(--on-error)] py-2 ${
+                  appearanceConfig ? getRoundedClass(buttonAppearance.rounded) : ''
+                } ${
+                  appearanceConfig && buttonAppearance.hasBorder ? 'border' : ''
+                }`}
+                style={appearanceConfig && buttonAppearance.hasBorder ? {
+                  borderColor: buttonAppearance.borderColor,
+                } : {}}
               >
                 <LogOut size={16} />
                 <span className="text-sm font-medium">Sair</span>

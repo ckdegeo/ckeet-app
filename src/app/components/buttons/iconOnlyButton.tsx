@@ -34,6 +34,9 @@ export default function IconOnlyButton({
     }
   };
 
+  // Extrair classes de arredondamento do className se existirem
+  const hasCustomRounded = className.includes('rounded-');
+  
   return (
     <button
       {...props}
@@ -41,7 +44,7 @@ export default function IconOnlyButton({
         cursor-pointer
         flex items-center justify-center
         w-12 h-12
-        rounded-full
+        ${hasCustomRounded ? '' : 'rounded-full'}
         font-medium
         transition-all
         hover:opacity-90

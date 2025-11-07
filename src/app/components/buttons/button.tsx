@@ -29,6 +29,9 @@ export default function Button({
     }
   };
 
+  // Extrair classes de arredondamento do className se existirem
+  const hasCustomRounded = className.includes('rounded-');
+  
   return (
     <button
       {...props}
@@ -36,7 +39,7 @@ export default function Button({
         cursor-pointer
         flex items-center justify-center gap-2
         px-6 py-3
-        rounded-full
+        ${hasCustomRounded ? '' : 'rounded-full'}
         font-medium
         transition-all
         disabled:opacity-50
