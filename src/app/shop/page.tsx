@@ -277,7 +277,7 @@ export default function ShopPage() {
       </div>
 
       {/* Conteúdo Principal */}
-      <main className="container mx-auto px-8 py-12">
+      <main className="container mx-auto px-8 py-8">
         {categories.length === 0 ? (
           <div className="text-center py-20">
             <div className="max-w-md mx-auto">
@@ -295,16 +295,19 @@ export default function ShopPage() {
             {categories.map((category) => (
               <section key={category.id} className="scroll-mt-20">
                 {/* Nome da Categoria com linha decorativa */}
-                <div className="flex items-center gap-2 sm:gap-4 mb-6 sm:mb-8">
+                <div className="flex items-center gap-2 sm:gap-4 mb-6 sm:mb-8 min-w-0 w-full overflow-hidden">
                   <h2 
-                    className="text-xl sm:text-2xl md:text-3xl font-bold flex-shrink-0"
+                    className="text-xl sm:text-2xl md:text-3xl font-bold truncate min-w-0 flex-1"
                     style={{ color: appearance.categoryTitle.titleColor || store.primaryColor || '#bd253c' }}
+                    title={category.name}
                   >
                     {category.name}
                   </h2>
                   <div 
-                    className="flex-1 h-0.5 sm:h-1 rounded-full min-w-[20px]"
-                    style={{ backgroundColor: `${appearance.categoryTitle.lineColor || store.primaryColor || '#bd253c'}20` }}
+                    className="h-0.5 sm:h-1 rounded-full min-w-[40px] sm:min-w-[60px] flex-shrink-0"
+                    style={{ 
+                      backgroundColor: `${appearance.categoryTitle.lineColor || store.primaryColor || '#bd253c'}20`,
+                    }}
                   ></div>
                 </div>
 
