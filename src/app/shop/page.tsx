@@ -9,12 +9,37 @@ import { useCustomerLogout } from '@/lib/hooks/useCustomerLogout';
 import LoadingSpinner from '@/app/components/ui/loadingSpinner';
 import SocialLinks from '@/app/components/social/socialLinks';
 
+// Interface para configurações de aparência
+interface AppearanceConfig {
+  buttons: {
+    rounded: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+    hasBorder: boolean;
+    borderColor: string;
+  };
+  productCards: {
+    rounded: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+    hasBorder: boolean;
+    borderColor: string;
+  };
+  banner: {
+    rounded: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+    hasBorder: boolean;
+    borderColor: string;
+    hoverEffect: 'none' | 'scale' | 'brightness' | 'opacity' | 'shadow';
+    hoverEnabled: boolean;
+    redirectUrl: string;
+    redirectEnabled: boolean;
+  };
+  storeBackground: string;
+}
+
 export default function ShopPage() {
   const [loading, setLoading] = useState(true);
   const [store, setStore] = useState<Store | null>(null);
   const [categories, setCategories] = useState<(Category & { products: Product[] })[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState<string>();
+  const [appearanceConfig, setAppearanceConfig] = useState<AppearanceConfig | null>(null);
   const { logout } = useCustomerLogout();
 
   useEffect(() => {
@@ -42,6 +67,11 @@ export default function ShopPage() {
       const data = await response.json();
       setStore(data.store);
       setCategories(data.categories);
+      
+      // Carregar configurações de aparência
+      if (data.store?.appearanceConfig) {
+        setAppearanceConfig(data.store.appearanceConfig as AppearanceConfig);
+      }
     } catch (error) {
     } finally {
       setLoading(false);
@@ -110,11 +140,70 @@ export default function ShopPage() {
     );
   }
 
+  // Função auxiliar para obter classes de arredondamento
+  const getRoundedClass = (rounded: string) => {
+    const roundedMap: Record<string, string> = {
+      'none': 'rounded-none',
+      'sm': 'rounded-sm',
+      'md': 'rounded-md',
+      'lg': 'rounded-lg',
+      'xl': 'rounded-xl',
+      '2xl': 'rounded-2xl',
+      'full': 'rounded-full',
+    };
+    return roundedMap[rounded] || 'rounded-2xl';
+  };
+
+  // Função auxiliar para obter classes de hover
+  const getHoverClass = (hoverEffect: string) => {
+    const hoverMap: Record<string, string> = {
+      'none': '',
+      'scale': 'hover:scale-105',
+      'brightness': 'hover:brightness-110',
+      'opacity': 'hover:opacity-90',
+      'shadow': 'hover:shadow-xl',
+    };
+    return hoverMap[hoverEffect] || '';
+  };
+
+  // Configurações padrão se não houver configuração
+  const defaultAppearance: AppearanceConfig = {
+    buttons: {
+      rounded: 'full',
+      hasBorder: false,
+      borderColor: '#000000',
+    },
+    productCards: {
+      rounded: '2xl',
+      hasBorder: true,
+      borderColor: '#e5e7eb',
+    },
+    banner: {
+      rounded: '2xl',
+      hasBorder: false,
+      borderColor: '#000000',
+      hoverEffect: 'none',
+      hoverEnabled: false,
+      redirectUrl: '',
+      redirectEnabled: false,
+    },
+    storeBackground: '#f9fafb',
+  };
+
+  const appearance = appearanceConfig || defaultAppearance;
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div 
+      className="min-h-screen"
+      style={{ backgroundColor: appearance.storeBackground }}
+    >
       {/* Navbar Moderna */}
       <StoreNavbar
-        store={store}
+        store={{
+          ...store,
+          name: (store.showStoreName !== false) ? store.name : '',
+          showStoreName: store.showStoreName,
+        }}
         isAuthenticated={isAuthenticated}
         userName={userName}
         onLoginClick={handleLoginClick}
@@ -124,13 +213,29 @@ export default function ShopPage() {
       {/* Banner da Loja (se existir) */}
       {store.storeBannerUrl && (
         <div className="container mx-auto px-8 py-6">
-          <div className="w-full h-72 overflow-hidden relative rounded-2xl shadow-lg">
+          <div 
+            className={`w-full h-72 overflow-hidden relative shadow-lg cursor-pointer transition-all duration-300 ${
+              getRoundedClass(appearance.banner.rounded)
+            } ${
+              appearance.banner.hasBorder ? 'border' : ''
+            } ${
+              appearance.banner.hoverEnabled ? getHoverClass(appearance.banner.hoverEffect) : ''
+            }`}
+            style={{
+              borderColor: appearance.banner.hasBorder ? appearance.banner.borderColor : 'transparent',
+            }}
+            onClick={() => {
+              if (appearance.banner.redirectEnabled && appearance.banner.redirectUrl) {
+                window.open(appearance.banner.redirectUrl, '_blank');
+              }
+            }}
+          >
             <img
               src={store.storeBannerUrl}
               alt="Banner da loja"
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"></div>
+            <div className={`absolute inset-0 bg-gradient-to-t from-black/20 to-transparent ${getRoundedClass(appearance.banner.rounded)}`}></div>
           </div>
         </div>
       )}
@@ -198,7 +303,16 @@ export default function ShopPage() {
                       <div
                         key={product.id}
                         onClick={() => handleProductClick(product.id)}
-                        className="group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 hover:border-transparent transform hover:-translate-y-1 cursor-pointer"
+                        className={`group bg-white shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden transform hover:-translate-y-1 cursor-pointer ${
+                          getRoundedClass(appearance.productCards.rounded)
+                        } ${
+                          appearance.productCards.hasBorder ? 'border' : 'border border-gray-100'
+                        } hover:border-transparent`}
+                        style={{
+                          borderColor: appearance.productCards.hasBorder 
+                            ? appearance.productCards.borderColor 
+                            : undefined,
+                        }}
                       >
                         {/* Imagem do Produto */}
                         {product.imageUrl ? (
@@ -298,8 +412,15 @@ export default function ShopPage() {
                               e.stopPropagation(); // Evitar que o clique no botão acione o clique no card
                               handleProductClick(product.id);
                             }}
-                            className="cursor-pointer flex items-center justify-center gap-2 px-6 py-3 rounded-full font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed text-white hover:opacity-90"
-                            style={{ backgroundColor: store.secondaryColor || '#970b27' }}
+                            className={`cursor-pointer flex items-center justify-center gap-2 px-6 py-3 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed text-white hover:opacity-90 ${
+                              getRoundedClass(appearance.buttons.rounded)
+                            } ${
+                              appearance.buttons.hasBorder ? 'border' : ''
+                            }`}
+                            style={{ 
+                              backgroundColor: store.secondaryColor || '#970b27',
+                              borderColor: appearance.buttons.hasBorder ? appearance.buttons.borderColor : 'transparent',
+                            }}
                           >
                             Comprar
                           </button>

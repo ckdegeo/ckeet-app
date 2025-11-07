@@ -108,6 +108,11 @@ function StorePageContent() {
         telegram: s?.telegramEnabled || false,
         threads: s?.threadsEnabled || false,
       });
+
+      // Carregar configurações de aparência do banco
+      if (s?.appearanceConfig) {
+        setAppearanceConfig(s.appearanceConfig as AppearanceConfig);
+      }
     }
   }, [storeData]);
   
@@ -236,6 +241,7 @@ function StorePageContent() {
                 primaryColor: storeConfig.primaryColor,
                 secondaryColor: storeConfig.secondaryColor,
                 showStoreName: storeConfig.showStoreName,
+                appearanceConfig: appearanceConfig,
                 // Social Media (opcional)
                 discordUrl: storeConfig.discord,
                 discordEnabled: socialEnabled.discord,

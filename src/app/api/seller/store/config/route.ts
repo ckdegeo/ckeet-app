@@ -52,6 +52,8 @@ export async function GET(request: NextRequest) {
             telegramEnabled: true,
             threadsUrl: true,
             threadsEnabled: true,
+            showStoreName: true,
+            appearanceConfig: true,
             createdAt: true,
             updatedAt: true,
           }
@@ -98,6 +100,8 @@ export async function GET(request: NextRequest) {
       telegramEnabled: seller.store.telegramEnabled,
       threadsUrl: seller.store.threadsUrl,
       threadsEnabled: seller.store.threadsEnabled,
+      showStoreName: seller.store.showStoreName ?? true,
+      appearanceConfig: seller.store.appearanceConfig,
     };
 
             return NextResponse.json({
@@ -152,6 +156,8 @@ export async function POST(request: NextRequest) {
       storeBannerUrl, 
       primaryColor, 
       secondaryColor,
+      showStoreName,
+      appearanceConfig,
       // Social Media (opcional)
       discordUrl,
       discordEnabled,
@@ -216,6 +222,8 @@ export async function POST(request: NextRequest) {
                   telegramEnabled: telegramEnabled || false,
                   threadsUrl: threadsUrl || null,
                   threadsEnabled: threadsEnabled || false,
+                  showStoreName: showStoreName !== undefined ? showStoreName : true,
+                  appearanceConfig: appearanceConfig || null,
                 }
               });
             } else {
@@ -243,6 +251,8 @@ export async function POST(request: NextRequest) {
           telegramEnabled: telegramEnabled || false,
           threadsUrl: threadsUrl || null,
           threadsEnabled: threadsEnabled || false,
+          showStoreName: showStoreName !== undefined ? showStoreName : true,
+          appearanceConfig: appearanceConfig || null,
         }
       });
     }

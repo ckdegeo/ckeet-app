@@ -13,6 +13,7 @@ interface StoreNavbarProps {
     logoUrl?: string | null;
     primaryColor?: string | null;
     secondaryColor?: string | null;
+    showStoreName?: boolean;
   };
   isAuthenticated?: boolean;
   userName?: string;
@@ -58,9 +59,11 @@ export default function StoreNavbar({
                 />
               </div>
             )}
-            <span className="text-xl font-bold text-white hidden sm:block">
-              {store.name}
-            </span>
+            {store.showStoreName !== false && (
+              <span className="text-xl font-bold text-white hidden sm:block">
+                {store.name}
+              </span>
+            )}
           </Link>
 
           {/* Desktop Actions */}

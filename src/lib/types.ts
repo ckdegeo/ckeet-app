@@ -241,6 +241,31 @@ export interface Store {
   threadsUrl?: string;
   threadsEnabled?: boolean;
   
+  // Appearance Configuration
+  showStoreName?: boolean;
+  appearanceConfig?: {
+    buttons: {
+      rounded: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+      hasBorder: boolean;
+      borderColor: string;
+    };
+    productCards: {
+      rounded: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+      hasBorder: boolean;
+      borderColor: string;
+    };
+    banner: {
+      rounded: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+      hasBorder: boolean;
+      borderColor: string;
+      hoverEffect: 'none' | 'scale' | 'brightness' | 'opacity' | 'shadow';
+      hoverEnabled: boolean;
+      redirectUrl: string;
+      redirectEnabled: boolean;
+    };
+    storeBackground: string;
+  };
+  
   // Status
   isActive: boolean;
   createdAt: Date;

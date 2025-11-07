@@ -241,6 +241,10 @@ model Store {
   threadsUrl    String?
   threadsEnabled Boolean @default(false)
   
+  // Appearance Configuration
+  showStoreName Boolean @default(true) // Exibir nome da loja na navbar
+  appearanceConfig Json? // Configurações de aparência (botões, cards, banner, background)
+  
   // Status
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())

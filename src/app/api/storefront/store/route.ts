@@ -43,6 +43,8 @@ export async function GET(request: NextRequest) {
         telegramEnabled: true,
         threadsUrl: true,
         threadsEnabled: true,
+        showStoreName: true,
+        appearanceConfig: true,
       },
     });
 
