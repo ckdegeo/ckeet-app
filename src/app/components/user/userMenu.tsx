@@ -127,16 +127,16 @@ export default function UserMenu({
             </div>
           )}
 
-          <div className="hidden md:block text-left">
+          <div className="text-left">
             <p className="text-xs font-medium text-[var(--foreground)]">{displayName}</p>
-            <p className="text-xs text-gray-500">{displayEmail}</p>
+            <p className="text-xs text-gray-500 hidden sm:block">{displayEmail}</p>
           </div>
-          <ChevronDown size={16} className="text-gray-500" />
+          <ChevronDown size={16} className="text-gray-500 hidden sm:block" />
         </button>
 
         {/* User Dropdown */}
         {showUserMenu && (
-          <div className="absolute right-0 mt-2 w-56 bg-[var(--surface)] border border-gray-200 rounded-lg shadow-lg z-[9999]">
+          <div className="absolute right-0 mt-2 w-56 sm:w-56 bg-[var(--surface)] border border-gray-200 rounded-lg shadow-lg z-[9999]">
 
             <div className="p-2 space-y-1">
               {/* Não mostrar Configurações para master */}

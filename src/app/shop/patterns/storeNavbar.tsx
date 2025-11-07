@@ -73,12 +73,15 @@ export default function StoreNavbar({
               <div className="flex items-center gap-3">
                 {/* Avatar do Usuário */}
                 <div 
-                  className="flex items-center gap-2 px-4 py-2 rounded-full text-white"
-                  style={{ backgroundColor: `${secondaryColor}10` }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full text-white border"
+                  style={{ 
+                    backgroundColor: secondaryColor,
+                    borderColor: secondaryColor
+                  }}
                 >
                   <div 
                     className="w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: secondaryColor }}
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
                   >
                     <User size={18} className="text-white" />
                   </div>
@@ -91,10 +94,10 @@ export default function StoreNavbar({
                   onClick={logout}
                   variant="surface"
                   title="Sair"
-                  className="text-white hover:bg-white/20 border-white/30 hover:border-white/50"
+                  className="text-white border"
                   style={{ 
-                    backgroundColor: `${secondaryColor}10`,
-                    borderColor: `${secondaryColor}40`
+                    backgroundColor: secondaryColor,
+                    borderColor: secondaryColor
                   }}
                 />
               </div>
@@ -130,16 +133,16 @@ export default function StoreNavbar({
                     window.location.href = '/shop/orders';
                   }}
                   title="Pedidos"
-                  className="text-white hover:bg-white/20 border-white/30 hover:border-white/50"
+                  className="text-white border"
                   style={{ 
-                    backgroundColor: `${secondaryColor}10`,
-                    borderColor: `${secondaryColor}40`
+                    backgroundColor: secondaryColor,
+                    borderColor: secondaryColor
                   }}
                 />
                 {/* Badge de quantidade */}
                 <span 
                   className="absolute -top-1 -right-1 w-5 h-5 text-white text-xs rounded-full flex items-center justify-center font-bold"
-                  style={{ backgroundColor: secondaryColor }}
+                  style={{ backgroundColor: primaryColor }}
                 >
                   0
                 </span>
@@ -159,15 +162,15 @@ export default function StoreNavbar({
                   }}
                   variant="surface"
                   title="Pedidos"
-                  className="text-white hover:bg-white/20 border-white/30 hover:border-white/50 w-10 h-10"
+                  className="text-white border w-10 h-10"
                   style={{ 
-                    backgroundColor: `${secondaryColor}10`,
-                    borderColor: `${secondaryColor}40`
+                    backgroundColor: secondaryColor,
+                    borderColor: secondaryColor
                   }}
                 />
                <span 
                   className="absolute -top-1 -right-1 w-5 h-5 text-white text-xs rounded-full flex items-center justify-center font-bold"
-                  style={{ backgroundColor: secondaryColor }}
+                  style={{ backgroundColor: primaryColor }}
                 >
                   0
                 </span>
@@ -187,42 +190,49 @@ export default function StoreNavbar({
         {showMobileMenu && (
           <div className="md:hidden py-4 border-t border-white/10">
             {isAuthenticated ? (
-              <div className="space-y-2 px-4">
-                {/* Avatar do Usuário Mobile */}
+              <div className="flex items-center gap-3 px-4">
+                {/* Avatar do Usuário Mobile - seguindo design desktop */}
                 <div 
-                  className="flex items-center gap-2 px-4 py-3 rounded-lg text-white"
-                  style={{ backgroundColor: `${secondaryColor}10` }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full text-white border"
+                  style={{ 
+                    backgroundColor: secondaryColor,
+                    borderColor: secondaryColor
+                  }}
                 >
                   <div 
                     className="w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: secondaryColor }}
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
                   >
                     <User size={18} className="text-white" />
                   </div>
-                  <span className="font-medium text-sm">{userName ? userName.split(' ')[0] : 'Usuário'}</span>
+                  <span className="font-light text-sm">{userName ? userName.split(' ')[0] : 'Usuário'}</span>
                 </div>
                 
-                {/* Botão de Logout Mobile */}
-                <button
+                {/* Botão de Logout Mobile - seguindo design desktop */}
+                <IconOnlyButton
+                  icon={LogOut}
                   onClick={() => {
                     setShowMobileMenu(false);
                     logout();
                   }}
-                  className="w-full flex items-center gap-2 px-4 py-3 rounded-lg hover:bg-white/10 text-red-300 transition-colors"
-                >
-                  <LogOut size={18} />
-                  Sair
-                </button>
+                  variant="surface"
+                  title="Sair"
+                  className="text-white border"
+                  style={{ 
+                    backgroundColor: secondaryColor,
+                    borderColor: secondaryColor
+                  }}
+                />
               </div>
             ) : (
-              <div className="space-y-2 px-4">
+              <div className="flex items-center gap-2 px-4">
                 <Button
                   onClick={() => {
                     setShowMobileMenu(false);
                     onLoginClick?.();
                   }}
                   variant="secondary"
-                  className="w-full bg-white/10 hover:bg-white/20 text-white border-2 border-white/20"
+                  className="px-5 py-2 text-sm bg-white/10 hover:bg-white/20 text-white border-2 border-white/20"
                 >
                   Login
                 </Button>
@@ -231,7 +241,7 @@ export default function StoreNavbar({
                     setShowMobileMenu(false);
                     onRegisterClick?.();
                   }}
-                  className="w-full"
+                  className="px-5 py-2 text-sm"
                   style={{ 
                     backgroundColor: secondaryColor,
                     color: 'white'
