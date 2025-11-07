@@ -297,7 +297,7 @@ export default function ShopPage() {
                 {/* Nome da Categoria com linha decorativa */}
                 <div className="flex items-center gap-2 sm:gap-4 mb-6 sm:mb-8 min-w-0 w-full overflow-hidden">
                   <h2 
-                    className="text-xl sm:text-2xl md:text-3xl font-bold truncate min-w-0 flex-1"
+                    className="text-xl sm:text-2xl md:text-3xl font-bold truncate min-w-0"
                     style={{ color: appearance.categoryTitle.titleColor || store.primaryColor || '#bd253c' }}
                     title={category.name}
                   >
@@ -305,7 +305,7 @@ export default function ShopPage() {
                   </h2>
                   {/* Divider decorativo - oculto em mobile, visível em desktop */}
                   <div 
-                    className="hidden sm:block h-1 rounded-full min-w-[60px] flex-shrink-0"
+                    className="hidden sm:block h-1 rounded-full flex-1 min-w-[60px]"
                     style={{ 
                       backgroundColor: `${appearance.categoryTitle.lineColor || store.primaryColor || '#bd253c'}20`,
                     }}
