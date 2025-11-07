@@ -118,7 +118,22 @@ function StorePageContent() {
 
       // Carregar configurações de aparência do banco
       if (s?.appearanceConfig) {
-        setAppearanceConfig(s.appearanceConfig as AppearanceConfig);
+        const loadedConfig = s.appearanceConfig as AppearanceConfig;
+        // Garantir que categoryTitle sempre exista
+        setAppearanceConfig({
+          ...loadedConfig,
+          categoryTitle: loadedConfig.categoryTitle || {
+            titleColor: '#111827',
+            lineColor: '#bd253c',
+          },
+          // Garantir que productCards tenha os novos campos
+          productCards: {
+            ...loadedConfig.productCards,
+            backgroundColor: loadedConfig.productCards?.backgroundColor || '#ffffff',
+            titleColor: loadedConfig.productCards?.titleColor || '#111827',
+            priceColor: loadedConfig.productCards?.priceColor || '#111827',
+          },
+        });
       }
     }
   }, [storeData]);
