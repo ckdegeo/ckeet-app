@@ -114,7 +114,7 @@ export default function Table<T>({
               style={useDefaultStyles ? {
                 borderColor: 'var(--border)'
               } : {
-                borderColor: `${primaryColor}20`
+                borderColor: borderColor ? `${borderColor}40` : `${primaryColor}20`
               }}
             >
               {columns.map((column, index) => (
@@ -158,7 +158,7 @@ export default function Table<T>({
             style={useDefaultStyles ? {
               borderColor: 'var(--border)'
             } : {
-              borderColor: `${primaryColor}10`
+              borderColor: borderColor ? `${borderColor}30` : `${primaryColor}10`
             }}
           >
             {paginatedData.length > 0 ? (
@@ -171,30 +171,40 @@ export default function Table<T>({
                   style={useDefaultStyles ? {
                     backgroundColor: rowIndex % 2 === 0 ? 'var(--background)' : 'var(--surface)'
                   } : {
-                    backgroundColor: rowIndex % 2 === 0 ? 'white' : `${primaryColor}02`
+                    backgroundColor: rowIndex % 2 === 0 
+                      ? (backgroundColor || 'white') 
+                      : (borderColor ? `${borderColor}08` : `${primaryColor}02`)
                   }}
                   onMouseEnter={useDefaultStyles ? undefined : (e) => {
-                    e.currentTarget.style.backgroundColor = `${primaryColor}05`;
+                    e.currentTarget.style.backgroundColor = borderColor 
+                      ? `${borderColor}15` 
+                      : `${primaryColor}05`;
                   }}
                   onMouseLeave={useDefaultStyles ? undefined : (e) => {
-                    e.currentTarget.style.backgroundColor = rowIndex % 2 === 0 ? 'white' : `${primaryColor}02`;
+                    e.currentTarget.style.backgroundColor = rowIndex % 2 === 0 
+                      ? (backgroundColor || 'white') 
+                      : (borderColor ? `${borderColor}08` : `${primaryColor}02`);
                   }}
                 >
                   {columns.map((column, colIndex) => (
                     <td
                       key={colIndex}
-                      className={`px-4 py-4 text-sm ${
+                      className={`px-4 py-4 text-sm border-r ${
                         useDefaultStyles ? 'text-[var(--foreground)]' : ''
                       }`}
                       style={useDefaultStyles ? {
                         width: column.width || 'auto',
                         wordWrap: 'break-word',
-                        overflowWrap: 'break-word'
+                        overflowWrap: 'break-word',
+                        borderColor: 'var(--border)'
                       } : { 
                         color: '#374151',
                         width: column.width || 'auto',
                         wordWrap: 'break-word',
-                        overflowWrap: 'break-word'
+                        overflowWrap: 'break-word',
+                        borderColor: colIndex < columns.length - 1 
+                          ? (borderColor ? `${borderColor}20` : `${primaryColor}10`)
+                          : 'transparent'
                       }}
                     >
                       {column.render ? column.render(item[column.key], item) : String(item[column.key])}

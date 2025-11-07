@@ -696,7 +696,7 @@ export default function OrdersPage() {
         <div className="flex items-center justify-between mb-8">
           <h1 
             className="text-3xl font-bold"
-            style={{ color: store.primaryColor || '#bd253c' }}
+            style={{ color: appearance.categoryTitle.titleColor || store.primaryColor || '#bd253c' }}
           >
             Pedidos
           </h1>
@@ -836,12 +836,36 @@ export default function OrdersPage() {
                     checkDelivery();
                   }}
                   disabled={ordersLoading}
-                  className="cursor-pointer p-2 rounded-lg border border-gray-200 hover:border-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`cursor-pointer p-2 rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    getRoundedClass(appearance.productCards.rounded)
+                  }`}
+                  style={{
+                    borderColor: appearance.productCards.hasBorder 
+                      ? appearance.productCards.borderColor 
+                      : '#e5e7eb',
+                    color: appearance.productCards.titleColor || '#6b7280',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!e.currentTarget.disabled) {
+                      e.currentTarget.style.borderColor = appearance.productCards.hasBorder 
+                        ? appearance.productCards.borderColor 
+                        : store.primaryColor || '#bd253c';
+                      e.currentTarget.style.color = store.primaryColor || '#bd253c';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!e.currentTarget.disabled) {
+                      e.currentTarget.style.borderColor = appearance.productCards.hasBorder 
+                        ? appearance.productCards.borderColor 
+                        : '#e5e7eb';
+                      e.currentTarget.style.color = appearance.productCards.titleColor || '#6b7280';
+                    }
+                  }}
                   title="Atualizar lista de pedidos"
                 >
                   <RefreshCw 
                     size={18} 
-                    className={`text-gray-600 ${ordersLoading ? 'animate-spin' : ''}`} 
+                    className={ordersLoading ? 'animate-spin' : ''} 
                   />
                 </button>
               </div>
@@ -854,6 +878,8 @@ export default function OrdersPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   primaryColor={store.primaryColor}
                   secondaryColor={store.secondaryColor}
+                  borderColor={appearance.productCards.hasBorder ? appearance.productCards.borderColor : undefined}
+                  backgroundColor={appearance.productCards.backgroundColor}
                 />
               </div>
             </div>

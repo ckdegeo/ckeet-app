@@ -9,6 +9,8 @@ interface SearchProps extends InputHTMLAttributes<HTMLInputElement> {
   className?: string;
   primaryColor?: string;
   secondaryColor?: string;
+  borderColor?: string;
+  backgroundColor?: string;
 }
 
 export default function Search({
@@ -17,6 +19,8 @@ export default function Search({
   className = "",
   primaryColor = '#bd253c',
   secondaryColor = '#970b27',
+  borderColor,
+  backgroundColor,
   ...props
 }: SearchProps) {
   return (
@@ -35,8 +39,7 @@ export default function Search({
             w-full
             pl-11 pr-4 py-3
             rounded-full
-            bg-white
-            border border-gray-300
+            border
             text-gray-900
             placeholder:text-gray-500
             transition-all
@@ -48,7 +51,8 @@ export default function Search({
             ${className}
           `}
           style={{
-            borderColor: error ? '#ef4444' : '#d1d5db',
+            backgroundColor: backgroundColor || '#ffffff',
+            borderColor: error ? '#ef4444' : (borderColor || '#d1d5db'),
             '--tw-ring-color': primaryColor,
           } as React.CSSProperties}
           onFocus={(e) => {
@@ -56,13 +60,13 @@ export default function Search({
             e.target.style.boxShadow = `0 0 0 3px ${primaryColor}20`;
           }}
           onBlur={(e) => {
-            e.target.style.borderColor = error ? '#ef4444' : '#d1d5db';
+            e.target.style.borderColor = error ? '#ef4444' : (borderColor || '#d1d5db');
             e.target.style.boxShadow = 'none';
           }}
         />
         <div 
           className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none"
-          style={{ color: '#6b7280' }}
+          style={{ color: borderColor || '#6b7280' }}
         >
           <SearchIcon size={18} />
         </div>
