@@ -44,8 +44,8 @@ export default function NumberCard({
         <h3 
           className="text-sm font-medium"
           style={{ 
-            color: style?.['--foreground'] 
-              ? `${style['--foreground']}E6` // 90% opacity (E6 = 230/255 ≈ 0.9)
+            color: (style as Record<string, string | undefined>)?.['--foreground'] 
+              ? `${(style as Record<string, string | undefined>)['--foreground']}E6` // 90% opacity (E6 = 230/255 ≈ 0.9)
               : 'var(--on-background)'
           }}
         >
@@ -61,8 +61,8 @@ export default function NumberCard({
         <p 
           className="text-2xl font-bold"
           style={{ 
-            color: style?.['--foreground'] 
-              ? `${style['--foreground']}E6` // 90% opacity
+            color: (style as Record<string, string | undefined>)?.['--foreground'] 
+              ? `${(style as Record<string, string | undefined>)['--foreground']}E6` // 90% opacity
               : 'var(--foreground)'
           }}
         >
@@ -87,8 +87,8 @@ export default function NumberCard({
           <span 
             className="text-sm"
             style={{ 
-              color: style?.['--foreground'] 
-                ? `${style['--foreground']}E6` // 90% opacity
+              color: (style as Record<string, string | undefined>)?.['--foreground'] 
+                ? `${(style as Record<string, string | undefined>)['--foreground']}E6` // 90% opacity
                 : 'var(--on-background)'
             }}
           >

@@ -744,7 +744,7 @@ export default function OrdersPage() {
               borderColor: appearance.productCards.hasBorder 
                 ? appearance.productCards.borderColor 
                 : '#e5e7eb',
-            } as React.CSSProperties}
+            } as React.CSSProperties & Record<string, string>}
           />
 
           <NumberCard
@@ -768,7 +768,7 @@ export default function OrdersPage() {
               borderColor: appearance.productCards.hasBorder 
                 ? appearance.productCards.borderColor 
                 : '#e5e7eb',
-            } as React.CSSProperties}
+            } as React.CSSProperties & Record<string, string>}
           />
 
           <NumberCard
@@ -792,7 +792,7 @@ export default function OrdersPage() {
               borderColor: appearance.productCards.hasBorder 
                 ? appearance.productCards.borderColor 
                 : '#e5e7eb',
-            } as React.CSSProperties}
+            } as React.CSSProperties & Record<string, string>}
           />
         </div>
 
