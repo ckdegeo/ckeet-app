@@ -295,15 +295,15 @@ export default function ShopPage() {
             {categories.map((category) => (
               <section key={category.id} className="scroll-mt-20">
                 {/* Nome da Categoria com linha decorativa */}
-                <div className="flex items-center gap-4 mb-8">
+                <div className="flex items-center gap-2 sm:gap-4 mb-6 sm:mb-8">
                   <h2 
-                    className="text-3xl font-bold"
+                    className="text-xl sm:text-2xl md:text-3xl font-bold flex-shrink-0"
                     style={{ color: appearance.categoryTitle.titleColor || store.primaryColor || '#bd253c' }}
                   >
                     {category.name}
                   </h2>
                   <div 
-                    className="flex-1 h-1 rounded-full"
+                    className="flex-1 h-0.5 sm:h-1 rounded-full min-w-[20px]"
                     style={{ backgroundColor: `${appearance.categoryTitle.lineColor || store.primaryColor || '#bd253c'}20` }}
                   ></div>
                 </div>
