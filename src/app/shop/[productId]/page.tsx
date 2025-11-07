@@ -11,6 +11,37 @@ import PixModal from '@/app/components/modals/pixModal';
 import { useCustomerLogout } from '@/lib/hooks/useCustomerLogout';
 import LoadingSpinner from '@/app/components/ui/loadingSpinner';
 
+// Interface para configurações de aparência
+interface AppearanceConfig {
+  buttons: {
+    rounded: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+    hasBorder: boolean;
+    borderColor: string;
+  };
+  productCards: {
+    rounded: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+    hasBorder: boolean;
+    borderColor: string;
+    backgroundColor?: string;
+    titleColor?: string;
+    priceColor?: string;
+  };
+  banner: {
+    rounded: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+    hasBorder: boolean;
+    borderColor: string;
+    hoverEffect: 'none' | 'scale' | 'brightness' | 'opacity' | 'shadow';
+    hoverEnabled: boolean;
+    redirectUrl: string;
+    redirectEnabled: boolean;
+  };
+  storeBackground: string;
+  categoryTitle: {
+    titleColor: string;
+    lineColor: string;
+  };
+}
+
 export default function ProductPage() {
   const params = useParams();
   const router = useRouter();
@@ -24,6 +55,7 @@ export default function ProductPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState<string>();
   const [isPixModalOpen, setIsPixModalOpen] = useState(false);
+  const [appearanceConfig, setAppearanceConfig] = useState<AppearanceConfig | null>(null);
 
   useEffect(() => {
     fetchProductData();
@@ -45,6 +77,11 @@ export default function ProductPage() {
       setStore(data.store);
       setProduct(data.product);
       setSelectedImage(data.product.imageUrl || '');
+      
+      // Carregar configurações de aparência
+      if (data.store?.appearanceConfig) {
+        setAppearanceConfig(data.store.appearanceConfig as AppearanceConfig);
+      }
     } catch (error) {
     } finally {
       setLoading(false);
@@ -83,7 +120,7 @@ export default function ProductPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#f9fafb' }}>
         <div className="text-center">
           <LoadingSpinner size="medium" />
         </div>
@@ -93,7 +130,7 @@ export default function ProductPage() {
 
   if (!store || !product) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen" style={{ backgroundColor: '#f9fafb' }}>
         <StoreNavbar
           store={store || { name: 'Loja', primaryColor: '#bd253c', secondaryColor: '#970b27' }}
           isAuthenticated={isAuthenticated}
@@ -120,8 +157,58 @@ export default function ProductPage() {
 
   const images = [product.imageUrl, product.image2Url, product.image3Url].filter(Boolean);
 
+  // Função auxiliar para obter classes de arredondamento
+  const getRoundedClass = (rounded: string) => {
+    const roundedMap: Record<string, string> = {
+      'none': 'rounded-none',
+      'sm': 'rounded-sm',
+      'md': 'rounded-md',
+      'lg': 'rounded-lg',
+      'xl': 'rounded-xl',
+      '2xl': 'rounded-2xl',
+      'full': 'rounded-full',
+    };
+    return roundedMap[rounded] || 'rounded-2xl';
+  };
+
+  // Configurações padrão se não houver configuração
+  const defaultAppearance: AppearanceConfig = {
+    buttons: {
+      rounded: 'full',
+      hasBorder: false,
+      borderColor: '#000000',
+    },
+    productCards: {
+      rounded: '2xl',
+      hasBorder: true,
+      borderColor: '#e5e7eb',
+      backgroundColor: '#ffffff',
+      titleColor: '#111827',
+      priceColor: '#111827',
+    },
+    banner: {
+      rounded: '2xl',
+      hasBorder: false,
+      borderColor: '#000000',
+      hoverEffect: 'none',
+      hoverEnabled: false,
+      redirectUrl: '',
+      redirectEnabled: false,
+    },
+    storeBackground: '#f9fafb',
+    categoryTitle: {
+      titleColor: '#111827',
+      lineColor: '#bd253c',
+    },
+  };
+
+  const appearance = appearanceConfig || defaultAppearance;
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div 
+      className="min-h-screen"
+      style={{ backgroundColor: appearance.storeBackground }}
+    >
       {/* Navbar do Design System */}
       <StoreNavbar
         store={store}
@@ -138,11 +225,17 @@ export default function ProductPage() {
         <div className="mb-6">
           <button
             onClick={() => router.push('/shop')}
-            className="px-8 py-3 text-md rounded-full transition-all flex items-center gap-2 cursor-pointer hover:opacity-90"
+            className={`px-8 py-3 text-md transition-all flex items-center gap-2 cursor-pointer hover:opacity-90 ${
+              getRoundedClass(appearance.buttons.rounded)
+            } ${
+              appearance.buttons.hasBorder ? 'border' : ''
+            }`}
             style={{
               backgroundColor: store.secondaryColor || '#bd253c',
               color: 'white',
-              border: `2px solid ${store.secondaryColor || '#bd253c'}`
+              borderColor: appearance.buttons.hasBorder 
+                ? appearance.buttons.borderColor 
+                : store.secondaryColor || '#bd253c',
             }}
           >
             <ArrowLeft className="w-4 h-4" />
@@ -233,14 +326,24 @@ export default function ProductPage() {
             <div className="pb-6 border-b border-gray-200">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                  <h1 
+                    className="text-2xl font-bold mb-4"
+                    style={{ 
+                      color: appearance.productCards.titleColor || '#111827' 
+                    }}
+                  >
                     {product.name}
                   </h1>
                 </div>
               </div>
               
               <div className="flex items-center gap-3">
-                <span className="text-3xl font-bold" style={{ color: store.primaryColor || '#bd253c' }}>
+                <span 
+                  className="text-3xl font-bold" 
+                  style={{ 
+                    color: appearance.productCards.priceColor || store.primaryColor || '#bd253c' 
+                  }}
+                >
                   R$ {product.price.toFixed(2)}
                 </span>
                 {(() => {
@@ -356,8 +459,17 @@ export default function ProductPage() {
             <div className="pt-6">
               <button
                 onClick={() => setIsPixModalOpen(true)}
-                className="cursor-pointer w-full py-4 text-base font-semibold text-white shadow-lg hover:shadow-xl rounded-full transition-all hover:opacity-90"
-                style={{ backgroundColor: store.secondaryColor || '#970b27' }}
+                className={`cursor-pointer w-full py-4 text-base font-semibold text-white shadow-lg hover:shadow-xl transition-all hover:opacity-90 ${
+                  getRoundedClass(appearance.buttons.rounded)
+                } ${
+                  appearance.buttons.hasBorder ? 'border' : ''
+                }`}
+                style={{ 
+                  backgroundColor: store.secondaryColor || '#970b27',
+                  borderColor: appearance.buttons.hasBorder 
+                    ? appearance.buttons.borderColor 
+                    : 'transparent',
+                }}
               >
                 Comprar agora
               </button>

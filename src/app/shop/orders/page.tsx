@@ -14,6 +14,37 @@ import Badge from '@/app/components/ui/badge';
 import ContentModal from '@/app/components/modals/contentModal';
 import LoadingSpinner from '@/app/components/ui/loadingSpinner';
 
+// Interface para configurações de aparência
+interface AppearanceConfig {
+  buttons: {
+    rounded: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+    hasBorder: boolean;
+    borderColor: string;
+  };
+  productCards: {
+    rounded: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+    hasBorder: boolean;
+    borderColor: string;
+    backgroundColor?: string;
+    titleColor?: string;
+    priceColor?: string;
+  };
+  banner: {
+    rounded: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+    hasBorder: boolean;
+    borderColor: string;
+    hoverEffect: 'none' | 'scale' | 'brightness' | 'opacity' | 'shadow';
+    hoverEnabled: boolean;
+    redirectUrl: string;
+    redirectEnabled: boolean;
+  };
+  storeBackground: string;
+  categoryTitle: {
+    titleColor: string;
+    lineColor: string;
+  };
+}
+
 interface Transaction {
   id: string;
   orderId: string;
@@ -67,6 +98,7 @@ export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
+  const [appearanceConfig, setAppearanceConfig] = useState<AppearanceConfig | null>(null);
 
   // Cache para dados da loja
   const { data: storeData, loading: storeLoading } = useCache(
@@ -238,6 +270,11 @@ export default function OrdersPage() {
   useEffect(() => {
     if (storeData) {
       setStore(storeData.store);
+      
+      // Carregar configurações de aparência
+      if (storeData.store?.appearanceConfig) {
+        setAppearanceConfig(storeData.store.appearanceConfig as AppearanceConfig);
+      }
     }
   }, [storeData]);
 
@@ -548,9 +585,59 @@ export default function OrdersPage() {
     );
   }
 
+  // Função auxiliar para obter classes de arredondamento
+  const getRoundedClass = (rounded: string) => {
+    const roundedMap: Record<string, string> = {
+      'none': 'rounded-none',
+      'sm': 'rounded-sm',
+      'md': 'rounded-md',
+      'lg': 'rounded-lg',
+      'xl': 'rounded-xl',
+      '2xl': 'rounded-2xl',
+      'full': 'rounded-full',
+    };
+    return roundedMap[rounded] || 'rounded-2xl';
+  };
+
+  // Configurações padrão se não houver configuração
+  const defaultAppearance: AppearanceConfig = {
+    buttons: {
+      rounded: 'full',
+      hasBorder: false,
+      borderColor: '#000000',
+    },
+    productCards: {
+      rounded: '2xl',
+      hasBorder: true,
+      borderColor: '#e5e7eb',
+      backgroundColor: '#ffffff',
+      titleColor: '#111827',
+      priceColor: '#111827',
+    },
+    banner: {
+      rounded: '2xl',
+      hasBorder: false,
+      borderColor: '#000000',
+      hoverEffect: 'none',
+      hoverEnabled: false,
+      redirectUrl: '',
+      redirectEnabled: false,
+    },
+    storeBackground: '#f9fafb',
+    categoryTitle: {
+      titleColor: '#111827',
+      lineColor: '#bd253c',
+    },
+  };
+
+  const appearance = appearanceConfig || defaultAppearance;
+
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div 
+        className="min-h-screen"
+        style={{ backgroundColor: appearance.storeBackground }}
+      >
         <StoreNavbar
           store={store}
           isAuthenticated={false}
@@ -565,11 +652,17 @@ export default function OrdersPage() {
             <div className="flex justify-center">
               <button
                 onClick={() => window.location.href = '/shop/auth/login'}
-                className="px-8 py-3 text-md rounded-full transition-all flex items-center gap-2 cursor-pointer hover:opacity-90 font-medium"
+                className={`px-8 py-3 text-md transition-all flex items-center gap-2 cursor-pointer hover:opacity-90 font-medium ${
+                  getRoundedClass(appearance.buttons.rounded)
+                } ${
+                  appearance.buttons.hasBorder ? 'border' : ''
+                }`}
                 style={{ 
                   backgroundColor: store.primaryColor || '#bd253c',
                   color: 'white',
-                  border: `2px solid ${store.primaryColor || '#bd253c'}`
+                  borderColor: appearance.buttons.hasBorder 
+                    ? appearance.buttons.borderColor 
+                    : store.primaryColor || '#bd253c',
                 }}
               >
                 Fazer login
@@ -584,7 +677,10 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div 
+      className="min-h-screen"
+      style={{ backgroundColor: appearance.storeBackground }}
+    >
       {/* Navbar */}
       <StoreNavbar
         store={store}
@@ -607,11 +703,17 @@ export default function OrdersPage() {
           
           <button
             onClick={() => window.location.href = '/shop'}
-            className="px-8 py-3 text-md rounded-full transition-all flex items-center gap-2 cursor-pointer hover:opacity-90"
+            className={`px-8 py-3 text-md transition-all flex items-center gap-2 cursor-pointer hover:opacity-90 ${
+              getRoundedClass(appearance.buttons.rounded)
+            } ${
+              appearance.buttons.hasBorder ? 'border' : ''
+            }`}
             style={{
               backgroundColor: store.secondaryColor || '#970b27',
               color: 'white',
-              border: `2px solid ${store.secondaryColor || '#970b27'}`
+              borderColor: appearance.buttons.hasBorder 
+                ? appearance.buttons.borderColor 
+                : store.secondaryColor || '#970b27',
             }}
           >
             <ArrowLeft className="w-4 h-4" />

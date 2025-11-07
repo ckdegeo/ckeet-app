@@ -30,6 +30,8 @@ export async function GET(request: NextRequest) {
         primaryColor: true,
         secondaryColor: true,
         subdomain: true,
+        showStoreName: true,
+        appearanceConfig: true,
       },
     });
 
