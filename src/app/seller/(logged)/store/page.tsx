@@ -900,9 +900,6 @@ function StorePageContent() {
       {/* Conteúdo Obrigatório */}
       {requiredContent}
 
-      {/* Divider */}
-      <hr className="border-t border-black/10" />
-
       {/* Tabs Opcionais */}
       <Tabs
         items={[
