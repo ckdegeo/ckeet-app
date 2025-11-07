@@ -201,7 +201,6 @@ export default function StoreNavbar({
                 >
                   <div 
                     className="w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
                   >
                     <User size={18} className="text-white" />
                   </div>
