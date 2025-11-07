@@ -277,11 +277,6 @@ function StorePageContent() {
       
       // Limpar cache e recarregar dados
       refreshStoreData();
-      
-      // Redirecionar para dashboard após salvar com sucesso
-      setTimeout(() => {
-        window.location.href = '/seller/dashboard';
-      }, 1500);
 
             } catch (error) {
               showErrorToast(error instanceof Error ? error.message : 'Erro ao salvar configurações');
