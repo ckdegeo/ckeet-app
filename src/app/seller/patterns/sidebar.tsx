@@ -76,7 +76,7 @@ export default function Sidebar({ className = "" }: SidebarProps) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { storeStatus, isLoading } = useStoreCompletion();
+  const { storeStatus, isLoading, checkStoreCompletion } = useStoreCompletion();
 
   // Force desktop-only collapse behavior
   const toggleCollapse = () => {
@@ -115,11 +115,6 @@ export default function Sidebar({ className = "" }: SidebarProps) {
       return true;
     }
     
-    // Tutoriais sempre acessível (seção de ensino)
-    if (href === '/seller/tutorials') {
-      return true;
-    }
-    
     // Se a loja está completa, permitir navegação
     if (storeStatus?.isComplete) {
       return true;
@@ -145,6 +140,19 @@ export default function Sidebar({ className = "" }: SidebarProps) {
       window.removeEventListener('toggle-mobile-sidebar' as unknown as keyof WindowEventMap, handler as EventListener);
     };
   }, []);
+
+  // Ouvir evento de salvamento da configuração da loja para atualizar o status
+  useEffect(() => {
+    const handleStoreConfigSaved = () => {
+      // Atualizar o status de completude após salvar
+      checkStoreCompletion();
+    };
+
+    window.addEventListener('store-config-saved', handleStoreConfigSaved);
+    return () => {
+      window.removeEventListener('store-config-saved', handleStoreConfigSaved);
+    };
+  }, [checkStoreCompletion]);
 
   return (
     <>

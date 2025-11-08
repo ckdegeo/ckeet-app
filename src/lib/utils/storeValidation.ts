@@ -65,8 +65,10 @@ export function validateStoreCompletion(store: StoreData | null): StoreCompletio
   // Isso permite que o seller acesse a página de configuração após criar o domínio
   const hasSubdomain = Boolean(store.subdomain && store.subdomain.trim() !== '');
   
+  // Loja completa = todos os campos obrigatórios preenchidos
+  // Subdomínio é opcional (pode ser criado depois)
   return {
-    isComplete: hasSubdomain && missingFields.length === 0, // Loja completa = tem subdomínio + todos os campos preenchidos
+    isComplete: missingFields.length === 0, // Loja completa quando todos os campos obrigatórios estão preenchidos
     missingFields,
     completionPercentage
   };

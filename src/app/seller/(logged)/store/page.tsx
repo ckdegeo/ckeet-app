@@ -306,6 +306,9 @@ function StorePageContent() {
       
       // Limpar cache e recarregar dados
       refreshStoreData();
+      
+      // Disparar evento customizado para atualizar o status de completude no sidebar
+      window.dispatchEvent(new CustomEvent('store-config-saved'));
 
             } catch (error) {
               showErrorToast(error instanceof Error ? error.message : 'Erro ao salvar configurações');
