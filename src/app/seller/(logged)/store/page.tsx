@@ -12,7 +12,7 @@ import SwitchButton from '@/app/components/buttons/switchButton';
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 import { getAccessToken } from '@/lib/utils/authUtils';
 import { useStoreConfigCache } from '@/lib/hooks/useCache';
-import LoadingSpinner from '@/app/components/ui/loadingSpinner';
+import StoreSkeleton from '@/app/components/store/storeSkeleton';
 import Tabs from '@/app/components/tabs/tabs';
 import Selector from '@/app/components/selectors/selector';
 
@@ -846,13 +846,7 @@ function StorePageContent() {
 
   // Mostrar loading se estiver carregando
   if (storeLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <LoadingSpinner size="medium" />
-        </div>
-      </div>
-    );
+    return <StoreSkeleton />;
   }
 
   // Mostrar erro se houver

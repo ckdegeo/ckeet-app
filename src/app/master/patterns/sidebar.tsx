@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   Users,
   BookOpen,
+  GraduationCap,
 } from "lucide-react";
 import Button from "@/app/components/buttons/button";
 import IconOnlyButton from "@/app/components/buttons/iconOnlyButton";
@@ -42,6 +43,11 @@ const menuItems = [
     label: "Vendas",
     href: "/master/sales",
     icon: TrendingUp,
+  },
+  {
+    label: "Tutoriais",
+    href: "/master/tutorials",
+    icon: GraduationCap,
   },
 ];
 

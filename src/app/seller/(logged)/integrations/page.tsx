@@ -8,7 +8,7 @@ import NumberCard from '@/app/components/cards/numberCard';
 import IntegrationCard from '@/app/components/cards/integrationCard';
 import { useMercadoPago } from '@/lib/hooks/useMercadoPago';
 import { useIntegrationDataCache } from '@/lib/hooks/useCache';
-import LoadingSpinner from '@/app/components/ui/loadingSpinner';
+import IntegrationsSkeleton from '@/app/components/integrations/integrationsSkeleton';
 
 function IntegrationsContent() {
   const searchParams = useSearchParams();
@@ -122,13 +122,7 @@ function IntegrationsContent() {
 
   // Mostrar loading global até todos os dados estarem prontos
   if (!isDataReady) {
-    return (
-      <div className="flex items-center justify-center min-h-[500px]">
-        <div className="text-center">
-          <LoadingSpinner size="large" />
-        </div>
-      </div>
-    );
+    return <IntegrationsSkeleton />;
   }
 
   // Mostrar erro se houver (só depois que os dados estiverem prontos)

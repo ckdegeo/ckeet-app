@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { invalidateProductCategoryCaches } from '@/lib/utils/cacheInvalidation';
 import { showErrorToast, showSuccessToast } from '@/lib/utils/toastUtils';
 import ImportSelectCategoryModal from '@/app/components/modals/importSelectCategoryModal';
-import LoadingSpinner from '@/app/components/ui/loadingSpinner';
+import CatalogSkeleton from '@/app/components/catalog/catalogSkeleton';
 
 interface CatalogProductDisplay {
   id: string;
@@ -78,13 +78,7 @@ export default function CatalogPage() {
 
   // Exibir loading
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <LoadingSpinner size="medium" />
-        </div>
-      </div>
-    );
+    return <CatalogSkeleton />;
   }
 
   return (

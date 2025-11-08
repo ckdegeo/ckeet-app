@@ -549,3 +549,37 @@ model CatalogCategorySubscription {
   @@unique([storeId, catalogCategoryId], name: "unique_category_subscription_per_store")
   @@map("catalog_category_subscriptions")
 }
+
+// ===========================================
+// TUTORIALS (TUTORIAIS)
+// ===========================================
+
+model TutorialSection {
+  id        String   @id @default(cuid())
+  title     String
+  order     Int      @default(0) // Ordem das seções
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  videos    TutorialVideo[]
+
+  @@map("tutorial_sections")
+}
+
+model TutorialVideo {
+  id        String   @id @default(cuid())
+  title     String
+  videoId   String   // ID do vídeo do YouTube
+  order     Int      @default(0) // Ordem dos vídeos dentro da seção
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  sectionId String
+  section   TutorialSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@map("tutorial_videos")
+}

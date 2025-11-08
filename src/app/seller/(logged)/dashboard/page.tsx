@@ -13,7 +13,7 @@ import AreaChartCard from '@/app/components/cards/areaChart';
 import Selector from '@/app/components/selectors/selector';
 import { AuthGuard } from '@/lib/components/AuthGuard';
 import toast from 'react-hot-toast';
-import LoadingSpinner from '@/app/components/ui/loadingSpinner';
+import DashboardSkeleton from '@/app/components/dashboard/dashboardSkeleton';
 
 interface DashboardData {
   faturamentoBruto: number;
@@ -136,30 +136,7 @@ function DashboardContent() {
 
   // Estado de loading
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">Dashboard</h1>
-          <div className="w-full md:w-72">
-            <Selector
-              value={period}
-              onChange={(value) => setPeriod(value as PeriodOption)}
-              options={[
-                { value: 'today', label: 'Hoje' },
-                { value: 'week', label: 'Últimos 7 dias' },
-                { value: 'month', label: 'Último mês' },
-                { value: 'year', label: 'Último ano' },
-                { value: 'all', label: 'Todo período' }
-              ]}
-            />
-          </div>
-        </div>
-        
-        <div className="flex items-center justify-center h-64">
-          <LoadingSpinner size="medium" />
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   // Se não tem dados

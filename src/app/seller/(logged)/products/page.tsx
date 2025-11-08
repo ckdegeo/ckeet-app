@@ -11,7 +11,7 @@ import DeleteProductModal from '@/app/components/modals/deleteProductModal';
 import { useCategories, Category } from '@/lib/hooks/useCategories';
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 import { invalidateProductCategoryCaches } from '@/lib/utils/cacheInvalidation';
-import LoadingSpinner from '@/app/components/ui/loadingSpinner';
+import ProductsSkeleton from '@/app/components/products/productsSkeleton';
 
 // Interface local para compatibilidade com dados existentes
 interface ProductDisplay {
@@ -343,13 +343,7 @@ export default function Products() {
 
   // Exibir loading
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <LoadingSpinner size="medium" />
-        </div>
-      </div>
-    );
+    return <ProductsSkeleton />;
   }
 
   return (

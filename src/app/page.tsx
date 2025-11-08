@@ -18,13 +18,10 @@ import {
   LayoutDashboard,
   Package,
   CreditCard,
-  MessageCircle
+  MessageCircle,
+  X
 } from 'lucide-react';
 import Button from '@/app/components/buttons/button';
-import Input from '@/app/components/inputs/input';
-import NumberCard from '@/app/components/cards/numberCard';
-import ValueCard from '@/app/components/cards/valueCard';
-import PricingSection from '@/app/components/sections/pricingSection';
 import TestimonialsSection from '@/app/components/sections/testimonialsSection';
 import LoadingSpinner from '@/app/components/ui/loadingSpinner';
 
@@ -38,6 +35,7 @@ const RESERVED_SUBDOMAINS = [
 export default function LandingPage() {
   const [email, setEmail] = useState('');
   const [isCheckingDomain, setIsCheckingDomain] = useState(true);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const router = useRouter();
 
   // Verificar se é um domínio de loja e redirecionar
@@ -88,6 +86,26 @@ export default function LandingPage() {
     checkStoreDomain();
   }, [router]);
 
+  // Fechar modal com tecla ESC e prevenir scroll do body
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isVideoModalOpen) {
+        setIsVideoModalOpen(false);
+      }
+    };
+
+    if (isVideoModalOpen) {
+      document.addEventListener('keydown', handleEscape);
+      // Prevenir scroll do body quando modal está aberto
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isVideoModalOpen]);
+
   // Mostrar loading enquanto verifica
   if (isCheckingDomain) {
     return (
@@ -105,8 +123,11 @@ export default function LandingPage() {
   };
 
   const handleWatchDemo = () => {
-    // Abrir demo em modal ou página
-    console.log('Assistir demo');
+    setIsVideoModalOpen(true);
+  };
+
+  const closeVideoModal = () => {
+    setIsVideoModalOpen(false);
   };
 
   const handleSubscribe = (e: React.FormEvent) => {
@@ -876,6 +897,48 @@ export default function LandingPage() {
       <div className="mb-8">
         <div className="h-px bg-gradient-to-r from-transparent via-[var(--on-background)]/20 to-transparent"></div>
       </div>
+
+      {/* Video Modal */}
+      {isVideoModalOpen && (
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+          onClick={closeVideoModal}
+        >
+          {/* Backdrop com opacidade preta leve */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
+          
+          {/* Modal Content */}
+          <div 
+            className="relative z-10 w-full max-w-4xl bg-[var(--surface)] rounded-2xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header com botão de fechar */}
+            <div className="flex items-center justify-between p-4 border-b border-[var(--on-background)]/10">
+              <h3 className="text-lg font-semibold text-[var(--foreground)]">
+                Demonstração
+              </h3>
+              <button
+                onClick={closeVideoModal}
+                className="p-2 rounded-full hover:bg-[var(--on-background)]/10 transition-colors"
+                aria-label="Fechar modal"
+              >
+                <X size={20} className="text-[var(--on-background)]" />
+              </button>
+            </div>
+            
+            {/* YouTube Player */}
+            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+              <iframe
+                className="absolute top-0 left-0 w-full h-full"
+                src="https://www.youtube.com/embed/D_LZCXmIwrA?autoplay=1&vq=hd1080&rel=0"
+                title="Demonstração Ckeet"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer role="contentinfo" className="bg-[var(--surface)] py-8">

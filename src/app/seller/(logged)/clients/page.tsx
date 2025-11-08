@@ -10,7 +10,7 @@ import { Users, UserCheck, UserX } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Badge from '@/app/components/ui/badge';
 import BanCustomerModal from '@/app/components/modals/banCustomerModal';
-import LoadingSpinner from '@/app/components/ui/loadingSpinner';
+import ClientsSkeleton from '@/app/components/clients/clientsSkeleton';
 
 type PeriodOption = 'today' | 'week' | 'month' | 'year' | 'all';
 
@@ -295,11 +295,7 @@ export default function Clients() {
   ];
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <LoadingSpinner size="medium" />
-      </div>
-    );
+    return <ClientsSkeleton />;
   }
 
   return (

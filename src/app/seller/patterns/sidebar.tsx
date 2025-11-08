@@ -14,7 +14,8 @@ import {
   Users,
   ShoppingCart,
   CreditCard,
-  BookOpen
+  BookOpen,
+  GraduationCap
 } from "lucide-react";
 import Button from "@/app/components/buttons/button";
 import IconOnlyButton from "@/app/components/buttons/iconOnlyButton";
@@ -63,6 +64,11 @@ const menuItems = [
     href: "/seller/integrations",
     icon: CreditCard,
   },
+  {
+    label: "Tutoriais",
+    href: "/seller/tutorials",
+    icon: GraduationCap,
+  },
 ];
 
 export default function Sidebar({ className = "" }: SidebarProps) {
@@ -106,6 +112,11 @@ export default function Sidebar({ className = "" }: SidebarProps) {
   const canNavigate = (href: string) => {
     // Se está na página de configuração da loja, permitir navegação
     if (href === '/seller/store') {
+      return true;
+    }
+    
+    // Tutoriais sempre acessível (seção de ensino)
+    if (href === '/seller/tutorials') {
       return true;
     }
     
@@ -184,14 +195,20 @@ export default function Sidebar({ className = "" }: SidebarProps) {
           {/* Navigation */}
           <nav className="flex-1">
             <ul className="space-y-2">
-              {menuItems.map((item) => {
+              {menuItems.map((item, index) => {
                 const isActive = pathname === item.href;
                 const Icon = item.icon;
-                
                 const canNavigateToItem = canNavigate(item.href);
+                
+                // Adicionar divider antes do último item (Tutoriais)
+                const isLastItem = index === menuItems.length - 1;
                 
                 return (
                   <li key={item.href}>
+                    {/* Divider antes do último item */}
+                    {isLastItem && (
+                      <div className="my-4 border-t border-gray-200"></div>
+                    )}
                     <Link
                       href={item.href}
                       onClick={(e) => {
