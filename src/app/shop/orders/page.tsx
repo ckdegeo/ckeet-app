@@ -116,7 +116,7 @@ export default function OrdersPage() {
     },
     {
       key: 'store_data',
-      duration: 2 * 60 * 1000, // Reduzido para 2 minutos para atualizar cores mais rapidamente
+      duration: 1 * 60 * 1000, // Reduzido para 1 minuto para atualizar cores mais rapidamente
       userId: (() => {
         try {
           if (typeof window === 'undefined') return null;
