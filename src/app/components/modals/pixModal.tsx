@@ -3,9 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, Copy, QrCode, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import Button from '@/app/components/buttons/button';
-import Input from '@/app/components/inputs/input';
 import { showErrorToast, showSuccessToast } from '@/lib/utils/toastUtils';
-import LoadingSpinner from '@/app/components/ui/loadingSpinner';
 
 interface PixModalProps {
   isOpen: boolean;
@@ -348,10 +346,41 @@ export default function PixModal({
           {/* Divider */}
           <div className="border-t border-gray-100 mb-6"></div>
 
-          {/* Status de Loading */}
+          {/* Status de Loading - Skeleton */}
           {isLoading && (
-            <div className="text-center py-8">
-              <LoadingSpinner size="medium" />
+            <div className="space-y-6 animate-pulse">
+              {/* QR Code Skeleton */}
+              <div className="text-center">
+                <div className="bg-gray-200 rounded-xl p-4 inline-block">
+                  <div className="w-48 h-48 bg-gray-300 rounded-lg"></div>
+                </div>
+              </div>
+
+              {/* Código PIX Skeleton */}
+              <div className="space-y-3">
+                <div className="h-4 w-24 bg-gray-200 rounded"></div>
+                <div className="flex gap-2">
+                  <div className="flex-1 h-12 bg-gray-200 rounded-full"></div>
+                  <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                </div>
+              </div>
+
+              {/* Timer Skeleton */}
+              <div className="flex items-center justify-center gap-2 p-3 bg-gray-100 rounded-lg">
+                <div className="w-4 h-4 bg-gray-300 rounded"></div>
+                <div className="h-4 w-32 bg-gray-300 rounded"></div>
+              </div>
+
+              {/* Status Skeleton */}
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
+                  <div className="h-4 w-40 bg-gray-300 rounded"></div>
+                </div>
+              </div>
+
+              {/* Botão Skeleton */}
+              <div className="h-12 bg-gray-200 rounded-lg"></div>
             </div>
           )}
 
