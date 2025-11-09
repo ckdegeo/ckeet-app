@@ -10,7 +10,7 @@ import DeleteCategoryModal from '@/app/components/modals/deleteCategoryModal';
 import DeleteProductModal from '@/app/components/modals/deleteProductModal';
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
 import { StockType } from '@/lib/types';
-import LoadingSpinner from '@/app/components/ui/loadingSpinner';
+import MasterCatalogSkeleton from '@/app/components/master/catalogSkeleton';
 
 // Interface local para compatibilidade com dados existentes
 interface CatalogProduct {
@@ -365,13 +365,7 @@ const handleReorderProducts = (categoryId: string, reorderedProducts: CatalogPro
 
   // Exibir loading
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <LoadingSpinner size="medium" />
-        </div>
-      </div>
-    );
+    return <MasterCatalogSkeleton />;
   }
 
   return (

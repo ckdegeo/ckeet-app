@@ -8,7 +8,7 @@ import { Store, ShieldX, Shield, UserCheck, ExternalLink } from "lucide-react";
 import { getAccessToken } from '@/lib/utils/authUtils';
 import { showToastWithAutoClose } from '@/lib/utils/toastUtils';
 import BanSellerModal from '@/app/components/modals/banSellerModal';
-import LoadingSpinner from '@/app/components/ui/loadingSpinner';
+import MasterSellersSkeleton from '@/app/components/master/sellersSkeleton';
 
 // Interface para os dados dos sellers
 interface Seller {
@@ -294,6 +294,10 @@ export default function Sellers() {
     }
   ];
 
+  if (isLoading) {
+    return <MasterSellersSkeleton />;
+  }
+
   return (
     <div className="space-y-6">
       {/* Cabeçalho */}
@@ -337,19 +341,13 @@ export default function Sellers() {
       </div>
 
       {/* Tabela de sellers */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <LoadingSpinner size="medium" />
-        </div>
-      ) : (
-        <Table
-          data={filteredSellers}
-          columns={columns}
-          actions={actions}
-          itemsPerPage={10}
-          emptyMessage="Nenhuma loja encontrada"
-        />
-      )}
+      <Table
+        data={filteredSellers}
+        columns={columns}
+        actions={actions}
+        itemsPerPage={10}
+        emptyMessage="Nenhuma loja encontrada"
+      />
 
       {/* Modal de confirmação */}
       {selectedSeller && (

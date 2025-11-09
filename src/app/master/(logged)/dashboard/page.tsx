@@ -14,6 +14,7 @@ import NumberCard from '@/app/components/cards/numberCard';
 import AreaChartCard from '@/app/components/cards/areaChart';
 import Selector from '@/app/components/selectors/selector';
 import { getAccessToken } from '@/lib/utils/authUtils';
+import MasterDashboardSkeleton from '@/app/components/master/dashboardSkeleton';
 
 export default function Dashboard() {
   // Período (Selector)
@@ -29,10 +30,12 @@ export default function Dashboard() {
 
   // Gráfico
   const [chartData, setChartData] = useState<{ name: string; faturamento: number }[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
+        setIsLoading(true);
         const token = getAccessToken();
         const res = await fetch(`/api/master/dashboard?period=${period}`, {
           headers: {
@@ -51,6 +54,8 @@ export default function Dashboard() {
         }
       } catch (e) {
         console.error('Erro ao carregar dashboard master:', e);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -72,6 +77,10 @@ export default function Dashboard() {
       type: 'line' as const
     }
   ];
+
+  if (isLoading) {
+    return <MasterDashboardSkeleton />;
+  }
 
   return (
     <div className="space-y-6">

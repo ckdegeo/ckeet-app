@@ -12,6 +12,7 @@ import { CheckCircle, BarChart2, DollarSign, Store } from 'lucide-react';
 import { getAccessToken } from '@/lib/utils/authUtils';
 import { showToastWithAutoClose } from '@/lib/utils/toastUtils';
 import RefundConfirmationModal from '@/app/components/modals/refundConfirmationModal';
+import MasterSalesSkeleton from '@/app/components/master/salesSkeleton';
 
 // Interface para os dados de vendas do master
 interface MasterSale {
@@ -41,10 +42,12 @@ export default function Sales() {
   const [isRefundOpen, setIsRefundOpen] = useState(false);
   const [selectedSale, setSelectedSale] = useState<MasterSale | null>(null);
   const [periodSel, setPeriodSel] = useState<'today' | 'week' | 'month' | 'year' | 'all'>('month');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchSales = async () => {
       try {
+        setIsLoading(true);
         const token = getAccessToken();
         const params = new URLSearchParams();
         if (dateRange[0]) params.set('startDate', dateRange[0].toISOString());
@@ -66,6 +69,8 @@ export default function Sales() {
       } catch (e) {
         console.error('Erro ao carregar vendas:', e);
         showToastWithAutoClose('error', 'Erro ao carregar vendas', 4000);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchSales();
@@ -300,6 +305,10 @@ export default function Sales() {
       show: (s: MasterSale) => s.status === 'PAID'
     }
   ];
+
+  if (isLoading) {
+    return <MasterSalesSkeleton />;
+  }
 
   return (
     <div className="space-y-6">

@@ -7,7 +7,7 @@ import Search from "@/app/components/inputs/search";
 import { Users } from "lucide-react";
 import { getAccessToken } from '@/lib/utils/authUtils';
 import { showToastWithAutoClose } from '@/lib/utils/toastUtils';
-import LoadingSpinner from '@/app/components/ui/loadingSpinner';
+import MasterClientsSkeleton from '@/app/components/master/clientsSkeleton';
 
 // Interface para os dados dos clientes
 interface Client {
@@ -201,6 +201,10 @@ export default function Clients() {
     }
   ];
 
+  if (isLoading) {
+    return <MasterClientsSkeleton />;
+  }
+
   return (
     <div className="space-y-6">
       {/* Cabeçalho */}
@@ -244,18 +248,12 @@ export default function Clients() {
       </div>
 
       {/* Tabela de clientes */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <LoadingSpinner size="medium" />
-        </div>
-      ) : (
-        <Table
-          data={filteredClients}
-          columns={columns}
-          itemsPerPage={10}
-          emptyMessage="Nenhum cliente encontrado"
-        />
-      )}
+      <Table
+        data={filteredClients}
+        columns={columns}
+        itemsPerPage={10}
+        emptyMessage="Nenhum cliente encontrado"
+      />
     </div>
   );
 }
