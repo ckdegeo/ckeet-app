@@ -317,18 +317,11 @@ export default function LandingPage() {
             {/* Conteúdo à esquerda */}
             <div className="space-y-8 animate-fade-in-up">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20">
-                <Zap size={16} className="text-[var(--primary)]" />
-                <span className="text-sm font-medium text-[var(--primary)]">
-                  Sua loja virtual em minutos
-                </span>
-              </div>
-
               {/* Main Headline */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-[var(--foreground)] leading-tight">
                 Sua{' '}
                 <span className="text-[var(--primary)] relative inline-block">
-                  lojinha virtual
+                  loja virtual
                   <span className="absolute -bottom-2 left-0 right-0 h-2 bg-[var(--primary)]/20 -z-10"></span>
                 </span>
                 <br />
