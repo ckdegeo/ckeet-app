@@ -330,8 +330,8 @@ export default function LandingPage() {
 
               {/* Subheadline */}
               <p className="text-lg sm:text-xl text-[var(--on-background)] leading-relaxed">
-                Crie, personalize e venda produtos digitais com sua própria loja virtual. 
-                Sem conhecimento técnico. Sem complicação. Sem mensalidades.
+              Crie sua loja virtual e venda produtos digitais em minutos.
+              Sem programação, sem burocracia, sem mensalidades.
               </p>
 
               {/* Key Benefits */}
