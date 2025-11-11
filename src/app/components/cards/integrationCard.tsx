@@ -1,16 +1,19 @@
 'use client';
 
-import { LucideIcon, Check, AlertCircle } from 'lucide-react';
+import { Check, AlertCircle } from 'lucide-react';
 import Button from '../buttons/button';
+import Image from 'next/image';
 
 interface IntegrationCardProps {
   name: string;
   description: string;
   status: 'active' | 'inactive' | 'error';
-  icon: LucideIcon;
+  logoUrl?: string;
   lastSync?: string;
   onConfigure: () => void;
   configuring?: boolean;
+  disabled?: boolean;
+  comingSoon?: boolean;
   className?: string;
 }
 
@@ -18,10 +21,12 @@ export default function IntegrationCard({
   name,
   description,
   status,
-  icon: Icon,
+  logoUrl,
   lastSync,
   onConfigure,
   configuring = false,
+  disabled = false,
+  comingSoon = false,
   className = "",
 }: IntegrationCardProps) {
   const statusConfig = {
@@ -51,58 +56,81 @@ export default function IntegrationCard({
   return (
     <div 
       className={`
-        bg-[var(--background)]
+        bg-[var(--surface)]
         border border-[var(--on-background)]
         rounded-2xl
         p-6
         transition-all
-        hover:shadow-md
+        ${disabled || comingSoon ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md'}
         ${className}
       `}
     >
-      {/* Header com ícone e status */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-[var(--primary)]/10 rounded-full">
-            <Icon size={24} className="text-[var(--primary)]" />
-          </div>
-          <div>
-            <h3 className="text-lg font-medium text-[var(--foreground)]">
-              {name}
-            </h3>
-            <div className="flex items-center gap-2 mt-1">
-              <span 
-                className={`
-                  inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium
-                  ${statusInfo.color} ${statusInfo.bgColor}
-                `}
-              >
-                <StatusIcon size={12} />
-                {statusInfo.text}
-              </span>
-              {lastSync && (
-                <span className="text-xs text-[var(--on-background)]">
-                  Última sincronização: {lastSync}
+      <div className="flex items-start justify-between gap-4">
+        {/* Logo e Info */}
+        <div className="flex items-start gap-4 flex-1 min-w-0">
+          {logoUrl && (
+            <div className="flex-shrink-0">
+              <div className={`w-16 h-16 rounded-xl bg-[var(--background)] p-2 flex items-center justify-center border border-[var(--on-background)]/20 ${disabled || comingSoon ? 'grayscale' : ''}`}>
+                <Image
+                  src={logoUrl}
+                  alt={name}
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            </div>
+          )}
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className={`text-lg font-semibold ${disabled || comingSoon ? 'text-[var(--on-background)]' : 'text-[var(--foreground)]'}`}>
+                {name}
+              </h3>
+              {comingSoon ? (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-[var(--primary)]/10 text-[var(--primary)]">
+                  Em breve
+                </span>
+              ) : (
+                <span 
+                  className={`
+                    inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium
+                    ${statusInfo.color} ${statusInfo.bgColor}
+                  `}
+                >
+                  <StatusIcon size={12} />
+                  {statusInfo.text}
                 </span>
               )}
             </div>
+            <p className={`text-sm mb-2 ${disabled || comingSoon ? 'text-[var(--on-background)]/60' : 'text-[var(--on-background)]'}`}>
+              {description}
+            </p>
+            {lastSync && !comingSoon && (
+              <p className="text-xs text-[var(--on-background)]">
+                Última sincronização: {lastSync}
+              </p>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* Descrição */}
-      <p className="text-sm text-[var(--on-background)] mb-6">
-        {description}
-      </p>
-
-      {/* Ações */}
-      <div className="flex items-center justify-end">
-        <Button 
-          onClick={onConfigure}
-          disabled={configuring}
-        >
-          {configuring ? 'Processando...' : status === 'active' ? 'Desconectar' : 'Conectar'}
-        </Button>
+        {/* Botão de ação */}
+        <div className="flex-shrink-0">
+          {comingSoon ? (
+            <Button 
+              disabled={true}
+            >
+              Em breve
+            </Button>
+          ) : (
+            <Button 
+              onClick={onConfigure}
+              disabled={configuring || disabled}
+            >
+              {configuring ? 'Processando...' : status === 'active' ? 'Desconectar' : 'Conectar'}
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

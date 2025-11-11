@@ -1,17 +1,19 @@
 'use client';
 
-import { useEffect, Suspense, useState, useCallback } from 'react';
+import { useEffect, Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { CreditCard, CheckCircle } from 'lucide-react';
+import { CreditCard, CheckCircle, BarChart3 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import NumberCard from '@/app/components/cards/numberCard';
 import IntegrationCard from '@/app/components/cards/integrationCard';
+import Tabs from '@/app/components/tabs/tabs';
 import { useMercadoPago } from '@/lib/hooks/useMercadoPago';
 import { useIntegrationDataCache } from '@/lib/hooks/useCache';
 import IntegrationsSkeleton from '@/app/components/integrations/integrationsSkeleton';
 
 function IntegrationsContent() {
   const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState('acquirers');
 
   // Hook do Mercado Pago (agora busca sellerId automaticamente)
   const { status: mpStatus, connecting, disconnecting, connect, disconnect, clearCache } = useMercadoPago();
@@ -153,6 +155,83 @@ function IntegrationsContent() {
     );
   }
 
+  // Conteúdo da Tab Adquirentes
+  const acquirersContent = (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Mercado Pago - Ativo */}
+        <IntegrationCard
+          name="Mercado Pago"
+          description="Processamento de pagamentos com PIX, cartão de crédito e débito"
+          status={getIntegrationStatus()}
+          logoUrl="/mp.png"
+          lastSync={getLastSync()}
+          onConfigure={handleConfigureIntegration}
+          configuring={connecting || disconnecting}
+        />
+
+        {/* Stripe - Em breve */}
+        <IntegrationCard
+          name="Stripe"
+          description="Gateway de pagamentos internacional com split payment e múltiplas moedas"
+          status="inactive"
+          logoUrl="/stripe.png"
+          comingSoon={true}
+          onConfigure={() => {}}
+        />
+
+        {/* PagBank - Em breve */}
+        <IntegrationCard
+          name="PagBank"
+          description="Solução completa de pagamentos com split automático e gestão de recebíveis"
+          status="inactive"
+          logoUrl="/pagbank.png"
+          comingSoon={true}
+          onConfigure={() => {}}
+        />
+
+        {/* Asaas - Em breve */}
+        <IntegrationCard
+          name="Asaas"
+          description="Plataforma de cobrança com split payment, assinaturas e gestão financeira"
+          status="inactive"
+          logoUrl="/asaas.png"
+          comingSoon={true}
+          onConfigure={() => {}}
+        />
+
+        {/* Efí - Em breve */}
+        <IntegrationCard
+          name="Efí"
+          description="API de pagamentos com split de recebimento e gestão de transações"
+          status="inactive"
+          logoUrl="/efi.png"
+          comingSoon={true}
+          onConfigure={() => {}}
+        />
+      </div>
+    </div>
+  );
+
+  // Conteúdo da Tab Rastreamento
+  const trackingContent = (
+    <div className="space-y-6">
+      <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-2xl p-8 text-center">
+        <div className="max-w-md mx-auto">
+          <div className="w-16 h-16 mx-auto mb-4 bg-[var(--primary)]/10 rounded-full flex items-center justify-center">
+            <BarChart3 size={32} className="text-[var(--primary)]" />
+          </div>
+          <h3 className="text-lg font-semibold text-[var(--foreground)] mb-2">
+            Rastreamento
+          </h3>
+          <p className="text-sm text-[var(--on-background)]">
+            Em breve você poderá configurar ferramentas de rastreamento e analytics para sua loja.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -173,26 +252,25 @@ function IntegrationsContent() {
         />
       </div>
 
-      <hr className="border-t border-black/10" />
-
-      {/* Lista Simples */}
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-[var(--foreground)]">
-          Adquirentes
-        </h2>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <IntegrationCard
-            name="Mercado Pago"
-            description="Processamento de pagamentos com PIX, cartão de crédito e débito"
-            status={getIntegrationStatus()}
-            icon={CreditCard}
-            lastSync={getLastSync()}
-            onConfigure={handleConfigureIntegration}
-            configuring={connecting || disconnecting}
-          />
-        </div>
-      </div>
+      {/* Tabs */}
+      <Tabs
+        items={[
+          {
+            id: 'acquirers',
+            label: 'Adquirentes',
+            icon: CreditCard,
+            content: acquirersContent,
+          },
+          {
+            id: 'tracking',
+            label: 'Rastreamento',
+            icon: BarChart3,
+            content: trackingContent,
+          },
+        ]}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+      />
     </div>
   );
 }
