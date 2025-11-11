@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Input from '@/app/components/inputs/input';
 import ImageUpload from '@/app/components/images/imageUpload';
 import ColorPicker from '@/app/components/inputs/colorPicker';
+import PercentageInput from '@/app/components/inputs/percentageInput';
 import Button from '@/app/components/buttons/button';
 import DomainModal from '@/app/components/modals/domainModal';
 import { Save, Settings, Store as StoreIcon, Palette, Image, Globe, Square, Circle, MousePointer } from 'lucide-react';
@@ -41,6 +42,13 @@ interface DomainConfig {
 }
 
 // Interface para configurações de aparência
+interface BackgroundImageConfig {
+  enabled: boolean;
+  url: string;
+  // Opacidade de 0 a 100 (percentual) para facilitar controle na UI
+  opacity: number;
+}
+
 interface ComponentStyle {
   rounded: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
   hasBorder: boolean;
@@ -62,6 +70,7 @@ interface AppearanceConfig {
   productCards: ComponentStyle;
   banner: BannerConfig;
   storeBackground: string;
+  backgroundImage: BackgroundImageConfig;
   categoryTitle: {
     titleColor: string;
     lineColor: string;
@@ -122,6 +131,12 @@ function StorePageContent() {
         // Garantir que categoryTitle sempre exista
         setAppearanceConfig({
           ...loadedConfig,
+          // Garantir que backgroundImage sempre exista
+          backgroundImage: loadedConfig.backgroundImage || {
+            enabled: false,
+            url: '',
+            opacity: 100,
+          },
           categoryTitle: loadedConfig.categoryTitle || {
             titleColor: '#111827',
             lineColor: '#bd253c',
@@ -194,6 +209,11 @@ function StorePageContent() {
       redirectEnabled: false,
     },
     storeBackground: '#f9fafb', // gray-50
+    backgroundImage: {
+      enabled: false,
+      url: '',
+      opacity: 100,
+    },
     categoryTitle: {
       titleColor: '#111827',
       lineColor: '#bd253c',
@@ -542,6 +562,55 @@ function StorePageContent() {
             value={appearanceConfig.storeBackground}
             onChange={(color) => setAppearanceConfig(prev => ({ ...prev, storeBackground: color }))}
           />
+
+          <div className="p-4 border border-[var(--on-background)] rounded-xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-[var(--foreground)]">Imagem de fundo</p>
+                <p className="text-xs text-[var(--on-background)]">Ative para exibir uma imagem no background</p>
+              </div>
+              <SwitchButton
+                value={appearanceConfig.backgroundImage.enabled}
+                onChange={(v) =>
+                  setAppearanceConfig(prev => ({
+                    ...prev,
+                    backgroundImage: { ...prev.backgroundImage, enabled: v },
+                  }))
+                }
+                size="md"
+              />
+            </div>
+
+            {appearanceConfig.backgroundImage.enabled && (
+              <div className="pt-2 border-t border-[var(--on-background)]/20 space-y-4">
+                <ImageUpload
+                  label=""
+                  value={appearanceConfig.backgroundImage.url ? { url: appearanceConfig.backgroundImage.url } : null}
+                  onChange={(_, url) =>
+                    setAppearanceConfig(prev => ({
+                      ...prev,
+                      backgroundImage: { ...prev.backgroundImage, url: url || '' },
+                    }))
+                  }
+                  placeholder="Arraste a imagem de fundo aqui"
+                  maxSize={10}
+                  error=""
+                  folder="store-background"
+                />
+                <PercentageInput
+                  label="Opacidade da imagem"
+                  value={appearanceConfig.backgroundImage.opacity}
+                  onChange={(value) =>
+                    setAppearanceConfig(prev => ({
+                      ...prev,
+                      backgroundImage: { ...prev.backgroundImage, opacity: value },
+                    }))
+                  }
+                  placeholder="0 a 100"
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
