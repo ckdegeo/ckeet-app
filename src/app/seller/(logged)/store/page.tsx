@@ -75,6 +75,11 @@ interface AppearanceConfig {
     titleColor: string;
     lineColor: string;
   };
+  footer: {
+    backgroundColor: string;
+    textColor: string;
+    opacity: number;
+  };
 }
 
 function StorePageContent() {
@@ -148,6 +153,12 @@ function StorePageContent() {
             titleColor: loadedConfig.productCards?.titleColor || '#111827',
             priceColor: loadedConfig.productCards?.priceColor || '#111827',
           },
+          // Garantir que footer sempre exista
+          footer: loadedConfig.footer || {
+            backgroundColor: '#ffffff',
+            textColor: '#111827',
+            opacity: 100,
+          },
         });
       }
     }
@@ -217,6 +228,11 @@ function StorePageContent() {
     categoryTitle: {
       titleColor: '#111827',
       lineColor: '#bd253c',
+    },
+    footer: {
+      backgroundColor: '#ffffff',
+      textColor: '#111827',
+      opacity: 100,
     },
   });
 
@@ -857,6 +873,53 @@ function StorePageContent() {
                 lineColor: color,
               },
             }))}
+          />
+        </div>
+      </div>
+
+      {/* Footer da Loja */}
+      <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-2xl p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Square size={20} className="text-[var(--primary)]" />
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">
+            Footer da loja
+          </h2>
+        </div>
+        
+        <div className="space-y-4">
+          <ColorPicker
+            label="Cor de fundo do footer"
+            value={appearanceConfig.footer.backgroundColor}
+            onChange={(color) => setAppearanceConfig(prev => ({
+              ...prev,
+              footer: {
+                ...prev.footer,
+                backgroundColor: color,
+              },
+            }))}
+          />
+          <ColorPicker
+            label="Cor do texto do footer"
+            value={appearanceConfig.footer.textColor}
+            onChange={(color) => setAppearanceConfig(prev => ({
+              ...prev,
+              footer: {
+                ...prev.footer,
+                textColor: color,
+              },
+            }))}
+          />
+          <PercentageInput
+            label="Opacidade do footer"
+            value={appearanceConfig.footer.opacity}
+            onChange={(value) => setAppearanceConfig(prev => ({
+              ...prev,
+              footer: {
+                ...prev.footer,
+                opacity: value,
+              },
+            }))}
+            placeholder="0 a 100"
           />
         </div>
       </div>
