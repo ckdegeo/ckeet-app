@@ -654,7 +654,7 @@ export default function OrdersPage() {
         {bgImageEnabled && (
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 -z-10"
+            className="pointer-events-none absolute inset-0 z-0"
             style={{
               backgroundImage: `url('${appearance.backgroundImage?.url}')`,
               backgroundSize: 'cover',
@@ -664,6 +664,7 @@ export default function OrdersPage() {
             }}
           />
         )}
+        <div className="relative z-10">
         <StoreNavbar
           store={store}
           isAuthenticated={false}
@@ -698,6 +699,7 @@ export default function OrdersPage() {
         </div>
 
         <Footer store={store} />
+        </div>
       </div>
     );
   }
@@ -713,7 +715,7 @@ export default function OrdersPage() {
       {bgImageEnabled && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10"
+          className="pointer-events-none absolute inset-0 z-0"
           style={{
             backgroundImage: `url('${appearance.backgroundImage?.url}')`,
             backgroundSize: 'cover',
@@ -723,6 +725,7 @@ export default function OrdersPage() {
           }}
         />
       )}
+      <div className="relative z-10">
       {/* Navbar */}
       <StoreNavbar
         store={store}
@@ -948,6 +951,7 @@ export default function OrdersPage() {
 
       {/* Footer */}
       <Footer store={store} />
+      </div>
 
       {/* Modal de Conteúdo */}
       {selectedOrder && (

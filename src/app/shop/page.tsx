@@ -227,7 +227,7 @@ export default function ShopPage() {
       {bgImageEnabled && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 -z-10"
+          className="pointer-events-none absolute inset-0 z-0"
           style={{
             backgroundImage: `url('${appearance.backgroundImage?.url}')`,
             backgroundSize: 'cover',
@@ -237,6 +237,7 @@ export default function ShopPage() {
           }}
         />
       )}
+      <div className="relative z-10">
       {/* Navbar Moderna */}
       <StoreNavbar
         store={{
@@ -491,6 +492,7 @@ export default function ShopPage() {
 
       {/* Footer */}
       <Footer store={store} />
+      </div>
     </div>
   );
 }
