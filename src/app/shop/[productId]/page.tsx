@@ -36,6 +36,11 @@ interface AppearanceConfig {
     redirectEnabled: boolean;
   };
   storeBackground: string;
+  backgroundImage?: {
+    enabled: boolean;
+    url: string;
+    opacity: number; // 0-100
+  };
   categoryTitle: {
     titleColor: string;
     lineColor: string;
@@ -196,6 +201,11 @@ export default function ProductPage() {
       redirectEnabled: false,
     },
     storeBackground: '#f9fafb',
+    backgroundImage: {
+      enabled: false,
+      url: '',
+      opacity: 100,
+    },
     categoryTitle: {
       titleColor: '#111827',
       lineColor: '#bd253c',
@@ -204,11 +214,27 @@ export default function ProductPage() {
 
   const appearance = appearanceConfig || defaultAppearance;
 
+  const bgImageEnabled = !!appearance.backgroundImage?.enabled && !!appearance.backgroundImage?.url;
+  const bgOpacity = (appearance.backgroundImage?.opacity ?? 100) / 100;
+
   return (
     <div 
-      className="min-h-screen"
+      className="min-h-screen relative"
       style={{ backgroundColor: appearance.storeBackground }}
     >
+      {bgImageEnabled && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 -z-10"
+          style={{
+            backgroundImage: `url('${appearance.backgroundImage?.url}')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            opacity: bgOpacity,
+          }}
+        />
+      )}
       {/* Navbar do Design System */}
       <StoreNavbar
         store={store}
