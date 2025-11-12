@@ -38,10 +38,63 @@ export async function POST(request: NextRequest) {
     // Fazer login no Supabase PRIMEIRO (ordem original)
     // O mesmo email pode ser seller em uma conta e customer em múltiplas lojas
     console.log('🔍 Attempting Supabase login for:', email);
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+    let { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
+    // Se o erro for "Email not confirmed", confirmar automaticamente e tentar novamente
+    if (authError && (authError.message.includes('Email not confirmed') || 
+                      authError.message.includes('email_not_confirmed'))) {
+      console.log('⚠️ Email não confirmado detectado. Confirmando automaticamente...');
+      
+      try {
+        // Buscar o usuário pelo email usando a API Admin
+        // Usar paginação para limitar a busca (máximo 1000 usuários por página)
+        const { data: usersData, error: listError } = await supabase.auth.admin.listUsers({
+          page: 1,
+          perPage: 1000
+        });
+        
+        if (!listError && usersData && usersData.users) {
+          const user = usersData.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+          
+          if (user) {
+            // Confirmar o email automaticamente usando a API Admin
+            const { error: confirmError } = await supabase.auth.admin.updateUserById(
+              user.id,
+              { email_confirm: true }
+            );
+            
+            if (!confirmError) {
+              console.log('✅ Email confirmado automaticamente. Tentando login novamente...');
+              // Tentar fazer login novamente após confirmar o email
+              const retryResult = await supabase.auth.signInWithPassword({
+                email,
+                password,
+              });
+              
+              if (!retryResult.error && retryResult.data) {
+                authData = retryResult.data;
+                authError = null;
+                console.log('✅ Login bem-sucedido após confirmação automática de email');
+              } else if (retryResult.error) {
+                authError = retryResult.error;
+              }
+            } else {
+              console.error('❌ Erro ao confirmar email automaticamente:', confirmError);
+            }
+          } else {
+            console.warn('⚠️ Usuário não encontrado na lista de usuários do Supabase');
+          }
+        } else if (listError) {
+          console.error('❌ Erro ao listar usuários:', listError);
+        }
+      } catch (error) {
+        console.error('❌ Erro ao processar confirmação automática de email:', error);
+        // Continuar com o erro original se a confirmação automática falhar
+      }
+    }
 
     if (authError) {
       console.log('❌ Supabase auth error:', authError.message, authError.status);
@@ -53,9 +106,6 @@ export async function POST(request: NextRequest) {
           authError.message.includes('invalid_credentials') ||
           authError.message.includes('Invalid email or password')) {
         errorMessage = 'Email ou senha incorretos. Verifique suas credenciais e tente novamente.';
-      } else if (authError.message.includes('Email not confirmed') || 
-                 authError.message.includes('email_not_confirmed')) {
-        errorMessage = 'Email não confirmado. Verifique sua caixa de entrada e confirme seu email antes de fazer login.';
       } else if (authError.message.includes('User not found') || 
                  authError.message.includes('user_not_found')) {
         errorMessage = 'Conta não encontrada. Faça o cadastro primeiro.';
@@ -71,8 +121,17 @@ export async function POST(request: NextRequest) {
     }
     console.log('✅ Supabase login successful');
 
+    // Verificar se authData e user existem
+    if (!authData || !authData.user) {
+      console.log('❌ Auth data ou user não encontrado após login');
+      return NextResponse.json(
+        { error: 'Erro ao fazer login. Tente novamente.' },
+        { status: 500 }
+      );
+    }
+
     // Verificar se é um customer ou se pode se tornar um
-    const userType = authData.user?.user_metadata?.user_type;
+    const userType = authData.user.user_metadata?.user_type;
     console.log('🔍 User type:', userType);
     
     // Verificar se o customer existe no banco para ESTA loja específica
@@ -143,7 +202,7 @@ export async function POST(request: NextRequest) {
       message: 'Login realizado com sucesso',
       user: {
         id: authData.user.id,
-        email: authData.user.email,
+        email: authData.user.email || email,
         name: customer.name || authData.user.user_metadata?.name || 'Cliente',
         user_type: 'customer',
         customer_id: customer.id,
