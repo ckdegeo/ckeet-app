@@ -462,7 +462,7 @@ function StorePageContent() {
               placeholder="Arraste seu logotipo aqui ou clique para selecionar"
               maxSize={5}
               error=""
-              folder="logos"
+              folder="logo"
             />
           </div>
 
@@ -489,7 +489,7 @@ function StorePageContent() {
               placeholder="Arraste o banner da tela inicial aqui"
               maxSize={10}
               error=""
-              folder="home-banner"
+              folder="homeBanner"
             />
           </div>
 
@@ -516,7 +516,7 @@ function StorePageContent() {
               placeholder="Arraste o banner da loja aqui"
               maxSize={10}
               error=""
-              folder="store-banner"
+              folder="storeBanner"
             />
           </div>
         </div>

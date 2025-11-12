@@ -7,7 +7,6 @@ import PhoneInput from "@/app/components/inputs/phoneInput";
 import Button from "@/app/components/buttons/button";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSellerRegister } from "@/lib/hooks/useSellerRegister";
 import { type SellerRegisterData } from "@/lib/validations/authSchemas";
 import { validateEmail, validateCPF } from "@/lib/utils/validation";
 import toast from "react-hot-toast";
@@ -19,11 +18,10 @@ export default function Register() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [emailError, setEmailError] = useState<string | undefined>(undefined);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const router = useRouter();
-  
-  const { isLoading, errors, register } = useSellerRegister();
 
   // Email: validar somente ao sair do campo (onBlur) para não floodar toasts
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,7 +56,38 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const formData: SellerRegisterData = {
+    // Validar senhas
+    if (password !== confirmPassword) {
+      toast.error('As senhas não coincidem');
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    // Validar email
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      setEmailError(emailValidation.error || 'E-mail inválido');
+      return;
+    }
+
+    // Validar CPF
+    if (cpf.length !== 11) {
+      toast.error('CPF deve ter 11 dígitos');
+      return;
+    }
+
+    const cpfValidation = validateCPF(cpf);
+    if (!cpfValidation.isValid) {
+      toast.error(cpfValidation.error || 'CPF inválido');
+      return;
+    }
+
+    // Salvar dados no sessionStorage e redirecionar para criação de loja
+    const registerData: SellerRegisterData = {
       name,
       email,
       cpf,
@@ -67,15 +96,8 @@ export default function Register() {
       confirmPassword,
     };
 
-    const success = await register(formData);
-    
-    if (success) {
-      setSuccess(true);
-      // Redirecionar para login após 2 segundos
-      setTimeout(() => {
-        router.push('/seller/auth/login');
-      }, 2000);
-    }
+    sessionStorage.setItem('sellerRegisterData', JSON.stringify(registerData));
+    router.push('/seller/auth/create-store');
   };
 
   return (
@@ -122,7 +144,7 @@ export default function Register() {
               placeholder="Digite seu nome completo"
               required
               error={errors?.name}
-              disabled={isLoading || success}
+              disabled={isLoading}
             />
 
             <Input
@@ -133,7 +155,7 @@ export default function Register() {
               onBlur={handleEmailBlur}
               placeholder="Digite seu email"
               required
-              disabled={isLoading || success}
+              disabled={isLoading}
               error={errors?.email || emailError}
             />
 
@@ -145,7 +167,7 @@ export default function Register() {
               placeholder="Digite seu CPF"
               maxLength={14}
               required
-              disabled={isLoading || success}
+              disabled={isLoading}
             />
 
             <PhoneInput
@@ -154,7 +176,7 @@ export default function Register() {
               onChange={setPhone}
               className="bg-transparent"
               error={errors?.phone}
-              disabled={isLoading || success}
+              disabled={isLoading}
             />
 
             <Input
@@ -165,7 +187,7 @@ export default function Register() {
               placeholder="Digite sua senha (mín. 6 caracteres)"
               required
               error={errors?.password}
-              disabled={isLoading || success}
+              disabled={isLoading}
             />
 
             <Input
@@ -176,15 +198,15 @@ export default function Register() {
               placeholder="Confirme sua senha"
               required
               error={errors?.confirmPassword}
-              disabled={isLoading || success}
+              disabled={isLoading}
             />
 
             <Button 
               className="w-full mb-2" 
-              disabled={isLoading || success}
+              disabled={isLoading}
               type="submit"
             >
-              {isLoading ? 'Criando conta...' : success ? '✅ Conta criada!' : 'Cadastrar'}
+              {isLoading ? 'Validando...' : 'Continuar'}
             </Button>
 
             <div className="text-center">

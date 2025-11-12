@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Upload, X, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import Button from '../buttons/button';
 import { ImageService } from '@/lib/services/imageService';
@@ -21,6 +21,7 @@ interface ImageUploadProps {
   uploadType?: 'store' | 'product'; // Tipo de upload
   productId?: string; // ID do produto (para produtos)
   imageType?: 'image1' | 'image2' | 'image3'; // Tipo da imagem do produto
+  deferUpload?: boolean; // Se true, não faz upload imediato, apenas armazena o arquivo
 }
 
 export default function ImageUpload({
@@ -36,7 +37,8 @@ export default function ImageUpload({
   folder = "store",
   uploadType = "store",
   productId,
-  imageType = "image1"
+  imageType = "image1",
+  deferUpload = false
 }: ImageUploadProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
@@ -49,9 +51,24 @@ export default function ImageUpload({
   // Determinar se há uma imagem existente (URL) ou nova (File)
   const hasExistingImage = value && typeof value === 'object' && 'url' in value;
   const existingImageUrl = hasExistingImage ? value.url : null;
+  const isFileValue = value && value instanceof File;
   const currentImageUrl = uploadedUrl || existingImageUrl;
-  const hasImage = !!(preview || currentImageUrl);
+  const hasImage = !!(preview || currentImageUrl || isFileValue);
   const isActive = isFocused || isDragOver || hasImage;
+
+  // Criar preview quando o value for um File
+  useEffect(() => {
+    if (isFileValue && value instanceof File) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result;
+        setPreview(result as string);
+      };
+      reader.readAsDataURL(value);
+    } else if (!value) {
+      setPreview(null);
+    }
+  }, [value, isFileValue]);
 
   const handleFileSelect = async (file: File) => {
     if (disabled) return;
@@ -68,17 +85,23 @@ export default function ImageUpload({
       return;
     }
 
+    // Criar preview local primeiro
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result;
+      setPreview(result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Se deferUpload for true, apenas armazenar o arquivo sem fazer upload
+    if (deferUpload) {
+      onChange?.(file);
+      return;
+    }
+
     setIsUploading(true);
 
     try {
-      // Criar preview local primeiro
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result;
-        setPreview(result as string);
-      };
-      reader.readAsDataURL(file);
-
       // Fazer upload para o Supabase
       let uploadResult;
       
@@ -87,6 +110,7 @@ export default function ImageUpload({
         uploadResult = await ImageService.uploadProductImage(file, productId, imageType);
       } else {
         // Upload de imagem de loja
+        // Usar folder como imageType para manter compatibilidade
         uploadResult = await ImageService.uploadImage(file, folder);
       }
       

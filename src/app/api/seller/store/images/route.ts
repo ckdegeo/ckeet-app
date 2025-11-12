@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    const folder = formData.get('folder') as string || 'store';
+    const imageType = formData.get('imageType') as string || 'store';
 
     if (!file) {
       return NextResponse.json(
@@ -48,7 +48,16 @@ export async function POST(request: NextRequest) {
       .update(user.id)
       .digest('hex')
       .slice(0, 16);
-    const filePath = `tenants/${namespace}/${folder}.${fileExtension}`;
+    
+    // Usar imageType para diferenciar logo, homeBanner, storeBanner
+    const filePath = `tenants/${namespace}/${imageType}.${fileExtension}`;
+    
+    console.log('🔍 [SERVER] Upload de imagem:', {
+      imageType,
+      filePath,
+      fileName: file.name,
+      fileSize: file.size,
+    });
 
     // Upload com upsert: true para substituir arquivo existente
     const { data, error } = await supabase.storage

@@ -22,25 +22,26 @@ export class ImageService {
    */
   static async uploadImage(
     file: File, 
-    folder: string = 'store'
+    imageType: 'logo' | 'homeBanner' | 'storeBanner' | string = 'store',
+    providedToken?: string | null
   ): Promise<UploadResult> {
     try {
-      // Obter token de acesso
-      const accessToken = getAccessToken();
+      // Usar token fornecido ou obter do storage
+      const accessToken = providedToken || getAccessToken();
       if (!accessToken) {
+        console.error('❌ [ImageService] Token de acesso não encontrado');
         return {
           success: false,
           error: 'Token de acesso não encontrado'
         };
       }
-
-      // Usar caminho fixo baseado no tipo de imagem
       
+      console.log('🔍 [ImageService] Fazendo upload com token:', !!accessToken, 'imageType:', imageType);
+
       // Criar FormData para enviar o arquivo
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('folder', folder);
-      // Não enviar fileName - será gerado com caminho fixo na API
+      formData.append('imageType', imageType); // Passar tipo de imagem específico
 
       // Fazer upload via API do servidor
       const response = await fetch('/api/seller/store/images', {

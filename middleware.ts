@@ -70,6 +70,13 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
+    // Rota especial: create-store - só pode ser acessada durante o fluxo de registro
+    // A verificação de sessionStorage é feita client-side no componente
+    // Aqui apenas permitimos o acesso sem autenticação (pois a conta ainda não foi criada)
+    if (pathname === '/seller/auth/create-store') {
+      return NextResponse.next();
+    }
+
     // Para todas as outras rotas de seller, verificar autenticação
     const accessToken = request.cookies.get('access_token')?.value;
     const userData = request.cookies.get('user_data')?.value;
