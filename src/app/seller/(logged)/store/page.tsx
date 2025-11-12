@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Input from '@/app/components/inputs/input';
 import ImageUpload from '@/app/components/images/imageUpload';
@@ -85,7 +85,9 @@ interface AppearanceConfig {
 function StorePageContent() {
   const searchParams = useSearchParams();
   const [isDomainModalOpen, setIsDomainModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('appearance');
+  const [activeTab, setActiveTab] = useState('store');
+  const [showFloatingSave, setShowFloatingSave] = useState(false);
+  const saveButtonRef = useRef<HTMLDivElement>(null);
 
   // Usar cache para carregar dados da loja
   const { data: storeData, loading: storeLoading, error: storeError, refresh: refreshStoreData } = useStoreConfigCache();
@@ -96,6 +98,39 @@ function StorePageContent() {
       showErrorToast('Complete a configuração da sua loja para acessar outras funcionalidades');
     }
   }, [searchParams]);
+
+  // Observar visibilidade do botão Salvar original
+  useEffect(() => {
+    // Não observar durante o loading
+    if (storeLoading) {
+      setShowFloatingSave(false);
+      return;
+    }
+
+    const currentRef = saveButtonRef.current;
+    
+    if (!currentRef) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // Se o botão não está visível, mostrar o botão flutuante
+        const isVisible = entries[0].isIntersecting;
+        setShowFloatingSave(!isVisible);
+      },
+      {
+        threshold: 0, // Considerar visível quando qualquer parte está visível
+        rootMargin: '0px',
+      }
+    );
+
+    observer.observe(currentRef);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [storeData, storeLoading]); // Re-executar quando os dados ou loading mudarem
 
   // Carregar dados do cache para o estado local
   useEffect(() => {
@@ -357,8 +392,8 @@ function StorePageContent() {
   };
 
 
-  // Conteúdo obrigatório (acima do divider)
-  const requiredContent = (
+  // Conteúdo da Tab Loja (configurações básicas)
+  const storeContent = (
     <div className="space-y-6">
       {/* Informações Básicas */}
       <div className="bg-[var(--surface)] border border-[var(--on-background)] rounded-2xl p-6">
@@ -1015,7 +1050,7 @@ function StorePageContent() {
             Loja          
           </h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3" ref={saveButtonRef}>
           <Button 
             onClick={handleSave}
             className="flex items-center gap-2"
@@ -1026,12 +1061,15 @@ function StorePageContent() {
         </div>
       </div>
 
-      {/* Conteúdo Obrigatório */}
-      {requiredContent}
-
-      {/* Tabs Opcionais */}
+      {/* Tabs de Configuração */}
       <Tabs
         items={[
+          {
+            id: 'store',
+            label: 'Loja',
+            icon: StoreIcon,
+            content: storeContent,
+          },
           {
             id: 'appearance',
             label: 'Aparência',
@@ -1056,6 +1094,22 @@ function StorePageContent() {
         onSave={handleDomainSave}
         initialConfig={domainConfig}
       />
+
+      {/* Botão Flutuante de Salvar */}
+      {showFloatingSave && !storeLoading && !storeError && (
+        <div className="fixed bottom-6 right-6 z-50 animate-fade-in">
+          <div>
+            <Button
+              onClick={handleSave}
+              variant="primary"
+              className="rounded-full"
+            >
+              <Save size={20} />
+              Salvar
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

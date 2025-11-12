@@ -89,7 +89,7 @@ export default function Input({
             bg-transparent
             border border-[var(--on-background)]
             text-[var(--foreground)]
-            placeholder:text-transparent
+            ${label ? "placeholder:text-transparent" : "placeholder:text-[var(--on-background)]/50"}
             transition-all
             outline-none
             focus:border-[var(--primary)]

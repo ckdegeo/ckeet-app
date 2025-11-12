@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Save, Box, Hash, Key, Edit, Trash2, Upload, Download, Plus } from 'lucide-react';
 import { showSuccessToast, showErrorToast } from '@/lib/utils/toastUtils';
@@ -174,8 +174,42 @@ export default function ProductPage() {
     image3: ''
   });
 
-  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [hasAttemptedSave, setHasAttemptedSave] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showFloatingSave, setShowFloatingSave] = useState(false);
+  const saveButtonRef = useRef<HTMLDivElement>(null);
+  
+  // Observar visibilidade do botão Salvar
+  useEffect(() => {
+    if (isSaving) { // Não observar durante o salvamento
+      setShowFloatingSave(false);
+      return;
+    }
+
+    const currentRef = saveButtonRef.current;
+    if (!currentRef) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const isVisible = entries[0].isIntersecting;
+        setShowFloatingSave(!isVisible);
+      },
+      {
+        threshold: 0,
+        rootMargin: '0px',
+      }
+    );
+
+    observer.observe(currentRef);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [productData, isSaving]); // Re-executar quando dados ou loading mudarem
+
   const [activeStockTab, setActiveStockTab] = useState('por_linha');
   const [categoryName, setCategoryName] = useState<string>('');
   const [loadedCategoryId, setLoadedCategoryId] = useState<string>(() => {
@@ -234,10 +268,11 @@ export default function ProductPage() {
     
     // Limpar erro do campo quando o usuário começar a digitar
     if (errors[field]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: undefined
-      }));
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
     }
   };
 
@@ -247,17 +282,20 @@ export default function ProductPage() {
       price: value
     }));
     
-    // Validação em tempo real para preço mínimo
-    if (value > 0 && value < 5) {
-      setErrors(prev => ({
-        ...prev,
-        price: 'Preço mínimo é R$ 5,00'
-      }));
-    } else if (errors.price) {
-      setErrors(prev => ({
-        ...prev,
-        price: undefined
-      }));
+    // Validação em tempo real para preço mínimo (apenas se já tentou salvar)
+    if (hasAttemptedSave) {
+      if (value > 0 && value < 5) {
+        setErrors(prev => ({
+          ...prev,
+          price: 'Preço mínimo é R$ 5,00'
+        }));
+      } else if (errors.price) {
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.price;
+          return newErrors;
+        });
+      }
     }
   };
 
@@ -282,34 +320,30 @@ export default function ProductPage() {
     
     // Limpar erro do campo quando o usuário fizer upload
     if (errors[imageKey]) {
-      setErrors(prev => ({
-        ...prev,
-        [imageKey]: undefined
-      }));
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[imageKey];
+        return newErrors;
+      });
     }
   };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    const errorMessages: string[] = [];
 
     // Validação de campos obrigatórios básicos
     if (!productData.name.trim()) {
       newErrors.name = 'Nome do produto é obrigatório';
-      errorMessages.push('❌ Nome do produto');
     }
 
     if (!productData.description.trim()) {
       newErrors.description = 'Descrição é obrigatória';
-      errorMessages.push('❌ Descrição do produto');
     }
 
     if (productData.price <= 0) {
       newErrors.price = 'Preço deve ser maior que zero';
-      errorMessages.push('❌ Preço válido (maior que R$ 0,00)');
     } else if (productData.price < 5) {
       newErrors.price = 'Preço mínimo é R$ 5,00';
-      errorMessages.push('❌ Preço mínimo de R$ 5,00');
     }
 
     // Verificar se há pelo menos uma imagem (URL ou objeto com URL)
@@ -318,25 +352,21 @@ export default function ProductPage() {
     
     if (!hasImage) {
       newErrors.image1 = 'Pelo menos uma imagem é obrigatória';
-      errorMessages.push('❌ Pelo menos 1 imagem do produto');
     }
 
     // Validações específicas por tipo de estoque
     if (productData.stockType === StockType.FIXED) {
       if (!productData.fixedContent?.trim()) {
         newErrors.fixedContent = 'Conteúdo fixo é obrigatório';
-        errorMessages.push('❌ Conteúdo fixo (aba Estoque)');
       }
     }
 
     if (productData.stockType === StockType.KEYAUTH) {
       if (!productData.keyAuthDays || productData.keyAuthDays <= 0) {
         newErrors.keyAuthDays = 'Número de dias é obrigatório';
-        errorMessages.push('❌ Número de dias (aba Estoque)');
       }
       if (!productData.keyAuthSellerKey?.trim()) {
         newErrors.keyAuthSellerKey = 'Seller key é obrigatória';
-        errorMessages.push('❌ Seller key (aba Estoque)');
       }
     }
 
@@ -344,29 +374,23 @@ export default function ProductPage() {
       if (stockLines.length === 0) {
         if (newStockContent.trim()) {
           newErrors.stockLines = 'Você digitou o conteúdo mas não clicou em "Adicionar"';
-          errorMessages.push('❌ Clique no botão "+ Adicionar" para adicionar a linha de estoque');
         } else {
           newErrors.stockLines = 'Adicione pelo menos uma linha de estoque';
-          errorMessages.push('❌ Pelo menos 1 linha de estoque (aba Estoque > Por Linha)');
         }
       }
     }
 
     setErrors(newErrors);
     
-    // Se houver erros, mostrar lista completa de forma clara
-    if (errorMessages.length > 0) {
-      // Toast principal com contagem
-      showErrorToast(
-        `Preencha os campos obrigatórios (${errorMessages.length} ${errorMessages.length === 1 ? 'pendente' : 'pendentes'})`
-      );
+    // Se houver erros, mostrar mensagem clara e direta
+    const errorCount = Object.keys(newErrors).length;
+    if (errorCount > 0) {
+      // Criar mensagem mais amigável e clara
+      const mainMessage = errorCount === 1 
+        ? 'Preencha o campo obrigatório antes de salvar'
+        : `Preencha ${errorCount} campos obrigatórios antes de salvar`;
       
-      // Toast detalhado com lista
-      setTimeout(() => {
-        showErrorToast(
-          `Campos pendentes: ${errorMessages.join(', ')}`
-        );
-      }, 300);
+      showErrorToast(mainMessage);
       
       // Scroll suave para o topo para ver o alerta de erros
       window.scrollTo({
@@ -379,6 +403,7 @@ export default function ProductPage() {
   };
 
   const handleSave = async () => {
+    setHasAttemptedSave(true);
     if (!validateForm()) {
       return;
     }
@@ -560,10 +585,11 @@ export default function ProductPage() {
     
     // Limpar erro de stockLines quando adicionar uma linha
     if (errors.stockLines) {
-      setErrors(prev => ({
-        ...prev,
-        stockLines: undefined
-      }));
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.stockLines;
+        return newErrors;
+      });
     }
   };
 
@@ -702,10 +728,11 @@ export default function ProductPage() {
     
     // Limpar erro de deliverables quando adicionar um
     if (errors.deliverables) {
-      setErrors(prev => ({
-        ...prev,
-        deliverables: undefined
-      }));
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.deliverables;
+        return newErrors;
+      });
     }
   };
 
@@ -819,19 +846,21 @@ export default function ProductPage() {
           </div>
         </div>
         
-        <Button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="flex items-center gap-2"
-          title={isSaving ? 'Salvando produto...' : 'Clique para salvar (validação será feita)'}
-        >
-          <Save size={18} />
-          {isSaving ? 'Salvando...' : 'Salvar produto'}
-        </Button>
+        <div ref={saveButtonRef}>
+          <Button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="flex items-center gap-2"
+            title={isSaving ? 'Salvando produto...' : 'Clique para salvar (validação será feita)'}
+          >
+            <Save size={18} />
+            {isSaving ? 'Salvando...' : 'Salvar produto'}
+          </Button>
+        </div>
       </div>
 
-      {/* Alerta de erros de validação */}
-      {Object.keys(errors).length > 0 && (
+      {/* Alerta de erros de validação - só mostra após tentar salvar */}
+      {hasAttemptedSave && Object.keys(errors).length > 0 && (
         <div className="bg-[var(--surface)] border border-[var(--error)]/30 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--error)]/10 flex items-center justify-center">
@@ -861,7 +890,7 @@ export default function ProductPage() {
           {/* Coluna 1: Nome, Preço, URL do Vídeo */}
           <div className="space-y-6">
             <Input
-              label="Nome do produto"
+              label="Nome do produto *"
               placeholder="Digite o nome do produto"
               value={productData.name}
               onChange={handleInputChange('name')}
@@ -870,7 +899,7 @@ export default function ProductPage() {
             />
 
             <ValueInput
-              label="Preço do produto"
+              label="Preço do produto *"
               value={productData.price}
               onChange={handlePriceChange}
               error={errors.price}
@@ -889,7 +918,7 @@ export default function ProductPage() {
           {/* Coluna 2: Descrição */}
           <div className="flex flex-col h-full">
             <Description
-              label="Descrição do produto"
+              label="Descrição do produto *"
               placeholder="Descreva detalhadamente o produto, suas características e benefícios..."
               value={productData.description}
               onChange={handleInputChange('description')}
@@ -904,7 +933,7 @@ export default function ProductPage() {
         {/* Grid de Imagens */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
            <ImageUpload
-             label="Imagem principal"
+             label="Imagem principal *"
              value={productData.image1}
              onChange={handleImageChange('image1')}
              error={errors.image1}
@@ -1049,7 +1078,7 @@ export default function ProductPage() {
                 content: (
                   <div className="py-6">
                     <Description
-                      label="Conteúdo a ser entregue"
+                      label="Conteúdo a ser entregue *"
                       placeholder="Digite o conteúdo que será entregue..."
                       value={productData.fixedContent || ''}
                       onChange={(e) => setProductData(prev => ({ ...prev, fixedContent: e.target.value }))}
@@ -1070,7 +1099,7 @@ export default function ProductPage() {
                   <div className="space-y-6">
                     {/* Número de dias */}
                     <Input
-                      label="Número de dias"
+                      label="Número de dias *"
                       type="number"
                       placeholder="30"
                       value={productData.keyAuthDays?.toString() || ''}
@@ -1082,7 +1111,7 @@ export default function ProductPage() {
 
                     {/* Seller Key */}
                     <Input
-                      label="Seller key"
+                      label="Seller key *"
                       placeholder="Digite sua chave de vendedor KeyAuth"
                       value={productData.keyAuthSellerKey || ''}
                       onChange={handleKeyAuthChange('keyAuthSellerKey')}
@@ -1231,6 +1260,22 @@ export default function ProductPage() {
             name={selectedDeliverable.name}
           />
         </>
+      )}
+
+      {/* Botão Flutuante de Salvar */}
+      {showFloatingSave && !isSaving && (
+        <div className="fixed bottom-6 right-6 z-50 animate-fade-in">
+          <div>
+            <Button
+              onClick={handleSave}
+              variant="primary"
+              className="rounded-full"
+            >
+              <Save size={20} />
+              Salvar produto
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );
