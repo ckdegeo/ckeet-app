@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Check, Globe, Palette, Image as ImageIcon, Mail, RefreshCw } from 'lucide-react';
@@ -144,6 +144,25 @@ function CreateStorePageContent() {
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
+
+  // Memoizar funções onChange para evitar loops infinitos
+  const handlePrimaryColorChange = useCallback((color: string) => {
+    setStoreData(prev => {
+      if (prev.primaryColor !== color) {
+        return { ...prev, primaryColor: color };
+      }
+      return prev;
+    });
+  }, []);
+
+  const handleSecondaryColorChange = useCallback((color: string) => {
+    setStoreData(prev => {
+      if (prev.secondaryColor !== color) {
+        return { ...prev, secondaryColor: color };
+      }
+      return prev;
+    });
+  }, []);
 
   // Verificação adicional em runtime (caso os dados sejam removidos durante a sessão)
   useEffect(() => {
@@ -834,12 +853,12 @@ function CreateStorePageContent() {
                       <ColorPicker
                         label="Cor primária"
                         value={storeData.primaryColor}
-                        onChange={(color) => setStoreData(prev => ({ ...prev, primaryColor: color }))}
+                        onChange={handlePrimaryColorChange}
                       />
                       <ColorPicker
                         label="Cor secundária"
                         value={storeData.secondaryColor}
-                        onChange={(color) => setStoreData(prev => ({ ...prev, secondaryColor: color }))}
+                        onChange={handleSecondaryColorChange}
                       />
                     </div>
                   </div>

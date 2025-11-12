@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { HexColorPicker } from 'react-colorful';
 import { Eye, EyeOff, Check, AlertCircle } from 'lucide-react';
 
@@ -35,11 +35,28 @@ export default function ColorPicker({
   const [isFocused, setIsFocused] = useState(false);
   const [hasValue, setHasValue] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const onChangeRef = useRef(onChange);
+  const lastColorRef = useRef<string>(value);
+
+  // Atualizar a referência do onChange quando ele mudar
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   useEffect(() => {
     setInputValue(value);
     setHasValue(!!value);
+    lastColorRef.current = value;
   }, [value]);
+
+  // Memoizar a função onChange para o HexColorPicker para evitar loops
+  const handleColorChange = useCallback((color: string) => {
+    // Só atualizar se a cor realmente mudou e for diferente da última cor processada
+    if (color !== lastColorRef.current) {
+      lastColorRef.current = color;
+      onChangeRef.current(color);
+    }
+  }, []);
 
   const validateHex = (color: string) => {
     const hexRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
@@ -178,7 +195,7 @@ export default function ColorPicker({
           <div className="absolute z-10 mt-2 p-4 bg-[var(--background)] border border-[var(--on-background)] rounded-2xl shadow-lg">
             <HexColorPicker 
               color={value} 
-              onChange={onChange}
+              onChange={handleColorChange}
               style={{
                 width: '100%',
                 aspectRatio: '1',

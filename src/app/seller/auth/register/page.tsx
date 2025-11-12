@@ -86,18 +86,54 @@ export default function Register() {
       return;
     }
 
-    // Salvar dados no sessionStorage e redirecionar para criação de loja
-    const registerData: SellerRegisterData = {
-      name,
-      email,
-      cpf,
-      phone,
-      password,
-      confirmPassword,
-    };
+    // Verificar se conta já existe no banco de dados
+    setIsLoading(true);
+    try {
+      const checkResponse = await fetch('/api/seller/auth/check', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, cpf }),
+      });
 
-    sessionStorage.setItem('sellerRegisterData', JSON.stringify(registerData));
-    router.push('/seller/auth/create-store');
+      const checkResult = await checkResponse.json();
+
+      if (!checkResponse.ok || checkResult.exists) {
+        // Se houver erros específicos, mostrar mensagens apropriadas
+        if (checkResult.errors?.email) {
+          setEmailError(checkResult.errors.email);
+          toast.error(checkResult.errors.email);
+        }
+        if (checkResult.errors?.cpf) {
+          toast.error(checkResult.errors.cpf);
+        }
+        // Se não houver erros específicos, mostrar erro genérico
+        if (!checkResult.errors) {
+          toast.error('Erro ao verificar dados. Tente novamente.');
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      // Se a verificação passou, salvar dados e redirecionar
+      const registerData: SellerRegisterData = {
+        name,
+        email,
+        cpf,
+        phone,
+        password,
+        confirmPassword,
+      };
+
+      sessionStorage.setItem('sellerRegisterData', JSON.stringify(registerData));
+      router.push('/seller/auth/create-store');
+    } catch (error) {
+      console.error('Erro ao verificar dados:', error);
+      toast.error('Erro ao verificar dados. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

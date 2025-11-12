@@ -44,6 +44,14 @@ function IntegrationsContent() {
       toast.success('Conectado ao Mercado Pago com sucesso!');
       setHasShownSuccessToast(true);
       
+      // Verificar se o token ainda está presente após o redirecionamento
+      const accessToken = localStorage.getItem('access_token');
+      if (!accessToken) {
+        console.warn('Token não encontrado após callback do Mercado Pago. Pode ser necessário fazer login novamente.');
+        // Não redirecionar imediatamente, apenas logar o aviso
+        // O middleware ou outras verificações vão lidar com isso
+      }
+      
       clearCache(); // Limpar cache do MercadoPago
       refreshIntegrationData(); // Recarregar dados de integração
       
@@ -55,7 +63,7 @@ function IntegrationsContent() {
         setIsDataReady(true);
       }, 1000);
     }
-  }, [searchParams.get('success'), searchParams.get('error'), hasShownSuccessToast]);
+  }, [searchParams.get('success'), searchParams.get('error'), hasShownSuccessToast, clearCache, refreshIntegrationData]);
 
   // Controlar quando todos os dados estão prontos
   useEffect(() => {

@@ -37,14 +37,28 @@ export function useCustomerLogin(): UseCustomerLoginReturn {
       const result = await response.json();
 
       if (!response.ok) {
+        console.error('Erro no login:', response.status, result);
+        
         // Se há erros específicos de campo
         if (result.errors) {
           setErrors(result.errors);
           return false;
         }
 
-        // Erro geral
-        const errorMessage = result.error || 'Erro ao fazer login';
+        // Erro geral - mensagens mais específicas baseadas no status
+        let errorMessage = result.error || 'Erro ao fazer login';
+        
+        if (response.status === 404) {
+          if (result.error?.includes('Loja não encontrada')) {
+            errorMessage = 'Loja não encontrada. Verifique o subdomain.';
+          } else if (result.error?.includes('Cliente não encontrado')) {
+            errorMessage = 'Cliente não encontrado nesta loja. Faça o cadastro primeiro.';
+          }
+        } else if (response.status === 401) {
+          errorMessage = 'Email ou senha incorretos.';
+        } else if (response.status === 403) {
+          errorMessage = result.error || 'Acesso negado.';
+        }
         
         // Se for erro de rate limit (429), mostrar toast mais longo
         const duration = response.status === 429 ? 8000 : 4000;

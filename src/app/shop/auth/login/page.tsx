@@ -29,10 +29,31 @@ export default function LoginPage() {
     try {
       setLoadingStore(true);
       const hostname = window.location.hostname;
-      const subdomainFromUrl = hostname.split('.')[0];
       
-      // Se for localhost, usar subdomain de teste
-      const currentSubdomain = hostname === 'localhost' ? 'loja-teste' : subdomainFromUrl;
+      // Detectar subdomain de forma mais robusta
+      let currentSubdomain = '';
+      
+      if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        // Em desenvolvimento, tentar pegar do localStorage ou usar padrão
+        const savedSubdomain = localStorage.getItem('dev_subdomain');
+        currentSubdomain = savedSubdomain || 'loja-teste';
+      } else if (hostname.includes('ckeet.store')) {
+        // Em produção, extrair subdomain da URL
+        const parts = hostname.split('.');
+        currentSubdomain = parts[0] || '';
+      } else {
+        // Fallback: pegar primeira parte do hostname
+        currentSubdomain = hostname.split('.')[0] || '';
+      }
+      
+      console.log('Subdomain detectado:', currentSubdomain);
+      
+      if (!currentSubdomain) {
+        console.error('Não foi possível detectar o subdomain');
+        setLoadingStore(false);
+        return;
+      }
+      
       setSubdomain(currentSubdomain);
       
       const response = await fetch(`/api/storefront/store?subdomain=${currentSubdomain}`);
@@ -40,9 +61,12 @@ export default function LoginPage() {
       if (response.ok) {
         const data = await response.json();
         setStore(data.store);
+        console.log('Loja carregada:', data.store?.name);
+      } else {
+        console.error('Erro ao carregar loja:', response.status, response.statusText);
       }
     } catch (error) {
-      // Erro ao carregar dados da loja
+      console.error('Erro ao carregar dados da loja:', error);
     } finally {
       setLoadingStore(false);
     }
@@ -52,8 +76,11 @@ export default function LoginPage() {
     e.preventDefault();
 
     if (!subdomain) {
+      console.error('Subdomain não encontrado');
       return;
     }
+
+    console.log('Tentando fazer login com:', { email, subdomain });
 
     const formData: LoginData & { subdomain: string } = {
       email,
@@ -66,6 +93,8 @@ export default function LoginPage() {
     if (success) {
       // Redirecionar para a loja após login bem-sucedido
       router.push('/shop');
+    } else {
+      console.error('Login falhou');
     }
   };
 
