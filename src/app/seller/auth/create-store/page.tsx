@@ -682,11 +682,84 @@ function CreateStorePageContent() {
           {/* Content */}
           <div className="bg-[var(--background)] rounded-2xl p-8 shadow-lg">
             {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-12">
-                <LoadingSpinner size="large" />
-                <p className="mt-4 text-[var(--on-background)]">
-                  Criando sua loja...
-                </p>
+              <div className="flex flex-col items-center justify-center py-16 space-y-8 animate-fade-in">
+                {/* Logo animado com anel de progresso */}
+                <div className="relative w-28 h-28">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[var(--primary)]/20 to-[var(--primary)]/5 flex items-center justify-center">
+                    <div className="w-20 h-20 rounded-full bg-[var(--primary)]/10 flex items-center justify-center">
+                      <Image
+                        src="/logo.png"
+                        alt="Ckeet Logo"
+                        width={56}
+                        height={56}
+                        className="opacity-90"
+                      />
+                    </div>
+                  </div>
+                  {/* Anel de progresso animado */}
+                  <div 
+                    className="absolute inset-0 rounded-full border-4 border-transparent border-t-[var(--primary)] animate-spin"
+                    style={{
+                      '--primary': '#bd253c',
+                    } as React.CSSProperties}
+                  />
+                </div>
+
+                {/* Texto principal */}
+                <div className="text-center space-y-2">
+                  <h3 className="text-2xl font-semibold text-[var(--foreground)]">
+                    Criando sua loja...
+                  </h3>
+                  <p className="text-sm text-[var(--on-background)]/70">
+                    Isso pode levar alguns instantes
+                  </p>
+                </div>
+
+                {/* Barra de progresso animada */}
+                <div className="w-full max-w-md space-y-3">
+                  <div className="h-2 bg-[var(--on-background)]/10 rounded-full overflow-hidden relative">
+                    <div 
+                      className="absolute inset-0 h-full bg-gradient-to-r from-transparent via-[var(--primary)] to-transparent rounded-full animate-progress"
+                      style={{
+                        width: '60%',
+                        '--primary': '#bd253c',
+                      } as React.CSSProperties}
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-[var(--on-background)]/60">
+                    <span className="animate-pulse">Configurando...</span>
+                    <span className="animate-pulse" style={{ animationDelay: '0.2s' }}>Aplicando...</span>
+                    <span className="animate-pulse" style={{ animationDelay: '0.4s' }}>Finalizando...</span>
+                  </div>
+                </div>
+
+                {/* Skeleton cards para mostrar o que está sendo criado */}
+                <div className="w-full max-w-md grid grid-cols-3 gap-4 mt-6">
+                  <div className="space-y-2">
+                    <div className="h-20 bg-gradient-to-br from-[var(--on-background)]/5 to-[var(--on-background)]/10 rounded-lg animate-pulse" />
+                    <div className="h-2.5 bg-[var(--on-background)]/5 rounded animate-pulse w-3/4 mx-auto" />
+                  </div>
+                  <div className="space-y-2">
+                    <div 
+                      className="h-20 bg-gradient-to-br from-[var(--on-background)]/5 to-[var(--on-background)]/10 rounded-lg animate-pulse"
+                      style={{ animationDelay: '0.2s' }}
+                    />
+                    <div 
+                      className="h-2.5 bg-[var(--on-background)]/5 rounded animate-pulse w-3/4 mx-auto"
+                      style={{ animationDelay: '0.2s' }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <div 
+                      className="h-20 bg-gradient-to-br from-[var(--on-background)]/5 to-[var(--on-background)]/10 rounded-lg animate-pulse"
+                      style={{ animationDelay: '0.4s' }}
+                    />
+                    <div 
+                      className="h-2.5 bg-[var(--on-background)]/5 rounded animate-pulse w-3/4 mx-auto"
+                      style={{ animationDelay: '0.4s' }}
+                    />
+                  </div>
+                </div>
               </div>
             ) : (
               <>
