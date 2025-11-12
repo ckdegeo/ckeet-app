@@ -7,18 +7,47 @@ export const revalidate = 0;
 
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting: 5 envios por IP a cada 10 minutos
-    const identifier = getRateLimitIdentifier(request);
-    const rateLimit = checkRateLimit(`send-otp:${identifier}`, {
+    const { email } = await request.json();
+
+    if (!email) {
+      return NextResponse.json(
+        { error: 'Email é obrigatório' },
+        { status: 400 }
+      );
+    }
+
+    // Validar formato do email primeiro
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: 'Email inválido' },
+        { status: 400 }
+      );
+    }
+
+    // Rate limiting: por IP E por email
+    // Isso garante que sellers diferentes do mesmo IP não se bloqueiem
+    const ipIdentifier = getRateLimitIdentifier(request);
+    const emailIdentifier = email.toLowerCase().trim();
+    
+    // Rate limit por IP: 10 envios a cada 10 minutos (mais generoso para múltiplos sellers)
+    const ipRateLimit = checkRateLimit(`send-otp:ip:${ipIdentifier}`, {
+      maxRequests: 10,
+      windowMs: 10 * 60 * 1000, // 10 minutos
+    });
+
+    // Rate limit por email: 5 envios a cada 10 minutos (proteção contra spam por email)
+    const emailRateLimit = checkRateLimit(`send-otp:email:${emailIdentifier}`, {
       maxRequests: 5,
       windowMs: 10 * 60 * 1000, // 10 minutos
     });
 
-    if (!rateLimit.allowed) {
-      const retryAfter = Math.ceil((rateLimit.resetAt - Date.now()) / 1000);
+    // Verificar ambos os rate limits
+    if (!ipRateLimit.allowed) {
+      const retryAfter = Math.ceil((ipRateLimit.resetAt - Date.now()) / 1000);
       return NextResponse.json(
         {
-          error: 'Muitas tentativas. Tente novamente em alguns minutos.',
+          error: 'Muitas tentativas deste endereço IP. Tente novamente em alguns minutos.',
           retryAfter,
         },
         {
@@ -30,21 +59,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email } = await request.json();
-
-    if (!email) {
+    if (!emailRateLimit.allowed) {
+      const retryAfter = Math.ceil((emailRateLimit.resetAt - Date.now()) / 1000);
       return NextResponse.json(
-        { error: 'Email é obrigatório' },
-        { status: 400 }
-      );
-    }
-
-    // Validar formato do email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { error: 'Email inválido' },
-        { status: 400 }
+        {
+          error: 'Muitas tentativas para este email. Tente novamente em alguns minutos.',
+          retryAfter,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': retryAfter.toString(),
+          },
+        }
       );
     }
 
