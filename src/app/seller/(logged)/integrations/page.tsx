@@ -47,8 +47,7 @@ function IntegrationsContent() {
       // Verificar se o token ainda está presente após o redirecionamento
       const accessToken = localStorage.getItem('access_token');
       if (!accessToken) {
-        console.warn('Token não encontrado após callback do Mercado Pago. Pode ser necessário fazer login novamente.');
-        // Não redirecionar imediatamente, apenas logar o aviso
+        // Token não encontrado após callback do Mercado Pago
         // O middleware ou outras verificações vão lidar com isso
       }
       

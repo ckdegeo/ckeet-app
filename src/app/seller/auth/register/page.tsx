@@ -129,7 +129,6 @@ export default function Register() {
       sessionStorage.setItem('sellerRegisterData', JSON.stringify(registerData));
       router.push('/seller/auth/create-store');
     } catch (error) {
-      console.error('Erro ao verificar dados:', error);
       toast.error('Erro ao verificar dados. Tente novamente.');
     } finally {
       setIsLoading(false);

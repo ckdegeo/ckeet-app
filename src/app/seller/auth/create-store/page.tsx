@@ -288,7 +288,6 @@ function CreateStorePageContent() {
       // Ir para step 4
       setCurrentStep(4);
     } catch (error) {
-      console.error('Erro ao enviar OTP:', error);
       showErrorToast(error instanceof Error ? error.message : 'Erro ao enviar código de verificação');
     } finally {
       setIsSendingOtp(false);
@@ -318,7 +317,6 @@ function CreateStorePageContent() {
       setOtpCode(''); // Limpar código anterior
       showSuccessToast('Código reenviado! Verifique seu email.');
     } catch (error) {
-      console.error('Erro ao reenviar OTP:', error);
       showErrorToast(error instanceof Error ? error.message : 'Erro ao reenviar código');
     } finally {
       setIsSendingOtp(false);
@@ -339,7 +337,6 @@ function CreateStorePageContent() {
       // Chamar handleFinish que agora inclui o OTP
       await handleFinish();
     } catch (error) {
-      console.error('Erro ao verificar OTP:', error);
       showErrorToast(error instanceof Error ? error.message : 'Erro ao verificar código');
     } finally {
       setIsVerifyingOtp(false);
@@ -396,31 +393,6 @@ function CreateStorePageContent() {
         otpCode: otpCode.toUpperCase().trim().replace(/\s/g, ''),
       };
 
-      // Logs de debug
-      console.log('🔍 [CLIENT] Dados sendo enviados:', {
-        seller: {
-          name: requestData.name,
-          email: requestData.email,
-          cpf: requestData.cpf ? '***' : 'MISSING',
-          phone: requestData.phone,
-          password: requestData.password ? '***' : 'MISSING',
-        },
-        store: {
-          subdomain: requestData.subdomain,
-          storeName: requestData.storeName,
-          primaryColor: requestData.primaryColor,
-          secondaryColor: requestData.secondaryColor,
-          logoUrl: requestData.logoUrl || 'EMPTY',
-          homeBannerUrl: requestData.homeBannerUrl || 'EMPTY',
-          storeBannerUrl: requestData.storeBannerUrl || 'EMPTY',
-        },
-        imageFiles: {
-          logo: imageFiles.logo ? `File(${imageFiles.logo.name}, ${imageFiles.logo.size} bytes)` : 'null',
-          homeBanner: imageFiles.homeBanner ? `File(${imageFiles.homeBanner.name}, ${imageFiles.homeBanner.size} bytes)` : 'null',
-          storeBanner: imageFiles.storeBanner ? `File(${imageFiles.storeBanner.name}, ${imageFiles.storeBanner.size} bytes)` : 'null',
-        },
-      });
-
       // Primeiro, criar a conta e obter o token
       const response = await fetch('/api/seller/auth/register-complete', {
         method: 'POST',
@@ -432,18 +404,7 @@ function CreateStorePageContent() {
 
       const result = await response.json();
 
-      // Logs de debug da resposta
-      console.log('🔍 [CLIENT] Resposta da API:', {
-        status: response.status,
-        ok: response.ok,
-        hasTokens: !!result.tokens,
-        hasUser: !!result.user,
-        requiresEmailConfirmation: result.requiresEmailConfirmation,
-        error: result.error,
-      });
-
       if (!response.ok) {
-        console.error('❌ [CLIENT] Erro na API:', result);
         throw new Error(result.error || 'Erro ao criar conta e loja');
       }
 
@@ -454,26 +415,19 @@ function CreateStorePageContent() {
       let accessToken: string | null = null;
       
       if (result.tokens && result.user) {
-        console.log('🔍 [CLIENT] Processando tokens recebidos...');
         saveAuthData(result.user, result.tokens);
         saveAuthCookies(result.user, result.tokens);
         // Usar o token diretamente do resultado para evitar problemas de timing
         accessToken = result.tokens.access_token || result.tokens.accessToken || null;
-        console.log('✅ [CLIENT] Tokens salvos, accessToken disponível:', !!accessToken);
-      } else {
-        console.error('❌ [CLIENT] Nenhum token retornado pela API');
       }
 
       // Se não temos token ainda, tentar obter do storage
       if (!accessToken) {
-        console.warn('⚠️ [CLIENT] Tentando obter token do storage...');
         accessToken = getAccessToken();
-        console.log('🔍 [CLIENT] Token obtido do storage:', !!accessToken);
       }
 
       // Se ainda não temos token, não podemos fazer upload
       if (!accessToken) {
-        console.error('❌ [CLIENT] Nenhum token disponível para upload de imagens');
         throw new Error('Token de acesso não encontrado. Não é possível fazer upload das imagens.');
       }
 
@@ -483,37 +437,28 @@ function CreateStorePageContent() {
       let storeBannerUrl = storeData.storeBannerUrl;
 
       if (imageFiles.logo) {
-        console.log('🔍 [CLIENT] Fazendo upload do logotipo...');
         const uploadResult = await ImageService.uploadImage(imageFiles.logo, 'logo', accessToken);
         if (uploadResult.success && uploadResult.url) {
           logoUrl = uploadResult.url;
-          console.log('✅ [CLIENT] Logotipo enviado com sucesso:', logoUrl);
         } else {
-          console.error('❌ [CLIENT] Erro no upload do logotipo:', uploadResult.error);
           throw new Error(uploadResult.error || 'Erro ao fazer upload do logotipo');
         }
       }
 
       if (imageFiles.homeBanner) {
-        console.log('🔍 [CLIENT] Fazendo upload do banner da tela inicial...');
         const uploadResult = await ImageService.uploadImage(imageFiles.homeBanner, 'homeBanner', accessToken);
         if (uploadResult.success && uploadResult.url) {
           homeBannerUrl = uploadResult.url;
-          console.log('✅ [CLIENT] Banner da tela inicial enviado com sucesso:', homeBannerUrl);
         } else {
-          console.error('❌ [CLIENT] Erro no upload do banner da tela inicial:', uploadResult.error);
           throw new Error(uploadResult.error || 'Erro ao fazer upload do banner da tela inicial');
         }
       }
 
       if (imageFiles.storeBanner) {
-        console.log('🔍 [CLIENT] Fazendo upload do banner da loja...');
         const uploadResult = await ImageService.uploadImage(imageFiles.storeBanner, 'storeBanner', accessToken);
         if (uploadResult.success && uploadResult.url) {
           storeBannerUrl = uploadResult.url;
-          console.log('✅ [CLIENT] Banner da loja enviado com sucesso:', storeBannerUrl);
         } else {
-          console.error('❌ [CLIENT] Erro no upload do banner da loja:', uploadResult.error);
           throw new Error(uploadResult.error || 'Erro ao fazer upload do banner da loja');
         }
       }
@@ -525,7 +470,6 @@ function CreateStorePageContent() {
       }
       
       if (accessToken && (logoUrl !== storeData.logoUrl || homeBannerUrl !== storeData.homeBannerUrl || storeBannerUrl !== storeData.storeBannerUrl)) {
-        console.log('🔍 [CLIENT] Atualizando loja com URLs das imagens...');
         const updateResponse = await fetch('/api/seller/store/config', {
           method: 'POST',
           headers: {
@@ -542,10 +486,6 @@ function CreateStorePageContent() {
             secondaryColor: storeData.secondaryColor,
           }),
         });
-
-        if (!updateResponse.ok) {
-          console.error('Erro ao atualizar URLs das imagens, mas a conta foi criada');
-        }
       }
 
       // Limpar dados do sessionStorage
@@ -556,7 +496,6 @@ function CreateStorePageContent() {
       // Redirecionar para dashboard
       router.push('/seller/dashboard');
     } catch (error) {
-      console.error('Erro ao criar conta e loja:', error);
       showErrorToast(error instanceof Error ? error.message : 'Erro ao criar conta e loja');
     } finally {
       setIsLoading(false);

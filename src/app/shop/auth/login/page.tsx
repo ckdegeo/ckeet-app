@@ -46,10 +46,7 @@ export default function LoginPage() {
         currentSubdomain = hostname.split('.')[0] || '';
       }
       
-      console.log('Subdomain detectado:', currentSubdomain);
-      
       if (!currentSubdomain) {
-        console.error('Não foi possível detectar o subdomain');
         setLoadingStore(false);
         return;
       }
@@ -61,12 +58,9 @@ export default function LoginPage() {
       if (response.ok) {
         const data = await response.json();
         setStore(data.store);
-        console.log('Loja carregada:', data.store?.name);
-      } else {
-        console.error('Erro ao carregar loja:', response.status, response.statusText);
       }
     } catch (error) {
-      console.error('Erro ao carregar dados da loja:', error);
+      // Erro ao carregar dados da loja
     } finally {
       setLoadingStore(false);
     }
@@ -76,11 +70,8 @@ export default function LoginPage() {
     e.preventDefault();
 
     if (!subdomain) {
-      console.error('Subdomain não encontrado');
       return;
     }
-
-    console.log('Tentando fazer login com:', { email, subdomain });
 
     const formData: LoginData & { subdomain: string } = {
       email,
@@ -93,8 +84,6 @@ export default function LoginPage() {
     if (success) {
       // Redirecionar para a loja após login bem-sucedido
       router.push('/shop');
-    } else {
-      console.error('Login falhou');
     }
   };
 

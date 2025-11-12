@@ -84,7 +84,6 @@ export default function TutorialsPage() {
 
         setTutorialSections(sectionsWithSortedVideos);
       } catch (err) {
-        console.error('Erro ao buscar tutoriais:', err);
         setError('Erro ao carregar tutoriais');
       } finally {
         setIsLoading(false);
