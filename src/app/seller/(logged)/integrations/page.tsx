@@ -126,8 +126,8 @@ function IntegrationsContent() {
     
     if (previousState) {
       // Desconectar
+      // O toast já é mostrado pelo hook useMercadoPago
       await disconnect();
-      toast.success('Desconectado');
       previousConnectionStateRef.current = false;
       // Limpar cache de dados de integração após desconectar
       refreshIntegrationData();
