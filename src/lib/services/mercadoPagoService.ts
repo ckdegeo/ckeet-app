@@ -282,34 +282,16 @@ export class MercadoPagoService {
     error?: string;
   }> {
     try {
-      // Validar e ajustar application_fee
-      let applicationFee = params.applicationFee;
+      // IMPORTANTE: Mercado Pago NÃO permite application_fee em pagamentos PIX
+      // A comissão da plataforma deve ser calculada e cobrada separadamente
+      // (via split manual ou outro mecanismo após o pagamento ser aprovado)
       
-      // Mercado Pago requer application_fee > 0 e < transaction_amount
-      if (applicationFee <= 0) {
-        applicationFee = 0.01; // Mínimo permitido
-      }
-      
-      if (applicationFee >= params.amount) {
-        applicationFee = Math.max(0.01, params.amount * 0.01); // 1% do total ou 0.01
-      }
-      
-      // Arredondar para 2 casas decimais
-      applicationFee = Math.round(applicationFee * 100) / 100;
-      
-      console.log('🔧 [MP DEBUG] Application fee ajustada:', {
-        original: params.applicationFee,
-        adjusted: applicationFee,
-        amount: params.amount,
-        percentage: ((applicationFee / params.amount) * 100).toFixed(2) + '%'
-      });
-
       const paymentData = {
         transaction_amount: params.amount,
         description: params.description,
         payment_method_id: 'pix',
         external_reference: params.externalReference,
-        application_fee: applicationFee,
+        // application_fee removido - não é suportado para PIX
         payer: {
           email: params.customerEmail,
           ...(params.customerName && { first_name: params.customerName.split(' ')[0] }),
@@ -317,6 +299,8 @@ export class MercadoPagoService {
         metadata: {
           order_id: params.externalReference,
           collector_id: params.sellerCollectorId,
+          // Armazenar application_fee no metadata para processar depois
+          platform_fee: params.applicationFee.toString(),
         },
       };
 
@@ -435,7 +419,8 @@ export class MercadoPagoService {
     amount: number,
     description: string,
     orderId: string,
-    customerEmail: string
+    customerEmail: string,
+    paymentMethodId: string = 'pix'
   ): Promise<MercadoPagoPaymentResponse> {
     const config = await this.getSellerCredentials(sellerId);
     
@@ -448,19 +433,39 @@ export class MercadoPagoService {
     const commissionFixedFee = config.commissionFixedFee || 0.50; // R$ 0,50
     const applicationFee = (amount * commissionRate) + commissionFixedFee;
 
-    const paymentData = {
+    // IMPORTANTE: application_fee só é permitido para pagamentos com cartão
+    // Para PIX, não podemos usar application_fee
+    const isPix = paymentMethodId === 'pix';
+    
+    const paymentData: {
+      transaction_amount: number;
+      description: string;
+      payment_method_id: string;
+      payer: { email: string };
+      metadata: {
+        order_id: string;
+        seller_id: string;
+        platform_fee: string;
+      };
+      application_fee?: number;
+    } = {
       transaction_amount: amount,
       description,
-      payment_method_id: 'pix', // ou 'credit_card', 'debit_card'
+      payment_method_id: paymentMethodId,
       payer: {
         email: customerEmail,
       },
-      application_fee: applicationFee,
       metadata: {
         order_id: orderId,
         seller_id: sellerId,
+        platform_fee: applicationFee.toString(), // Armazenar no metadata para processar depois
       },
     };
+
+    // Só adicionar application_fee se NÃO for PIX
+    if (!isPix) {
+      paymentData.application_fee = applicationFee;
+    }
 
     const response = await fetch(`${this.BASE_URL}/v1/payments`, {
       method: 'POST',
