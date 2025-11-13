@@ -38,12 +38,12 @@ export default function Input({
         {label && (
           <label
             className={`
-              absolute left-4
+              absolute
               pointer-events-none
               transition-all duration-200
               ${isActive
-                ? 'top-0 text-xs -translate-y-1/2 bg-[var(--background)] px-2'
-                : 'top-1/2 -translate-y-1/2 text-sm'
+                ? 'top-0 left-3 text-xs -translate-y-1/2 bg-[var(--background)] px-2 z-20'
+                : 'top-1/2 left-4 -translate-y-1/2 text-sm z-0'
               }
               ${isFocused && !error
                 ? 'text-[var(--primary)]'
@@ -84,7 +84,7 @@ export default function Input({
           }}
           className={`
             w-full
-            px-4 py-3
+            px-4
             rounded-full
             bg-transparent
             border border-[var(--on-background)]
@@ -96,7 +96,7 @@ export default function Input({
             disabled:opacity-50
             disabled:cursor-not-allowed
             ${error ? "border-[var(--error)]" : ""}
-            ${label && isActive ? "pt-4 pb-2" : ""}
+            ${label && isActive ? "pt-4 pb-2" : "py-3"}
             ${className}
           `}
           style={{
