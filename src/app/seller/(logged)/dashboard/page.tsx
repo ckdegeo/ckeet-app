@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   DollarSign, 
   TrendingUp, 
   ShoppingCart, 
-  Package
+  Package,
+  RefreshCw
 } from 'lucide-react';
 import ValueCard from '@/app/components/cards/valueCard';
 import NumberCard from '@/app/components/cards/numberCard';
@@ -33,7 +34,9 @@ type PeriodOption = 'today' | 'week' | 'month' | 'year' | 'all';
 function DashboardContent() {
   const [period, setPeriod] = useState<PeriodOption>('month');
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const isFetchingRef = useRef(false); // Prevenir múltiplas requisições simultâneas
 
   // Calcular range de datas baseado no período selecionado
   const getDateRange = (period: PeriodOption): [Date, Date] => {
@@ -66,8 +69,22 @@ function DashboardContent() {
     return [startDate, endDate];
   };
 
-  const fetchDashboardData = React.useCallback(async () => {
-    setIsLoading(true);
+  const fetchDashboardData = React.useCallback(async (isRefresh = false) => {
+    // Prevenir múltiplas requisições simultâneas
+    if (isFetchingRef.current) {
+      return;
+    }
+
+    isFetchingRef.current = true;
+    
+    // Se for refresh (não é o carregamento inicial), mostrar indicador sutil
+    if (isRefresh && dashboardData) {
+      setIsRefreshing(true);
+    } else if (!dashboardData) {
+      // Se não tem dados ainda, é o carregamento inicial
+      setIsInitialLoading(true);
+    }
+
     try {
       const accessToken = localStorage.getItem('access_token');
       
@@ -87,14 +104,14 @@ function DashboardContent() {
       // Adicionar timestamp para bypass de cache
       params.append('_t', Date.now().toString());
 
-        const response = await fetch(`/api/seller/dashboard?${params.toString()}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Cache-Control': 'no-cache'
-          },
-          cache: 'no-store'
-        });
+      const response = await fetch(`/api/seller/dashboard?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Cache-Control': 'no-cache'
+        },
+        cache: 'no-store'
+      });
 
       if (!response.ok) {
         const error = await response.json();
@@ -104,26 +121,31 @@ function DashboardContent() {
       const result = await response.json();
       setDashboardData(result.data);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar dados da dashboard';
-      toast.error(errorMessage);
+      // Só mostrar toast de erro se não for um refresh silencioso
+      if (!isRefresh) {
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar dados da dashboard';
+        toast.error(errorMessage);
+      }
     } finally {
-      setIsLoading(false);
+      setIsInitialLoading(false);
+      setIsRefreshing(false);
+      isFetchingRef.current = false;
     }
-  }, [period]);
+  }, [period, dashboardData]);
 
   useEffect(() => {
-    fetchDashboardData();
+    // Carregamento inicial - não é refresh
+    fetchDashboardData(false);
     
-    // Refresh automático a cada 30 segundos
+    // Refresh automático a cada 30 segundos (silencioso, sem mostrar loading completo)
     const interval = setInterval(() => {
-      fetchDashboardData();
+      fetchDashboardData(true); // true = é um refresh
     }, 30000);
 
     return () => {
       clearInterval(interval);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [period]);
+  }, [fetchDashboardData]);
 
   const dataKeys = [
     {
@@ -134,8 +156,8 @@ function DashboardContent() {
     }
   ];
 
-  // Estado de loading
-  if (isLoading) {
+  // Estado de loading inicial - mostrar skeleton apenas na primeira vez
+  if (isInitialLoading && !dashboardData) {
     return <DashboardSkeleton />;
   }
 
@@ -168,13 +190,25 @@ function DashboardContent() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Indicador sutil de refresh (não bloqueia a UI) */}
+      {isRefreshing && (
+        <div className="absolute top-0 right-0 z-10 flex items-center gap-2 px-3 py-1.5 bg-[var(--surface)] border border-[var(--on-background)]/10 rounded-lg shadow-sm">
+          <RefreshCw size={14} className="animate-spin text-[var(--primary)]" />
+          <span className="text-xs text-[var(--foreground-secondary)]">Atualizando...</span>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-[var(--foreground)]">Dashboard</h1>
         <div className="w-full md:w-72">
           <Selector
             value={period}
-            onChange={(value) => setPeriod(value as PeriodOption)}
+            onChange={(value) => {
+              setPeriod(value as PeriodOption);
+              // Quando mudar o período, mostrar loading inicial novamente
+              setIsInitialLoading(true);
+            }}
             options={[
               { value: 'today', label: 'Hoje' },
               { value: 'week', label: 'Últimos 7 dias' },
