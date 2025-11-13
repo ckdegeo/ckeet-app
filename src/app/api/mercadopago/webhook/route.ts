@@ -7,10 +7,21 @@ import * as crypto from 'crypto';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+// Configuração para evitar redirecionamentos
+export const runtime = 'nodejs';
+export const maxDuration = 30; // 30 segundos para processar webhook
+
 export async function POST(request: NextRequest) {
   // Logs antes de qualquer coisa
   console.log('🔔 [WEBHOOK] ========== WEBHOOK INICIADO ==========');
   console.log('🔔 [WEBHOOK] Timestamp:', new Date().toISOString());
+  console.log('🔔 [WEBHOOK] URL:', request.url);
+  console.log('🔔 [WEBHOOK] Method:', request.method);
+  console.log('🔔 [WEBHOOK] Headers:', {
+    'content-type': request.headers.get('content-type'),
+    'x-signature': request.headers.get('x-signature') ? 'present' : 'missing',
+    'user-agent': request.headers.get('user-agent'),
+  });
   
   try {
     // IMPORTANTE: Ler body como texto primeiro para validação de assinatura
@@ -64,13 +75,19 @@ export async function POST(request: NextRequest) {
     // Verificar se é um webhook de pagamento
     if (body.type !== 'payment') {
       console.log('⚠️ [WEBHOOK] Tipo não é payment, ignorando');
-      return NextResponse.json({ success: true });
+      return NextResponse.json(
+        { success: true },
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
     const paymentId = body.data?.id;
     if (!paymentId) {
       console.log('⚠️ [WEBHOOK] Payment ID não encontrado, ignorando');
-      return NextResponse.json({ success: true });
+      return NextResponse.json(
+        { success: true },
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log('🔍 [WEBHOOK] Buscando transação com mpPaymentId:', paymentId);
@@ -99,7 +116,10 @@ export async function POST(request: NextRequest) {
 
     if (!transaction) {
       console.log('⚠️ [WEBHOOK] Transação não encontrada para paymentId:', paymentId);
-      return NextResponse.json({ success: true });
+      return NextResponse.json(
+        { success: true },
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log('✅ [WEBHOOK] Transação encontrada:', {
@@ -113,7 +133,10 @@ export async function POST(request: NextRequest) {
     const mpConfig = transaction.order.store.seller?.paymentConfigs?.[0];
     if (!mpConfig || !mpConfig.accessToken) {
       console.log('⚠️ [WEBHOOK] Configuração do Mercado Pago não encontrada');
-      return NextResponse.json({ success: true });
+      return NextResponse.json(
+        { success: true },
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log('✅ [WEBHOOK] Configuração MP encontrada para seller:', transaction.order.store.sellerId);
@@ -139,7 +162,10 @@ export async function POST(request: NextRequest) {
 
     if (!paymentStatus.success) {
       console.log('⚠️ [WEBHOOK] Status não obtido com sucesso, abortando');
-      return NextResponse.json({ success: true });
+      return NextResponse.json(
+        { success: true },
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
 
@@ -216,7 +242,10 @@ export async function POST(request: NextRequest) {
 
         if (!order) {
           console.error('❌ [WEBHOOK] Order não encontrada:', transaction.orderId);
-          return NextResponse.json({ success: true });
+          return NextResponse.json(
+            { success: true },
+            { status: 200, headers: { 'Content-Type': 'application/json' } }
+          );
         }
 
         console.log('✅ [WEBHOOK] Order encontrada:', {
@@ -236,7 +265,10 @@ export async function POST(request: NextRequest) {
 
         if (existingPurchases.length > 0) {
           console.log('⚠️ [WEBHOOK] Conteúdo já foi entregue anteriormente');
-          return NextResponse.json({ success: true });
+          return NextResponse.json(
+            { success: true },
+            { status: 200, headers: { 'Content-Type': 'application/json' } }
+          );
         }
 
         // Processar cada produto do pedido
@@ -416,14 +448,35 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('✅ [WEBHOOK] ========== WEBHOOK FINALIZADO ==========');
-    return NextResponse.json({ success: true });
+    // Retornar 200 explicitamente com headers para evitar redirecionamentos
+    return NextResponse.json(
+      { success: true },
+      { 
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+        }
+      }
+    );
 
   } catch (error: unknown) {
     console.error('❌ [WEBHOOK] ========== ERRO GERAL ==========');
     console.error('❌ [WEBHOOK] Erro:', error);
     console.error('❌ [WEBHOOK] Message:', error instanceof Error ? error.message : 'N/A');
     console.error('❌ [WEBHOOK] Stack:', error instanceof Error ? error.stack : 'N/A');
-    return NextResponse.json({ success: true }); // Sempre retornar sucesso para o MP
+    // Sempre retornar 200 para o Mercado Pago, mesmo em caso de erro
+    // Isso evita que o MP tente reenviar o webhook repetidamente
+    return NextResponse.json(
+      { success: true },
+      { 
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+        }
+      }
+    );
   }
 }
 
