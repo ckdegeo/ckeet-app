@@ -226,7 +226,7 @@ export default function Table<T>({
                                     color === 'primary' ? 'text-[var(--primary)] hover:bg-[var(--primary-hover)]' :
                                     color === 'secondary' ? 'text-[var(--secondary)] hover:bg-[var(--secondary-hover)]' :
                                     color === 'error' ? 'text-red-600 hover:bg-red-50' :
-                                    'text-[var(--primary)] hover:bg-[var(--primary-hover)]'
+                                    'text-[var(--secondary)] hover:bg-[var(--secondary-hover)]'
                                   }`}
                                   title={action.label}
                                 >
@@ -236,7 +236,7 @@ export default function Table<T>({
                               );
                             }
 
-                            // Design personalizado para customer
+                            // Design personalizado para customer - usar cor secundária como padrão
                             return (
                               <button
                                 key={actionIndex}
@@ -245,12 +245,12 @@ export default function Table<T>({
                                 style={{
                                   color: color === 'primary' ? primaryColor : 
                                          color === 'secondary' ? secondaryColor : 
-                                         color === 'error' ? '#dc2626' : primaryColor
+                                         color === 'error' ? '#dc2626' : secondaryColor || primaryColor
                                 }}
                                 onMouseEnter={(e) => {
                                   const bgColor = color === 'primary' ? primaryColor : 
                                                 color === 'secondary' ? secondaryColor : 
-                                                color === 'error' ? '#dc2626' : primaryColor;
+                                                color === 'error' ? '#dc2626' : secondaryColor || primaryColor;
                                   e.currentTarget.style.backgroundColor = `${bgColor}10`;
                                 }}
                                 onMouseLeave={(e) => {
