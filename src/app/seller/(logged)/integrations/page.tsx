@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, Suspense, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useEffect, Suspense, useState, useRef } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { CreditCard, CheckCircle, BarChart3 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import NumberCard from '@/app/components/cards/numberCard';
@@ -13,6 +13,7 @@ import IntegrationsSkeleton from '@/app/components/integrations/integrationsSkel
 
 function IntegrationsContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('acquirers');
 
   // Hook do Mercado Pago (agora busca sellerId automaticamente)
@@ -24,47 +25,79 @@ function IntegrationsContent() {
   // Estado para controlar se todos os dados estão prontos
   const [isDataReady, setIsDataReady] = useState(false);
   
-  // Controle para evitar múltiplos toasts
-  const [hasShownSuccessToast, setHasShownSuccessToast] = useState(false);
+  // Rastrear estado anterior da integração para detectar mudanças
+  const previousConnectionStateRef = useRef<boolean | null>(null);
+  const hasProcessedUrlParamsRef = useRef(false);
 
   // Verificar parâmetros da URL para mostrar mensagens de erro e sucesso
+  // IMPORTANTE: Só processar se realmente veio do callback OAuth
   useEffect(() => {
+    // Só processar se ainda não foi processado e os dados estão prontos
+    if (hasProcessedUrlParamsRef.current || !isDataReady) {
+      return;
+    }
+
     const error = searchParams.get('error');
     const success = searchParams.get('success');
 
-    if (error === 'authorization_denied') {
-      toast.error('Autorização negada pelo Mercado Pago');
-    } else if (error === 'missing_parameters') {
-      toast.error('Parâmetros inválidos na conexão');
-    } else if (error === 'connection_failed') {
-      toast.error('Falha na conexão com o Mercado Pago');
-    } else if (success === 'connected' && !hasShownSuccessToast) {
-      // Quando volta do OAuth com sucesso, limpar cache e recarregar dados
-      // Só mostrar toast uma vez para evitar flood
-      toast.success('Conectado ao Mercado Pago com sucesso!');
-      setHasShownSuccessToast(true);
-      
-      // Verificar se o token ainda está presente após o redirecionamento
-      const accessToken = localStorage.getItem('access_token');
-      if (!accessToken) {
-        // Token não encontrado após callback do Mercado Pago
-        // O middleware ou outras verificações vão lidar com isso
+    // Se não há parâmetros para processar, sair
+    if (!error && !success) {
+      return;
+    }
+
+    // Verificar se realmente veio do OAuth callback
+    // Se sim, haverá uma flag no sessionStorage
+    const isOAuthCallback = sessionStorage.getItem('mp_oauth_initiated') === 'true';
+    
+    // Processar erros (sempre mostrar, mesmo que não seja callback)
+    if (error) {
+      if (error === 'authorization_denied') {
+        toast.error('Autorização negada pelo Mercado Pago');
+      } else if (error === 'missing_parameters') {
+        toast.error('Parâmetros inválidos na conexão');
+      } else if (error === 'connection_failed') {
+        toast.error('Falha na conexão com o Mercado Pago');
       }
       
-      clearCache(); // Limpar cache do MercadoPago
-      refreshIntegrationData(); // Recarregar dados de integração
-      
-      // Resetar estado de loading para permitir nova verificação
-      setIsDataReady(false);
-      
-      // Aguardar um pouco para garantir que os dados foram atualizados
-      setTimeout(() => {
-        setIsDataReady(true);
-      }, 1000);
+      // Limpar flags
+      sessionStorage.removeItem('mp_oauth_initiated');
+      hasProcessedUrlParamsRef.current = true;
+      router.replace('/seller/integrations');
+      return;
     }
-  }, [searchParams.get('success'), searchParams.get('error'), hasShownSuccessToast, clearCache, refreshIntegrationData]);
+    
+    // Para sucesso, só processar se realmente veio do OAuth
+    if (success === 'connected' && isOAuthCallback) {
+      // Verificar se houve mudança real de estado (de desconectado para conectado)
+      const wasConnected = previousConnectionStateRef.current;
+      const isNowConnected = mpStatus?.connected || integrationData?.mpStatus?.connected || false;
+      
+      // Só mostrar toast se mudou de desconectado para conectado
+      if (wasConnected === false && isNowConnected) {
+        toast.success('Conectado');
+      }
+      
+      // Atualizar estado anterior para refletir a nova conexão
+      previousConnectionStateRef.current = isNowConnected;
+      
+      // Limpar cache e recarregar dados
+      clearCache();
+      refreshIntegrationData();
+      
+      // Limpar flags
+      sessionStorage.removeItem('mp_oauth_initiated');
+      hasProcessedUrlParamsRef.current = true;
+      
+      // Limpar parâmetros da URL
+      router.replace('/seller/integrations');
+    } else if (success === 'connected' && !isOAuthCallback) {
+      // Se há parâmetro success mas não veio do OAuth, apenas limpar a URL
+      hasProcessedUrlParamsRef.current = true;
+      router.replace('/seller/integrations');
+    }
+  }, [searchParams, isDataReady, mpStatus, integrationData, clearCache, refreshIntegrationData, router]);
 
-  // Controlar quando todos os dados estão prontos
+  // Controlar quando todos os dados estão prontos e rastrear mudanças de estado
   useEffect(() => {
     // Aguardar tanto o cache quanto o hook do MercadoPago estarem prontos
     const isCacheReady = !integrationLoading && (integrationData || integrationError);
@@ -72,6 +105,14 @@ function IntegrationsContent() {
     
     // Só liberar a tela quando ambos estiverem prontos
     if (isCacheReady && isMercadoPagoReady) {
+      // Rastrear estado atual da conexão
+      const currentConnectionState = mpStatus?.connected || integrationData?.mpStatus?.connected || false;
+      
+      // Se é a primeira vez que temos dados, salvar o estado inicial
+      if (previousConnectionStateRef.current === null) {
+        previousConnectionStateRef.current = currentConnectionState;
+      }
+      
       setIsDataReady(true);
     }
   }, [integrationLoading, integrationData, integrationError, mpStatus]);
@@ -80,10 +121,14 @@ function IntegrationsContent() {
     // Resetar estado de loading durante a operação
     setIsDataReady(false);
     
-    if (mpStatus?.connected) {
+    // Salvar estado anterior antes da mudança
+    const previousState = mpStatus?.connected || integrationData?.mpStatus?.connected || false;
+    
+    if (previousState) {
+      // Desconectar
       await disconnect();
-      // Resetar controle de toast para permitir novo toast após reconectar
-      setHasShownSuccessToast(false);
+      toast.success('Desconectado');
+      previousConnectionStateRef.current = false;
       // Limpar cache de dados de integração após desconectar
       refreshIntegrationData();
       // Aguardar um pouco para garantir que o cache foi limpo
@@ -91,13 +136,15 @@ function IntegrationsContent() {
         setIsDataReady(true);
       }, 500);
     } else {
+      // Conectar - redireciona para OAuth
+      // Marcar que estamos iniciando o fluxo OAuth
+      sessionStorage.setItem('mp_oauth_initiated', 'true');
+      // Salvar que estava desconectado antes de iniciar o OAuth
+      previousConnectionStateRef.current = false;
+      // Resetar flag de processamento para permitir processar o callback quando voltar
+      hasProcessedUrlParamsRef.current = false;
       await connect();
-      // Limpar cache após conectar
-      refreshIntegrationData();
-      // Aguardar um pouco para garantir que o cache foi limpo
-      setTimeout(() => {
-        setIsDataReady(true);
-      }, 500);
+      // O toast será mostrado quando voltar do callback OAuth
     }
   };
 

@@ -37,6 +37,8 @@ function DashboardContent() {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const isFetchingRef = useRef(false); // Prevenir múltiplas requisições simultâneas
+  const lastETagRef = useRef<string | null>(null); // Armazenar ETag da última resposta
+  const intervalRef = useRef<NodeJS.Timeout | null>(null); // Referência para o intervalo
 
   // Calcular range de datas baseado no período selecionado
   const getDateRange = (period: PeriodOption): [Date, Date] => {
@@ -69,7 +71,9 @@ function DashboardContent() {
     return [startDate, endDate];
   };
 
-  const fetchDashboardData = React.useCallback(async (isRefresh = false) => {
+  const fetchDashboardDataRef = useRef<((isRefresh?: boolean, force?: boolean) => Promise<void>) | null>(null);
+
+  const fetchDashboardData = React.useCallback(async (isRefresh = false, force = false) => {
     // Prevenir múltiplas requisições simultâneas
     if (isFetchingRef.current) {
       return;
@@ -101,21 +105,37 @@ function DashboardContent() {
       const params = new URLSearchParams();
       params.append('startDate', startDateStr);
       params.append('endDate', endDateStr);
-      // Adicionar timestamp para bypass de cache
-      params.append('_t', Date.now().toString());
+
+      const headers: HeadersInit = {
+        'Authorization': `Bearer ${accessToken}`,
+        'Cache-Control': 'no-cache'
+      };
+
+      // Enviar ETag apenas se não for forçado e já tivermos um ETag
+      if (!force && lastETagRef.current) {
+        headers['If-None-Match'] = lastETagRef.current;
+      }
 
       const response = await fetch(`/api/seller/dashboard?${params.toString()}`, {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Cache-Control': 'no-cache'
-        },
+        headers,
         cache: 'no-store'
       });
+
+      // Se não houve mudanças (304 Not Modified), não fazer nada
+      if (response.status === 304) {
+        return;
+      }
 
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Erro ao carregar dados');
+      }
+
+      // Atualizar ETag se presente
+      const etag = response.headers.get('ETag');
+      if (etag) {
+        lastETagRef.current = etag;
       }
 
       const result = await response.json();
@@ -133,19 +153,39 @@ function DashboardContent() {
     }
   }, [period, dashboardData]);
 
+  // Atualizar ref quando a função mudar
   useEffect(() => {
-    // Carregamento inicial - não é refresh
-    fetchDashboardData(false);
+    fetchDashboardDataRef.current = fetchDashboardData;
+  }, [fetchDashboardData]);
+
+  useEffect(() => {
+    // Limpar intervalo anterior se existir
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    // Resetar ETag quando o período mudar
+    lastETagRef.current = null;
+
+    // Carregamento inicial - não é refresh, forçar busca
+    if (fetchDashboardDataRef.current) {
+      fetchDashboardDataRef.current(false, true);
+    }
     
-    // Refresh automático a cada 30 segundos (silencioso, sem mostrar loading completo)
-    const interval = setInterval(() => {
-      fetchDashboardData(true); // true = é um refresh
+    // Polling inteligente: verificar mudanças a cada 30 segundos
+    // A API retornará 304 se não houver mudanças, evitando processamento desnecessário
+    intervalRef.current = setInterval(() => {
+      if (fetchDashboardDataRef.current) {
+        fetchDashboardDataRef.current(true, false); // false = não forçar, usar ETag
+      }
     }, 30000);
 
     return () => {
-      clearInterval(interval);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
     };
-  }, [fetchDashboardData]);
+  }, [period]); // Depender apenas do período, não da função
 
   const dataKeys = [
     {
@@ -206,7 +246,8 @@ function DashboardContent() {
             value={period}
             onChange={(value) => {
               setPeriod(value as PeriodOption);
-              // Quando mudar o período, mostrar loading inicial novamente
+              // Quando mudar o período, resetar ETag e mostrar loading inicial
+              lastETagRef.current = null;
               setIsInitialLoading(true);
             }}
             options={[
