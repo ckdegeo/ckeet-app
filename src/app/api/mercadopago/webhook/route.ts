@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { MercadoPagoService } from '@/lib/services/mercadoPagoService';
+import * as crypto from 'crypto';
 
 // Desabilitar cache para garantir logs em produção
 export const dynamic = 'force-dynamic';
@@ -12,22 +13,53 @@ export async function POST(request: NextRequest) {
   console.log('🔔 [WEBHOOK] Timestamp:', new Date().toISOString());
   
   try {
-    const body = await request.json();
-    console.log('🔔 [WEBHOOK] Body recebido:', JSON.stringify(body, null, 2));
-    console.log('🔔 [WEBHOOK] Type:', body.type);
-    console.log('🔔 [WEBHOOK] Payment ID:', body.data?.id);
+    // IMPORTANTE: Ler body como texto primeiro para validação de assinatura
+    // O body raw é necessário para calcular o HMAC corretamente
+    const bodyText = await request.text();
     
-    // Validar assinatura do webhook (se configurada)
+    // Validar assinatura do webhook ANTES de fazer parse do JSON
+    // Isso garante que estamos validando exatamente o que o Mercado Pago enviou
     const signature = request.headers.get('x-signature');
     const webhookSecret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
     
-    if (webhookSecret && signature) {
-      const isValid = validateWebhookSignature(body, signature, webhookSecret);
-      if (!isValid) {
-        console.error('❌ [WEBHOOK] Assinatura inválida');
-        return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 });
+    // Estratégia de validação segura:
+    // 1. Se secret configurado E assinatura presente: validar obrigatoriamente
+    // 2. Se secret configurado MAS assinatura ausente: logar warning mas permitir (compatibilidade)
+    // 3. Se secret não configurado: permitir (modo desenvolvimento/teste)
+    if (webhookSecret) {
+      if (signature) {
+        // Secret configurado e assinatura presente: validar obrigatoriamente
+        console.log('🔐 [WEBHOOK] Validando assinatura do webhook...');
+        const isValid = validateWebhookSignature(bodyText, signature, webhookSecret);
+        if (!isValid) {
+          console.error('❌ [WEBHOOK] Assinatura inválida - webhook rejeitado');
+          console.error('❌ [WEBHOOK] Signature recebida:', signature.substring(0, 20) + '...');
+          return NextResponse.json({ error: 'Assinatura inválida' }, { status: 401 });
+        }
+        console.log('✅ [WEBHOOK] Assinatura válida - webhook autenticado');
+      } else {
+        // Secret configurado mas assinatura ausente: logar warning mas permitir
+        // Isso permite compatibilidade com webhooks antigos ou de teste
+        console.warn('⚠️ [WEBHOOK] Secret configurado mas assinatura não presente - permitindo por compatibilidade');
+        console.warn('⚠️ [WEBHOOK] Recomendado: configurar assinatura no Mercado Pago para maior segurança');
       }
+    } else {
+      // Secret não configurado: modo desenvolvimento/teste
+      console.log('ℹ️ [WEBHOOK] Secret não configurado - validação de assinatura desabilitada');
     }
+    
+    // Agora fazer parse do JSON para processar o webhook
+    let body;
+    try {
+      body = JSON.parse(bodyText);
+    } catch (parseError) {
+      console.error('❌ [WEBHOOK] Erro ao fazer parse do JSON:', parseError);
+      return NextResponse.json({ error: 'Body inválido' }, { status: 400 });
+    }
+    
+    console.log('🔔 [WEBHOOK] Body recebido:', JSON.stringify(body, null, 2));
+    console.log('🔔 [WEBHOOK] Type:', body.type);
+    console.log('🔔 [WEBHOOK] Payment ID:', body.data?.id);
     
     // Verificar se é um webhook de pagamento
     if (body.type !== 'payment') {
@@ -395,25 +427,74 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Função para validar assinatura do webhook
-function validateWebhookSignature(_body: unknown, _signature: string, _secret: string): boolean {
+/**
+ * Valida a assinatura do webhook do Mercado Pago usando HMAC-SHA256
+ * 
+ * O Mercado Pago envia a assinatura no header 'x-signature' no formato:
+ * - sha256=hash_hex ou apenas hash_hex
+ * 
+ * A validação é feita calculando o HMAC-SHA256 do body raw (texto) usando o secret
+ * e comparando com a assinatura recebida.
+ * 
+ * IMPORTANTE: O body deve ser o texto raw exatamente como recebido, não o objeto JSON parseado.
+ * Isso garante que a validação seja feita sobre os mesmos bytes que o Mercado Pago assinou.
+ * 
+ * @param bodyText - Corpo da requisição como texto raw (string)
+ * @param signature - Assinatura recebida no header 'x-signature'
+ * @param secret - Secret configurado no ambiente (MERCADOPAGO_WEBHOOK_SECRET)
+ * @returns true se a assinatura for válida, false caso contrário
+ */
+function validateWebhookSignature(bodyText: string, signature: string, secret: string): boolean {
   try {
-    // Implementar validação de assinatura conforme documentação do Mercado Pago
-    // Por enquanto, retorna true (implementar validação real depois)
+    // Normalizar a assinatura recebida
+    // O Mercado Pago pode enviar no formato "sha256=hash" ou apenas "hash"
+    let normalizedSignature = signature.trim();
+    if (normalizedSignature.startsWith('sha256=')) {
+      normalizedSignature = normalizedSignature.substring(7).trim();
+    }
     
-    // TODO: Implementar validação real da assinatura
-    // O Mercado Pago usa HMAC-SHA256 para assinar os webhooks
-    // Exemplo de implementação:
-    // const crypto = require('crypto');
-    // const expectedSignature = crypto
-    //   .createHmac('sha256', secret)
-    //   .update(JSON.stringify(body))
-    //   .digest('hex');
-    // return signature === expectedSignature;
+    // Calcular HMAC-SHA256 do body raw
+    // IMPORTANTE: Usar o body exatamente como recebido (texto), não o JSON parseado
+    // Isso garante que estamos validando os mesmos bytes que o Mercado Pago assinou
+    const expectedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(bodyText, 'utf8')
+      .digest('hex');
     
-    return true; // Temporário - sempre aceita
+    // Comparar assinaturas usando comparação segura (timing-safe)
+    // Isso previne timing attacks onde um atacante poderia descobrir a assinatura
+    // comparando o tempo de resposta
+    try {
+      const isValid = crypto.timingSafeEqual(
+        Buffer.from(normalizedSignature, 'hex'),
+        Buffer.from(expectedSignature, 'hex')
+      );
+      
+      if (!isValid) {
+        console.error('❌ [WEBHOOK] Assinatura não confere:', {
+          received: normalizedSignature.substring(0, 20) + '...',
+          expected: expectedSignature.substring(0, 20) + '...',
+          bodyLength: bodyText.length,
+          signatureLength: normalizedSignature.length,
+          expectedLength: expectedSignature.length
+        });
+      }
+      
+      return isValid;
+    } catch (compareError) {
+      // Se as assinaturas tiverem tamanhos diferentes, timingSafeEqual lança erro
+      // Isso também indica assinatura inválida
+      console.error('❌ [WEBHOOK] Erro ao comparar assinaturas (tamanhos diferentes?):', {
+        receivedLength: normalizedSignature.length,
+        expectedLength: expectedSignature.length,
+        error: compareError instanceof Error ? compareError.message : compareError
+      });
+      return false;
+    }
   } catch (error: unknown) {
     console.error('❌ [WEBHOOK] Erro na validação de assinatura:', error instanceof Error ? error.message : error);
+    console.error('❌ [WEBHOOK] Stack:', error instanceof Error ? error.stack : 'N/A');
+    // Em caso de erro na validação, rejeitar por segurança
     return false;
   }
 }
