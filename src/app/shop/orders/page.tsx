@@ -190,8 +190,8 @@ export default function OrdersPage() {
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [ordersError, setOrdersError] = useState<string | null>(null);
 
-  // Função para buscar orders
-  const fetchOrders = async () => {
+  // Função para buscar orders (memoizada com useCallback)
+  const fetchOrders = useCallback(async () => {
     try {
       setOrdersLoading(true);
       const accessToken = localStorage.getItem('customer_access_token');
@@ -219,12 +219,29 @@ export default function OrdersPage() {
     } finally {
       setOrdersLoading(false);
     }
-  };
-
-  // Buscar orders ao montar o componente
-  useEffect(() => {
-    fetchOrders();
   }, []);
+
+  // Buscar orders ao montar o componente e verificar se veio de uma página de pagamento
+  useEffect(() => {
+    // Verificar se há um flag de nova compra no sessionStorage
+    const hasNewPurchase = sessionStorage.getItem('new_purchase_created');
+    if (hasNewPurchase) {
+      // Limpar o flag
+      sessionStorage.removeItem('new_purchase_created');
+      // Buscar orders imediatamente
+      fetchOrders();
+      // Aguardar um pouco e buscar novamente (para garantir que o webhook processou)
+      setTimeout(() => {
+        fetchOrders();
+      }, 3000);
+      // Buscar mais uma vez após 8 segundos (tempo para webhook processar)
+      setTimeout(() => {
+        fetchOrders();
+      }, 8000);
+    } else {
+      fetchOrders();
+    }
+  }, [fetchOrders]);
 
   // Fallback para refreshOrders (caso seja usado em outros lugares)
   const refreshOrders = () => {
@@ -319,10 +336,22 @@ export default function OrdersPage() {
     }
   }, [fetchOrders]);
 
-  // Checar apenas uma vez ao carregar a página
+  // Polling periódico para verificar novos pedidos e entregas
   useEffect(() => {
+    // Verificar imediatamente ao carregar
     checkDelivery();
-  }, [checkDelivery]);
+    
+    // Configurar polling a cada 5 segundos para verificar novos pedidos (mais frequente)
+    const pollingInterval = setInterval(() => {
+      fetchOrders();
+      checkDelivery();
+    }, 5000); // 5 segundos - mais frequente para detectar novos pedidos rapidamente
+    
+    // Limpar intervalo ao desmontar
+    return () => {
+      clearInterval(pollingInterval);
+    };
+  }, [checkDelivery, fetchOrders]);
 
   useEffect(() => {
     if (ordersError) {

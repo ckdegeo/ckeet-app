@@ -159,6 +159,12 @@ export default function PixModal({
       };
 
       setPaymentData(pixData);
+      
+      // Marcar que um novo pedido foi criado para atualizar a página de orders
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('new_purchase_created', 'true');
+        sessionStorage.setItem('last_order_id', orderData.order.id);
+      }
       setOrderNumber(orderData.order.orderNumber);
       
       // Calcular tempo restante (30 minutos)
