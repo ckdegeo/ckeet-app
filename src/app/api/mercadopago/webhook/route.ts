@@ -11,6 +11,30 @@ export const revalidate = 0;
 export const runtime = 'nodejs';
 export const maxDuration = 30; // 30 segundos para processar webhook
 
+// GET - Handler para teste do Mercado Pago (retorna 200 OK)
+// O Mercado Pago faz GET para verificar se a URL está acessível antes de enviar webhooks POST
+export async function GET(request: NextRequest) {
+  console.log('🔔 [WEBHOOK] GET request recebido (teste do Mercado Pago)');
+  console.log('🔔 [WEBHOOK] URL:', request.url);
+  console.log('🔔 [WEBHOOK] Query params:', Object.fromEntries(request.nextUrl.searchParams));
+  
+  // Retornar 200 OK para o teste do Mercado Pago
+  return NextResponse.json(
+    { 
+      success: true,
+      message: 'Webhook endpoint está ativo e funcionando',
+      timestamp: new Date().toISOString()
+    },
+    { 
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+      }
+    }
+  );
+}
+
 export async function POST(request: NextRequest) {
   // Logs antes de qualquer coisa
   console.log('🔔 [WEBHOOK] ========== WEBHOOK INICIADO ==========');
