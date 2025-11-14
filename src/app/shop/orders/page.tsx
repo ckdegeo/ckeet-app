@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Store } from '@/lib/types';
 import StoreNavbar from '../patterns/storeNavbar';
 import Footer from '../patterns/footer';
@@ -138,7 +138,7 @@ export default function OrdersPage() {
     }
   );
 
-  // Estados para orders (SEM cache para atualização instantânea)
+  // Estados para orders com padrão do dashboard
   interface PurchaseItemRaw {
     id: string;
     orderNumber: string;
@@ -185,109 +185,158 @@ export default function OrdersPage() {
       totalDownloads: number;
       totalAmount: number;
     };
+    customer?: {
+      id: string;
+      email: string;
+      name: string;
+      phone: string;
+    };
   }
+  
   const [ordersData, setOrdersData] = useState<OrdersData | null>(null);
-  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [ordersError, setOrdersError] = useState<string | null>(null);
+  const isFetchingRef = useRef(false); // Prevenir múltiplas requisições simultâneas
+  const lastETagRef = useRef<string | null>(null); // Armazenar ETag da última resposta
+  const intervalRef = useRef<NodeJS.Timeout | null>(null); // Referência para o intervalo
 
-  // Função para buscar orders (memoizada com useCallback)
-  const fetchOrders = useCallback(async () => {
+  // Função para buscar orders (padrão dashboard com ETag)
+  const fetchOrdersDataRef = useRef<((isRefresh?: boolean, force?: boolean) => Promise<void>) | null>(null);
+
+  const fetchOrdersData = useCallback(async (isRefresh = false, force = false) => {
+    // Prevenir múltiplas requisições simultâneas
+    if (isFetchingRef.current) {
+      return;
+    }
+
+    isFetchingRef.current = true;
+    
+    // Se for refresh (não é o carregamento inicial), mostrar indicador sutil
+    if (isRefresh && ordersData) {
+      setIsRefreshing(true);
+    } else if (!ordersData) {
+      // Se não tem dados ainda, é o carregamento inicial
+      setIsInitialLoading(true);
+    }
+
     try {
-      setOrdersLoading(true);
       const accessToken = localStorage.getItem('customer_access_token');
       if (!accessToken) {
         throw new Error('Token de acesso não encontrado');
       }
 
-      const response = await fetch('/api/customer/orders/list?_t=' + Date.now(), {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
+      const headers: HeadersInit = {
+        'Authorization': `Bearer ${accessToken}`,
+        'Cache-Control': 'no-cache'
+      };
+
+      // Enviar ETag apenas se não for forçado e já tivermos um ETag
+      if (!force && lastETagRef.current) {
+        headers['If-None-Match'] = lastETagRef.current;
+      }
+
+      const response = await fetch('/api/customer/orders/list', {
+        method: 'GET',
+        headers,
         cache: 'no-store'
       });
 
+      // Se não houve mudanças (304 Not Modified), não fazer nada
+      if (response.status === 304) {
+        return;
+      }
+
       if (!response.ok) {
-        throw new Error('Erro ao buscar pedidos');
+        const error = await response.json();
+        throw new Error(error.error || 'Erro ao buscar pedidos');
+      }
+
+      // Atualizar ETag se presente
+      const etag = response.headers.get('ETag');
+      if (etag) {
+        lastETagRef.current = etag;
       }
 
       const data = await response.json();
       setOrdersData(data);
       setOrdersError(null);
     } catch (error) {
-      // Silenciar erro no console; UI/Toast cuidam do feedback
+      // Só mostrar toast de erro se não for um refresh silencioso
+      if (!isRefresh) {
+        const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar pedidos';
+        const isRealError = errorMessage.includes('Erro interno do servidor') || 
+                           errorMessage.includes('Token de acesso é obrigatório') ||
+                           errorMessage.includes('Token inválido') ||
+                           errorMessage.includes('Customer não encontrado');
+        
+        if (isRealError) {
+          showErrorToast('Erro ao carregar pedidos');
+        }
+      }
       setOrdersError(error instanceof Error ? error.message : 'Erro desconhecido');
     } finally {
-      setOrdersLoading(false);
+      setIsInitialLoading(false);
+      setIsRefreshing(false);
+      isFetchingRef.current = false;
     }
-  }, []);
+  }, [ordersData]);
 
-  // Buscar orders ao montar o componente e verificar se veio de uma página de pagamento
+  // Atualizar ref quando a função mudar
   useEffect(() => {
+    fetchOrdersDataRef.current = fetchOrdersData;
+  }, [fetchOrdersData]);
+
+  // Buscar orders ao montar o componente (UMA VEZ)
+  useEffect(() => {
+    // Limpar intervalo anterior se existir
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
     // Verificar se há um flag de nova compra no sessionStorage
     const hasNewPurchase = sessionStorage.getItem('new_purchase_created');
     if (hasNewPurchase) {
       // Limpar o flag
       sessionStorage.removeItem('new_purchase_created');
-      // Buscar orders imediatamente
-      fetchOrders();
-      // Aguardar um pouco e buscar novamente (para garantir que o webhook processou)
-      setTimeout(() => {
-        fetchOrders();
-      }, 3000);
-      // Buscar mais uma vez após 8 segundos (tempo para webhook processar)
-      setTimeout(() => {
-        fetchOrders();
-      }, 8000);
-    } else {
-      fetchOrders();
+      // Resetar ETag para forçar busca
+      lastETagRef.current = null;
     }
-  }, [fetchOrders]);
 
-  // Fallback para refreshOrders (caso seja usado em outros lugares)
-  const refreshOrders = () => {
-    fetchOrders();
-  };
+    // Resetar ETag quando entrar na página
+    lastETagRef.current = null;
+
+    // Carregamento inicial - não é refresh, forçar busca
+    if (fetchOrdersDataRef.current) {
+      fetchOrdersDataRef.current(false, true);
+    }
+    
+    // Polling inteligente: verificar mudanças a cada 30 segundos
+    // A API retornará 304 se não houver mudanças, evitando processamento desnecessário
+    intervalRef.current = setInterval(() => {
+      if (fetchOrdersDataRef.current) {
+        fetchOrdersDataRef.current(true, false); // false = não forçar, usar ETag
+      }
+    }, 30000); // 30 segundos
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []); // Executar apenas uma vez ao montar
+
+  // Fallback para refreshOrders (usado no botão de refresh)
+  const refreshOrders = useCallback(() => {
+    lastETagRef.current = null; // Resetar ETag para forçar busca
+    if (fetchOrdersDataRef.current) {
+      fetchOrdersDataRef.current(false, true);
+    }
+  }, []);
 
   useEffect(() => {
     checkAuthentication();
   }, []);
-
-  // Invalidação automática do cache quando a página ganha foco
-  useEffect(() => {
-    const handleFocus = () => {
-      // Refresh automático quando a página ganha foco (usuário volta da aba)
-      refreshOrders();
-    };
-
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        // Refresh quando a página fica visível novamente
-        refreshOrders();
-      }
-    };
-
-    // Listener para detectar mudanças no localStorage (novas compras e mudanças na loja)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'customer_access_token' || e.key?.includes('order') || e.key?.includes('store')) {
-        // Invalidar cache quando há mudanças relacionadas a pedidos ou loja
-        refreshOrders();
-        // Também invalidar cache da loja se houver mudanças relacionadas à loja
-        if (e.key?.includes('store')) {
-          window.location.reload(); // Recarregar para pegar novas cores
-        }
-      }
-    };
-
-    window.addEventListener('focus', handleFocus);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [refreshOrders]);
 
   useEffect(() => {
     if (storeData) {
@@ -299,75 +348,6 @@ export default function OrdersPage() {
       }
     }
   }, [storeData]);
-
-  // Função para verificar entrega de conteúdo
-  const checkDelivery = useCallback(async () => {
-    try {
-      
-      const accessToken = localStorage.getItem('customer_access_token');
-      if (!accessToken) {
-        
-        return;
-      }
-
-      
-      const response = await fetch('/api/customer/orders/check-delivery', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        cache: 'no-store'
-      });
-
-      
-
-      if (response.ok) {
-        const data = await response.json();
-        
-        if (data.success && data.delivered > 0) {
-          
-          // Refresh orders para mostrar conteúdo entregue
-          await fetchOrders();
-        }
-      }
-    } catch (error) {
-      // Silenciar erros de polling no console
-    }
-  }, [fetchOrders]);
-
-  // Polling periódico para verificar novos pedidos e entregas
-  useEffect(() => {
-    // Verificar imediatamente ao carregar
-    checkDelivery();
-    
-    // Configurar polling a cada 5 segundos para verificar novos pedidos (mais frequente)
-    const pollingInterval = setInterval(() => {
-      fetchOrders();
-      checkDelivery();
-    }, 5000); // 5 segundos - mais frequente para detectar novos pedidos rapidamente
-    
-    // Limpar intervalo ao desmontar
-    return () => {
-      clearInterval(pollingInterval);
-    };
-  }, [checkDelivery, fetchOrders]);
-
-  useEffect(() => {
-    if (ordersError) {
-      // Só mostra erro se for um erro real de servidor (500) ou de autenticação (401/403)
-      // Não mostra erro para usuários novos sem pedidos (que é normal)
-      const errorMessage = ordersError || '';
-      const isRealError = errorMessage.includes('Erro interno do servidor') || 
-                         errorMessage.includes('Token de acesso é obrigatório') ||
-                         errorMessage.includes('Token inválido') ||
-                         errorMessage.includes('Customer não encontrado');
-      
-      if (isRealError) {
-        showErrorToast('Erro ao carregar pedidos');
-      }
-    }
-  }, [ordersError]);
 
   function checkAuthentication() {
     const accessToken = localStorage.getItem('customer_access_token');
@@ -600,7 +580,8 @@ export default function OrdersPage() {
     },
   ];
 
-  if (storeLoading || ordersLoading) {
+  // Estado de loading inicial - mostrar skeleton apenas na primeira vez
+  if (storeLoading || (isInitialLoading && !ordersData)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <LoadingSpinner size="medium" />
@@ -765,7 +746,7 @@ export default function OrdersPage() {
       />
 
       {/* Conteúdo Principal */}
-      <main className="container mx-auto px-8 py-12">
+      <main className="container mx-auto px-8 py-12 relative">
         {/* Header com Botão de Voltar */}
         <div className="flex items-center justify-between mb-8">
           <h1 
@@ -795,14 +776,22 @@ export default function OrdersPage() {
           </button>
         </div>
 
+        {/* Indicador sutil de refresh (não bloqueia a UI) */}
+        {isRefreshing && (
+          <div className="absolute top-0 right-0 z-10 flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm">
+            <RefreshCw size={14} className="animate-spin" style={{ color: store?.primaryColor || '#bd253c' }} />
+            <span className="text-xs text-gray-600">Atualizando...</span>
+          </div>
+        )}
+
         {/* Estatísticas Rápidas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <NumberCard
             title="Total de pedidos"
-            value={ordersLoading ? '...' : stats.totalOrders}
+            value={stats.totalOrders}
             icon={CheckCircle}
             background="transparent"
-            className={`shadow-sm ${ordersLoading ? 'opacity-75' : ''} ${
+            className={`shadow-sm ${
               getRoundedClass(appearance.productCards.rounded)
             } ${
               appearance.productCards.hasBorder ? 'border' : 'border'
@@ -823,10 +812,10 @@ export default function OrdersPage() {
 
           <NumberCard
             title="Pedidos pagos"
-            value={ordersLoading ? '...' : stats.paidOrders}
+            value={stats.paidOrders}
             icon={Download}
             background="transparent"
-            className={`shadow-sm ${ordersLoading ? 'opacity-75' : ''} ${
+            className={`shadow-sm ${
               getRoundedClass(appearance.productCards.rounded)
             } ${
               appearance.productCards.hasBorder ? 'border' : 'border'
@@ -847,10 +836,10 @@ export default function OrdersPage() {
 
           <NumberCard
             title="Downloads realizados"
-            value={ordersLoading ? '...' : stats.totalDownloads}
+            value={stats.totalDownloads}
             icon={Eye}
             background="transparent"
-            className={`shadow-sm ${ordersLoading ? 'opacity-75' : ''} ${
+            className={`shadow-sm ${
               getRoundedClass(appearance.productCards.rounded)
             } ${
               appearance.productCards.hasBorder ? 'border' : 'border'
@@ -905,11 +894,8 @@ export default function OrdersPage() {
                 
                 {/* Botão de Refresh */}
                 <button
-                  onClick={() => {
-                    refreshOrders();
-                    checkDelivery();
-                  }}
-                  disabled={ordersLoading}
+                  onClick={refreshOrders}
+                  disabled={isFetchingRef.current}
                   className={`cursor-pointer p-2 rounded-lg border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                     getRoundedClass(appearance.productCards.rounded)
                   }`}
@@ -939,7 +925,7 @@ export default function OrdersPage() {
                 >
                   <RefreshCw 
                     size={18} 
-                    className={ordersLoading ? 'animate-spin' : ''} 
+                    className={isFetchingRef.current ? 'animate-spin' : ''} 
                   />
                 </button>
               </div>

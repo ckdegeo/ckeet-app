@@ -99,8 +99,15 @@ function DashboardContent() {
       }
 
       const [startDate, endDate] = getDateRange(period);
-      const startDateStr = startDate.toISOString().split('T')[0];
-      const endDateStr = endDate.toISOString().split('T')[0];
+      // Formatar datas no formato YYYY-MM-DD usando horário local (não UTC)
+      const formatDateLocal = (date: Date): string => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      const startDateStr = formatDateLocal(startDate);
+      const endDateStr = formatDateLocal(endDate);
       
       const params = new URLSearchParams();
       params.append('startDate', startDateStr);

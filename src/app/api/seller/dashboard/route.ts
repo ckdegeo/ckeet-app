@@ -57,13 +57,20 @@ export async function GET(request: NextRequest) {
     const startDateParam = url.searchParams.get('startDate');
     const endDateParam = url.searchParams.get('endDate');
 
-    // End date deve ser o FIM do dia (23:59:59)
-    const endDate = endDateParam ? new Date(endDateParam) : new Date();
+    // Função para criar Date a partir de string YYYY-MM-DD no horário local
+    const parseDateLocal = (dateStr: string): Date => {
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
+      return date;
+    };
+
+    // End date deve ser o FIM do dia (23:59:59) no horário local
+    const endDate = endDateParam ? parseDateLocal(endDateParam) : new Date();
     endDate.setHours(23, 59, 59, 999);
     
-    // Start date deve ser o início do dia (00:00:00)
+    // Start date deve ser o início do dia (00:00:00) no horário local
     const startDate = startDateParam 
-      ? new Date(startDateParam) 
+      ? parseDateLocal(startDateParam)
       : new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
     startDate.setHours(0, 0, 0, 0);
 

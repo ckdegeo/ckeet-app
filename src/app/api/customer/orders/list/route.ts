@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createUserSupabaseClient } from '@/lib/supabase';
+import * as crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -199,7 +200,7 @@ export async function GET(request: NextRequest) {
       totalAmount: purchasesData.reduce((sum, p) => sum + (p.totalAmount || 0), 0)
     };
 
-    return NextResponse.json({
+    const responseData = {
       success: true,
       orders: orders,
       purchases: purchasesData,
@@ -210,8 +211,27 @@ export async function GET(request: NextRequest) {
         name: customer.name,
         phone: customer.phone
       }
-    }, {
+    };
+
+    // Gerar ETag baseado no hash dos dados
+    const dataString = JSON.stringify(responseData);
+    const etag = crypto.createHash('md5').update(dataString).digest('hex');
+
+    // Verificar se o cliente já tem a versão mais recente
+    const ifNoneMatch = request.headers.get('if-none-match');
+    if (ifNoneMatch === `"${etag}"`) {
+      return new NextResponse(null, {
+        status: 304,
+        headers: {
+          'ETag': `"${etag}"`,
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+        }
+      });
+    }
+
+    return NextResponse.json(responseData, {
       headers: {
+        'ETag': `"${etag}"`,
         'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
         'Pragma': 'no-cache',
         'Expires': '0'
