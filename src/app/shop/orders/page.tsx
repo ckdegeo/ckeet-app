@@ -541,6 +541,7 @@ export default function OrdersPage() {
     {
       icon: Eye,
       label: 'Ver Conteúdo',
+      color: 'secondary' as const,
       onClick: (item: OrderItem) => {
         if (item.orderStatus === 'PAID' && item.deliveredContent) {
           handleViewContent(item);
@@ -553,6 +554,7 @@ export default function OrdersPage() {
     {
       icon: Copy,
       label: 'Copiar Conteúdo',
+      color: 'secondary' as const,
       onClick: (item: OrderItem) => {
         if (item.orderStatus === 'PAID' && item.deliveredContent) {
           handleCopyContent(item.deliveredContent);
@@ -565,6 +567,7 @@ export default function OrdersPage() {
     {
       icon: Download,
       label: 'Download',
+      color: 'secondary' as const,
       onClick: (item: OrderItem) => {
         if (item.orderStatus === 'PAID') {
           if (item.downloadUrl) {
