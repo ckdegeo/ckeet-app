@@ -119,7 +119,7 @@ export default function Table<T>({
             >
               {actionsFirst && actions && (
                 <th 
-                  className={`px-4 py-4 text-right w-[140px] ${
+                  className={`px-3 py-4 text-left w-[120px] ${
                     useDefaultStyles ? 'text-[var(--foreground-secondary)] bg-[var(--surface)]' : ''
                   }`}
                   style={useDefaultStyles ? {} : { 
@@ -198,8 +198,8 @@ export default function Table<T>({
                   }}
                 >
                   {actionsFirst && actions && (
-                    <td className="px-4 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1 sm:gap-2">
+                    <td className="px-3 py-4">
+                      <div className="flex items-center justify-start gap-1.5">
                         {actions
                           .filter(action => !action.show || action.show(item))
                           .map((action, actionIndex) => {
@@ -212,7 +212,7 @@ export default function Table<T>({
                                 <button
                                   key={actionIndex}
                                   onClick={() => action.onClick(item)}
-                                  className={`p-1.5 sm:p-2 rounded-full transition-colors cursor-pointer ${
+                                  className={`p-1.5 rounded-full transition-colors cursor-pointer ${
                                     color === 'primary' ? 'text-[var(--primary)] hover:bg-[var(--primary-hover)]' :
                                     color === 'secondary' ? 'text-[var(--secondary)] hover:bg-[var(--secondary-hover)]' :
                                     color === 'error' ? 'text-red-600 hover:bg-red-50' :
@@ -220,7 +220,7 @@ export default function Table<T>({
                                   }`}
                                   title={action.label}
                                 >
-                                  <Icon size={16} className="sm:w-5 sm:h-5" />
+                                  <Icon size={16} />
                                   <span className="sr-only">{action.label}</span>
                                 </button>
                               );
@@ -231,7 +231,7 @@ export default function Table<T>({
                               <button
                                 key={actionIndex}
                                 onClick={() => action.onClick(item)}
-                                className="p-1.5 sm:p-2 rounded-full hover:bg-opacity-10 transition-colors cursor-pointer"
+                                className="p-1.5 rounded-full hover:bg-opacity-10 transition-colors cursor-pointer"
                                 style={{
                                   color: color === 'primary' ? primaryColor : 
                                          color === 'secondary' ? secondaryColor : 
@@ -248,7 +248,7 @@ export default function Table<T>({
                                 }}
                                 title={action.label}
                               >
-                                <Icon size={16} className="sm:w-5 sm:h-5" />
+                                <Icon size={16} />
                                 <span className="sr-only">{action.label}</span>
                               </button>
                             );
