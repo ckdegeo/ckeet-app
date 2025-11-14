@@ -1,6 +1,5 @@
 'use client';
 
-import Image from "next/image";
 import Link from "next/link";
 import Input from "@/app/components/inputs/input";
 import Button from "@/app/components/buttons/button";
@@ -9,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useCustomerLogin } from "@/lib/hooks/useCustomerLogin";
 import { loginSchema, type LoginData } from "@/lib/validations/authSchemas";
 import { Store } from '@/lib/types';
-import LoadingSpinner from '@/app/components/ui/loadingSpinner';
+import ShopAuthSkeleton from '@/app/components/shop/shopAuthSkeleton';
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -94,7 +93,7 @@ export default function LoginPage() {
   };
 
   if (loadingStore) {
-    return <LoadingSpinner fullscreen />;
+    return <ShopAuthSkeleton />;
   }
 
   return (
@@ -114,10 +113,10 @@ export default function LoginPage() {
           >
             <div className="max-w-md text-white text-center">
               <h1 className="text-4xl font-bold mb-4">
-                {store?.name || 'Ckeet'}
+                {store?.name || 'Loja'}
               </h1>
               <p className="text-lg opacity-90">
-                {store?.description || 'Sua lojinha virtual em minutos'}
+                {store?.description || 'Bem-vindo à nossa loja'}
               </p>
             </div>
           </div>
@@ -138,14 +137,11 @@ export default function LoginPage() {
                 />
               </div>
             ) : (
-              <Image
-                src="/logo.png"
-                alt="Ckeet Logo"
-                width={100}
-                height={100}
-                priority
-                className="h-auto"
-              />
+              <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
+                <span className="text-gray-400 text-sm font-medium">
+                  {store?.name || 'Loja'}
+                </span>
+              </div>
             )}
             <h2 className="text-md font-semibold text-[var(--foreground)]">
               Login do cliente

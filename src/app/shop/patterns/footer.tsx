@@ -60,17 +60,13 @@ export default function Footer({ store }: FooterProps) {
           </div>
         </div>
 
-        {/* Ckeet credit */}
+        {/* Copyright */}
         <div 
           className="text-center md:text-right text-xs"
           style={{ color: footerConfig.textColor, opacity: 0.7 }}
         >
           <span className="block md:inline">
             © {new Date().getFullYear()} {store.name}
-          </span>
-          <span className="hidden md:inline mx-2">•</span>
-          <span className="block md:inline">
-            Loja criada com <span style={{ color: store.primaryColor || '#bd253c' }}>❤️</span> pela plataforma Ckeet
           </span>
         </div>
       </div>

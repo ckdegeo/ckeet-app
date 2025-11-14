@@ -1,6 +1,5 @@
 'use client';
 
-import Image from "next/image";
 import Link from "next/link";
 import Input from "@/app/components/inputs/input";
 import PhoneInput from "@/app/components/inputs/phoneInput";
@@ -10,7 +9,7 @@ import { useRouter } from "next/navigation";
 import { useCustomerRegister } from "@/lib/hooks/useCustomerRegister";
 import { customerRegisterSchema, type CustomerRegisterData } from "@/lib/validations/authSchemas";
 import { Store } from '@/lib/types';
-import LoadingSpinner from '@/app/components/ui/loadingSpinner';
+import ShopRegisterSkeleton from '@/app/components/shop/shopRegisterSkeleton';
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -83,7 +82,7 @@ export default function RegisterPage() {
   };
 
   if (loadingStore) {
-    return <LoadingSpinner fullscreen />;
+    return <ShopRegisterSkeleton />;
   }
 
   if (success) {
@@ -119,10 +118,10 @@ export default function RegisterPage() {
           >
             <div className="max-w-md text-white text-center">
               <h1 className="text-4xl font-bold mb-4">
-                {store?.name || 'Ckeet'}
+                {store?.name || 'Loja'}
               </h1>
               <p className="text-lg opacity-90">
-                {store?.description || 'Sua lojinha virtual em minutos'}
+                {store?.description || 'Bem-vindo à nossa loja'}
               </p>
             </div>
           </div>
@@ -143,14 +142,11 @@ export default function RegisterPage() {
                 />
               </div>
             ) : (
-              <Image
-                src="/logo.png"
-                alt="Ckeet Logo"
-                width={100}
-                height={100}
-                priority
-                className="h-auto"
-              />
+              <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
+                <span className="text-gray-400 text-sm font-medium">
+                  {store?.name || 'Loja'}
+                </span>
+              </div>
             )}
             <h2 className="text-md font-semibold text-[var(--foreground)]">
               Cadastro de cliente
