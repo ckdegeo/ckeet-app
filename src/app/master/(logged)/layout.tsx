@@ -4,9 +4,14 @@ import { useState } from 'react';
 import Sidebar from '@/app/master/patterns/sidebar';
 import Navbar from '@/app/master/patterns/navbar';
 import { AuthGuard } from '@/lib/components/AuthGuard';
+import { useTokenExpiration, useApiInterceptor } from '@/lib/hooks/useTokenExpiration';
 
 export default function MasterLayout({ children }: { children: React.ReactNode }) {
   const [pageTitle, setPageTitle] = useState('Master');
+  
+  // Verificar expiração do token e interceptar requisições
+  useTokenExpiration();
+  useApiInterceptor();
 
   return (
     <AuthGuard redirectTo="/master/auth/login" userType="master">

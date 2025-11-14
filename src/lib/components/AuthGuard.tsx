@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAuthenticated, isMasterAuthenticated, refreshAuthToken } from '@/lib/utils/authUtils';
+import { checkTokenExpiration } from '@/lib/utils/apiClient';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -18,14 +19,26 @@ export function AuthGuard({ children, redirectTo = '/seller/auth/login', userTyp
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // Verificar se o token expirou primeiro
+        checkTokenExpiration();
+        
         // Verificar autenticação baseado no tipo de usuário
         let authenticated = false;
         
         if (userType === 'master') {
           authenticated = isMasterAuthenticated();
         } else if (userType === 'customer') {
-          // Pode adicionar isCustomerAuthenticated se necessário
-          authenticated = isAuthenticated();
+          // Verificar token de customer
+          const customerToken = typeof window !== 'undefined' ? localStorage.getItem('customer_access_token') : null;
+          const customerExpiresAt = typeof window !== 'undefined' ? localStorage.getItem('customer_expires_at') : null;
+          
+          if (customerToken && customerExpiresAt) {
+            const expirationTime = parseInt(customerExpiresAt);
+            const currentTime = Math.floor(Date.now() / 1000);
+            authenticated = currentTime < expirationTime;
+          } else {
+            authenticated = false;
+          }
         } else {
           // Seller (padrão)
           authenticated = isAuthenticated();
@@ -42,6 +55,17 @@ export function AuthGuard({ children, redirectTo = '/seller/auth/login', userTyp
             // Verificar novamente após refresh
             if (userType === 'master') {
               authenticated = isMasterAuthenticated();
+            } else if (userType === 'customer') {
+              const customerToken = typeof window !== 'undefined' ? localStorage.getItem('customer_access_token') : null;
+              const customerExpiresAt = typeof window !== 'undefined' ? localStorage.getItem('customer_expires_at') : null;
+              
+              if (customerToken && customerExpiresAt) {
+                const expirationTime = parseInt(customerExpiresAt);
+                const currentTime = Math.floor(Date.now() / 1000);
+                authenticated = currentTime < expirationTime;
+              } else {
+                authenticated = false;
+              }
             } else {
               authenticated = isAuthenticated();
             }
@@ -49,15 +73,23 @@ export function AuthGuard({ children, redirectTo = '/seller/auth/login', userTyp
             if (authenticated) {
               setIsAuth(true);
             } else {
-              router.push(redirectTo);
+              // Token expirado, redirecionar para login
+              if (typeof window !== 'undefined') {
+                window.location.href = redirectTo;
+              }
             }
           } else {
-            router.push(redirectTo);
+            // Token expirado, redirecionar para login
+            if (typeof window !== 'undefined') {
+              window.location.href = redirectTo;
+            }
           }
         }
       } catch (error) {
         console.error('Erro ao verificar autenticação:', error);
-        router.push(redirectTo);
+        if (typeof window !== 'undefined') {
+          window.location.href = redirectTo;
+        }
       } finally {
         setIsLoading(false);
       }

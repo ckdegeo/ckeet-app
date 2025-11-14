@@ -13,6 +13,7 @@ import NumberCard from '@/app/components/cards/numberCard';
 import Badge from '@/app/components/ui/badge';
 import ContentModal from '@/app/components/modals/contentModal';
 import ShopOrdersSkeleton from '@/app/components/shop/shopOrdersSkeleton';
+import { useTokenExpiration, useApiInterceptor } from '@/lib/hooks/useTokenExpiration';
 
 // Interface para configurações de aparência
 interface AppearanceConfig {
@@ -248,6 +249,10 @@ export default function OrdersPage() {
       }
 
       if (!response.ok) {
+        // Se for 401, o interceptor já vai redirecionar
+        if (response.status === 401) {
+          return;
+        }
         const error = await response.json();
         throw new Error(error.error || 'Erro ao buscar pedidos');
       }

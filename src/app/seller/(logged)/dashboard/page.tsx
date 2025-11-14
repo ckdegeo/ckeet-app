@@ -135,6 +135,10 @@ function DashboardContent() {
       }
 
       if (!response.ok) {
+        // Se for 401, o interceptor já vai redirecionar
+        if (response.status === 401) {
+          return;
+        }
         const error = await response.json();
         throw new Error(error.error || 'Erro ao carregar dados');
       }

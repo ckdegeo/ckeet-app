@@ -6,6 +6,7 @@ import Navbar from '@/app/seller/patterns/navbar';
 import DomainModal from '@/app/components/modals/domainModal';
 import { useDomainCheck } from '@/lib/hooks/useDomainCheck';
 import { useStoreCompletion } from '@/lib/hooks/useStoreCompletion';
+import { useTokenExpiration, useApiInterceptor } from '@/lib/hooks/useTokenExpiration';
 
 export default function SellerLayout({ children }: { children: React.ReactNode }) {
   const [pageTitle, setPageTitle] = useState('Seller');
@@ -20,6 +21,10 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
   
   // Verificar completude da loja
   const { storeStatus } = useStoreCompletion();
+  
+  // Verificar expiração do token e interceptar requisições
+  useTokenExpiration();
+  useApiInterceptor();
 
   return (
     <div className="flex h-screen bg-[var(--background)]">
