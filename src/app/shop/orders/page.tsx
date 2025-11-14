@@ -12,7 +12,7 @@ import { useCache } from '@/lib/hooks/useCache';
 import NumberCard from '@/app/components/cards/numberCard';
 import Badge from '@/app/components/ui/badge';
 import ContentModal from '@/app/components/modals/contentModal';
-import LoadingSpinner from '@/app/components/ui/loadingSpinner';
+import ShopOrdersSkeleton from '@/app/components/shop/shopOrdersSkeleton';
 
 // Interface para configurações de aparência
 interface AppearanceConfig {
@@ -588,11 +588,7 @@ export default function OrdersPage() {
 
   // Estado de loading inicial - mostrar skeleton apenas na primeira vez
   if (storeLoading || (isInitialLoading && !ordersData)) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner size="medium" />
-      </div>
-    );
+    return <ShopOrdersSkeleton />;
   }
 
   if (!store) {

@@ -9,7 +9,7 @@ import StoreNavbar from '../patterns/storeNavbar';
 import Footer from '../patterns/footer';
 import PixModal from '@/app/components/modals/pixModal';
 import { useCustomerLogout } from '@/lib/hooks/useCustomerLogout';
-import LoadingSpinner from '@/app/components/ui/loadingSpinner';
+import ShopProductSkeleton from '@/app/components/shop/shopProductSkeleton';
 
 // Interface para configurações de aparência
 interface AppearanceConfig {
@@ -124,13 +124,7 @@ export default function ProductPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen" style={{ backgroundColor: '#f9fafb' }}>
-        <div className="text-center">
-          <LoadingSpinner size="medium" />
-        </div>
-      </div>
-    );
+    return <ShopProductSkeleton />;
   }
 
   if (!store || !product) {

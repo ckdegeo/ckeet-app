@@ -6,7 +6,7 @@ import { Store, Category, Product } from '@/lib/types';
 import StoreNavbar from './patterns/storeNavbar';
 import Footer from './patterns/footer';
 import { useCustomerLogout } from '@/lib/hooks/useCustomerLogout';
-import LoadingSpinner from '@/app/components/ui/loadingSpinner';
+import ShopSkeleton from '@/app/components/shop/shopSkeleton';
 import SocialLinks from '@/app/components/social/socialLinks';
 
 // Interface para configurações de aparência
@@ -134,11 +134,7 @@ export default function ShopPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner size="medium" />
-      </div>
-    );
+    return <ShopSkeleton />;
   }
 
   if (!store) {
