@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Package, User, ShoppingCart, Calendar, DollarSign, CreditCard, Info, Key, Copy, CheckCircle } from 'lucide-react';
+import { X, Package, User, Calendar, DollarSign, CreditCard, Copy, CheckCircle, Download } from 'lucide-react';
 import Button from '@/app/components/buttons/button';
 import Input from '@/app/components/inputs/input';
+import Badge from '@/app/components/ui/badge';
 
 interface OrderDetailsModalProps {
   isOpen: boolean;
@@ -20,12 +21,51 @@ interface OrderDetailsModalProps {
     amount: number;
     createdAt: string;
   };
+  primaryColor?: string;
+  secondaryColor?: string;
+}
+
+// Componente de Skeleton para informações
+function InfoSkeleton() {
+  return (
+    <div className="space-y-3 animate-pulse">
+      <div className="h-4 w-20 bg-[var(--on-background)]/10 rounded"></div>
+      <div className="h-6 w-32 bg-[var(--on-background)]/10 rounded"></div>
+    </div>
+  );
+}
+
+// Componente de Card de Informação
+function InfoCard({ 
+  label, 
+  value, 
+  icon: Icon,
+  highlight = false 
+}: { 
+  label: string; 
+  value: string | React.ReactNode; 
+  icon?: React.ComponentType<{ size?: number; className?: string }>;
+  highlight?: boolean;
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        {Icon && <Icon size={16} className="text-[var(--on-background)]" />}
+        <span className="text-sm font-medium text-[var(--on-background)]">{label}</span>
+      </div>
+      <div className={`text-base ${highlight ? 'font-bold text-[var(--primary)]' : 'font-medium text-[var(--foreground)]'}`}>
+        {value}
+      </div>
+    </div>
+  );
 }
 
 export default function OrderDetailsModal({
   isOpen,
   onClose,
-  orderData
+  orderData,
+  primaryColor = '#bd253c',
+  secondaryColor = '#970b27'
 }: OrderDetailsModalProps) {
   const [copied, setCopied] = useState(false);
   const [purchaseContent, setPurchaseContent] = useState<string | null>(null);
@@ -84,19 +124,6 @@ export default function OrderDetailsModal({
     }
   };
 
-  // Formatar status
-  const formatStatus = (status: string) => {
-    const statusMap: Record<string, { text: string; color: string; bgColor: string }> = {
-      PENDING: { text: 'Pendente', color: 'text-orange-600', bgColor: 'bg-orange-100' },
-      PAID: { text: 'Pago', color: 'text-green-600', bgColor: 'bg-green-100' },
-      CANCELLED: { text: 'Cancelado', color: 'text-red-600', bgColor: 'bg-red-100' },
-      REFUNDED: { text: 'Reembolsado', color: 'text-gray-600', bgColor: 'bg-gray-100' },
-    };
-    return statusMap[status] || { text: status, color: 'text-gray-600', bgColor: 'bg-gray-100' };
-  };
-
-  const statusConfig = formatStatus(orderData.status);
-
   // Formatar forma de pagamento
   const formatPaymentMethod = (method: string) => {
     const methodMap: Record<string, string> = {
@@ -109,7 +136,7 @@ export default function OrderDetailsModal({
     return methodMap[method] || method;
   };
 
-  // Formatar data
+  // Formatar data com hora
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleString('pt-BR', {
@@ -130,130 +157,150 @@ export default function OrderDetailsModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div 
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div 
+        className="bg-[var(--surface)] rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        style={{
+          '--primary': primaryColor,
+          '--secondary': secondaryColor,
+          '--background': '#ffffff',
+          '--surface': '#ffffff',
+          '--foreground': '#111827',
+          '--on-background': '#6b7280',
+          '--on-primary': '#ffffff'
+        } as React.CSSProperties}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+        <div className="flex items-center justify-between p-6 border-b border-[var(--on-background)]/10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--primary)] bg-opacity-10">
-              <ShoppingCart size={20} className="text-[var(--primary)]" />
+            <div 
+              className="w-10 h-10 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: `${primaryColor}15` }}
+            >
+              <Package size={20} style={{ color: primaryColor }} />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-[var(--foreground)]">
-                Detalhes
+              <h2 className="text-xl font-bold text-[var(--foreground)]">
+                Detalhes do pedido
               </h2>
               <p className="text-sm text-[var(--on-background)]">
                 {orderData.orderNumber}
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors cursor-pointer"
-          >
-            <X size={16} className="text-gray-600" />
-          </button>
+          <div className="flex items-center gap-3">
+            <Badge 
+              status={orderData.status} 
+              primaryColor={primaryColor}
+              secondaryColor={secondaryColor}
+            />
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-[var(--on-background)]/10 hover:bg-[var(--on-background)]/20 flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <X size={16} className="text-[var(--on-background)]" />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
         <div className="p-6 space-y-6">
-          {/* Informações do Produto */}
-          <div className="bg-gray-50 rounded-xl p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-gray-600">
-                <Package size={18} />
-                <h3 className="font-semibold text-[var(--foreground)]">Produto</h3>
-              </div>
-              {/* Status Badge */}
-              <span className={`px-4 py-2 rounded-full text-sm font-medium ${statusConfig.bgColor} ${statusConfig.color} border border-current border-opacity-20`}>
-                {statusConfig.text}
-              </span>
+          {/* Informações Principais - Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Valor */}
+            <div className="bg-[var(--background)] border border-[var(--on-background)]/10 rounded-xl p-4">
+              <InfoCard
+                label="Valor total"
+                value={formatCurrency(orderData.amount)}
+                icon={DollarSign}
+                highlight
+              />
             </div>
-            <div className="space-y-2">
-              <div>
-                <span className="text-sm text-gray-600">Nome:</span>
-                <p className="font-medium text-[var(--foreground)]">{orderData.productName}</p>
-              </div>
+
+            {/* Método de Pagamento */}
+            <div className="bg-[var(--background)] border border-[var(--on-background)]/10 rounded-xl p-4">
+              <InfoCard
+                label="Método de pagamento"
+                value={formatPaymentMethod(orderData.paymentMethod)}
+                icon={CreditCard}
+              />
+            </div>
+
+            {/* Data */}
+            <div className="bg-[var(--background)] border border-[var(--on-background)]/10 rounded-xl p-4">
+              <InfoCard
+                label="Data do Pedido"
+                value={formatDate(orderData.createdAt)}
+                icon={Calendar}
+              />
+            </div>
+
+            {/* Status */}
+            <div className="bg-[var(--background)] border border-[var(--on-background)]/10 rounded-xl p-4">
+              <InfoCard
+                label="Status"
+                value={
+                  <Badge 
+                    status={orderData.status} 
+                    primaryColor={primaryColor}
+                    secondaryColor={secondaryColor}
+                  />
+                }
+              />
+            </div>
+          </div>
+
+          {/* Informações do Produto */}
+          <div className="bg-[var(--background)] border border-[var(--on-background)]/10 rounded-xl p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <Package size={18} className="text-[var(--on-background)]" />
+              <h3 className="font-semibold text-[var(--foreground)]">Produto</h3>
+            </div>
+            <div className="space-y-3">
+              <InfoCard label="Nome" value={orderData.productName} />
               {orderData.productDescription && (
-                <div>
-                  <span className="text-sm text-gray-600">Descrição:</span>
-                  <p className="text-sm text-[var(--on-background)]">{orderData.productDescription}</p>
+                <div className="pt-2 border-t border-[var(--on-background)]/10">
+                  <InfoCard label="Descrição" value={orderData.productDescription} />
                 </div>
               )}
             </div>
           </div>
 
           {/* Informações do Cliente */}
-          <div className="bg-gray-50 rounded-xl p-4 space-y-4">
-            <div className="flex items-center gap-2 text-gray-600">
-              <User size={18} />
+          <div className="bg-[var(--background)] border border-[var(--on-background)]/10 rounded-xl p-4 space-y-4">
+            <div className="flex items-center gap-2">
+              <User size={18} className="text-[var(--on-background)]" />
               <h3 className="font-semibold text-[var(--foreground)]">Cliente</h3>
             </div>
-            <div className="space-y-2">
-              <div>
-                <span className="text-sm text-gray-600">Nome:</span>
-                <p className="font-medium text-[var(--foreground)]">{orderData.customerName}</p>
-              </div>
-              <div>
-                <span className="text-sm text-gray-600">E-mail:</span>
-                <p className="font-medium text-[var(--foreground)]">{orderData.customerEmail}</p>
-              </div>
+            <div className="space-y-3">
+              <InfoCard label="Nome" value={orderData.customerName} />
+              <InfoCard label="E-mail" value={orderData.customerEmail} />
             </div>
-          </div>
-
-          {/* Informações de Pagamento */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-              <div className="flex items-center gap-2 text-gray-600 mb-2">
-                <DollarSign size={18} />
-                <h3 className="font-semibold text-[var(--foreground)]">Valor</h3>
-              </div>
-              <p className="text-2xl font-bold text-[var(--primary)]">
-                {formatCurrency(orderData.amount)}
-              </p>
-            </div>
-
-            <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-              <div className="flex items-center gap-2 text-gray-600 mb-2">
-                <CreditCard size={18} />
-                <h3 className="font-semibold text-[var(--foreground)]">Pagamento</h3>
-              </div>
-              <p className="font-medium text-[var(--foreground)]">
-                {formatPaymentMethod(orderData.paymentMethod)}
-              </p>
-            </div>
-          </div>
-
-          {/* Informações de Data */}
-          <div className="bg-gray-50 rounded-xl p-4 space-y-2">
-            <div className="flex items-center gap-2 text-gray-600 mb-2">
-              <Calendar size={18} />
-              <h3 className="font-semibold text-[var(--foreground)]">Data do Pedido</h3>
-            </div>
-            <p className="font-medium text-[var(--foreground)]">
-              {formatDate(orderData.createdAt)}
-            </p>
           </div>
 
           {/* Conteúdo Entregue */}
           {isLoadingPurchase ? (
-            <div className="bg-gray-50 rounded-xl p-4 space-y-3 animate-pulse">
+            <div className="bg-[var(--background)] border border-[var(--on-background)]/10 rounded-xl p-4 space-y-4">
               <div className="flex items-center gap-2">
-                <div className="w-[18px] h-[18px] bg-[var(--on-background)]/10 rounded"></div>
-                <div className="h-5 w-40 bg-[var(--on-background)]/10 rounded"></div>
+                <div className="w-[18px] h-[18px] bg-[var(--on-background)]/10 rounded animate-pulse"></div>
+                <div className="h-5 w-40 bg-[var(--on-background)]/10 rounded animate-pulse"></div>
               </div>
-              <div className="space-y-2">
-                <div className="h-10 w-full bg-[var(--on-background)]/10 rounded-lg"></div>
-                <div className="h-10 w-24 bg-[var(--on-background)]/10 rounded-lg"></div>
+              <div className="space-y-3">
+                <InfoSkeleton />
+                <div className="h-10 w-24 bg-[var(--on-background)]/10 rounded-lg animate-pulse"></div>
               </div>
             </div>
           ) : purchaseContent && (
-            <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-              <div className="flex items-center gap-2 text-gray-600">
-                <Key size={18} />
-                <h3 className="font-semibold text-[var(--foreground)]">Conteúdo entregue</h3>
-              </div>
-              <div className="space-y-2">
+            <div className="bg-[var(--background)] border border-[var(--on-background)]/10 rounded-xl p-4 space-y-4">
+              <h3 className="font-semibold text-[var(--foreground)]">Conteúdo entregue</h3>
+              <div className="space-y-3">
                 <div className="flex gap-2">
                   <div className="flex-1">
                     <Input
@@ -261,54 +308,52 @@ export default function OrderDetailsModal({
                       value={purchaseContent}
                       readOnly
                       className="font-mono text-sm"
+                      primaryColor={primaryColor}
+                      secondaryColor={secondaryColor}
                     />
                   </div>
-                  <Button
+                  <button
                     onClick={copyContent}
-                    variant="primary"
-                    className="px-4 py-2 flex items-center gap-2"
+                    className="px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap"
+                    style={{ 
+                      backgroundColor: secondaryColor,
+                      color: 'white'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '0.9';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '1';
+                    }}
                   >
                     {copied ? <CheckCircle size={16} /> : <Copy size={16} />}
                     {copied ? 'Copiado!' : 'Copiar'}
-                  </Button>
+                  </button>
                 </div>
                 {purchaseDownloadUrl && (
                   <a
                     href={purchaseDownloadUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block text-sm text-blue-600 hover:text-blue-800 underline"
+                    className="flex items-center gap-2 text-sm font-medium transition-colors cursor-pointer"
+                    style={{ color: primaryColor }}
                   >
-                    Download disponível
+                    <Download size={16} />
+                    Baixar conteúdo
                   </a>
                 )}
-              </div>
-            </div>
-          )}
-
-          {/* Aviso para o Seller */}
-          {orderData.status === 'PAID' && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-              <div className="flex items-start gap-3">
-                <Info size={18} className="text-blue-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-medium text-blue-900 mb-1">Pedido confirmado</h4>
-                  <p className="text-sm text-blue-800">
-                    Este pedido foi pago e confirmado. O conteúdo deve ser entregue ao cliente.
-                  </p>
-                </div>
               </div>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
+        <div className="p-6 border-t border-[var(--on-background)]/10 bg-[var(--background)] rounded-b-2xl">
           <div className="flex justify-end">
             <Button
               onClick={onClose}
+              variant="secondary"
               className="px-6 cursor-pointer"
-              style={{ backgroundColor: '#970b27' }}
             >
               Fechar
             </Button>
