@@ -221,7 +221,7 @@ export default function ContentModal({
             {/* Valor */}
             <div className="bg-[var(--background)] border border-[var(--on-background)]/10 rounded-xl p-4">
               <InfoCard
-                label="Valor Total"
+                label="Valor total"
                 value={formatCurrency(orderData.totalAmount)}
                 icon={DollarSign}
                 highlight
@@ -231,7 +231,7 @@ export default function ContentModal({
             {/* Data */}
             <div className="bg-[var(--background)] border border-[var(--on-background)]/10 rounded-xl p-4">
               <InfoCard
-                label="Data do Pedido"
+                label="Data do pedido"
                 value={formatDate(orderData.createdAt)}
                 icon={Calendar}
               />
