@@ -540,7 +540,7 @@ export default function OrdersPage() {
   const actions = [
     {
       icon: Eye,
-      label: 'Ver Conteúdo',
+      label: 'Ver conteúdo',
       color: 'secondary' as const,
       onClick: (item: OrderItem) => {
         if (item.orderStatus === 'PAID' && item.deliveredContent) {
@@ -553,7 +553,7 @@ export default function OrdersPage() {
     },
     {
       icon: Copy,
-      label: 'Copiar Conteúdo',
+      label: 'Copiar conteúdo',
       color: 'secondary' as const,
       onClick: (item: OrderItem) => {
         if (item.orderStatus === 'PAID' && item.deliveredContent) {
