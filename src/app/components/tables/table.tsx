@@ -32,6 +32,7 @@ interface TableProps<T> {
   backgroundColor?: string;
   borderColor?: string;
   rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+  actionsFirst?: boolean; // Se true, actions aparecem antes das colunas
 }
 
 export default function Table<T>({
@@ -45,7 +46,8 @@ export default function Table<T>({
   titleColor,
   backgroundColor,
   borderColor,
-  rounded = '2xl'
+  rounded = '2xl',
+  actionsFirst = false
 }: TableProps<T>) {
   const [currentPage, setCurrentPage] = useState(1);
   const pathname = usePathname();
@@ -115,6 +117,19 @@ export default function Table<T>({
                 borderColor: borderColor ? `${borderColor}40` : `${primaryColor}20`
               }}
             >
+              {actionsFirst && actions && (
+                <th 
+                  className={`px-4 py-4 text-right w-[140px] ${
+                    useDefaultStyles ? 'text-[var(--foreground-secondary)] bg-[var(--surface)]' : ''
+                  }`}
+                  style={useDefaultStyles ? {} : { 
+                    color: primaryColor,
+                    backgroundColor: `${primaryColor}05`
+                  }}
+                >
+                  <span className="sr-only">Ações</span>
+                </th>
+              )}
               {columns.map((column, index) => (
                 <th
                   key={index}
@@ -134,7 +149,7 @@ export default function Table<T>({
                   {column.label}
                 </th>
               ))}
-              {actions && (
+              {!actionsFirst && actions && (
                 <th 
                   className={`px-4 py-4 text-right w-[140px] ${
                     useDefaultStyles ? 'text-[var(--foreground-secondary)] bg-[var(--surface)]' : ''
@@ -182,6 +197,65 @@ export default function Table<T>({
                       : (borderColor ? `${borderColor}08` : `${primaryColor}02`);
                   }}
                 >
+                  {actionsFirst && actions && (
+                    <td className="px-4 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1 sm:gap-2">
+                        {actions
+                          .filter(action => !action.show || action.show(item))
+                          .map((action, actionIndex) => {
+                            const Icon = action.icon;
+                            const color = action.color || "primary";
+
+                            if (useDefaultStyles) {
+                              // Design system padrão para seller
+                              return (
+                                <button
+                                  key={actionIndex}
+                                  onClick={() => action.onClick(item)}
+                                  className={`p-1.5 sm:p-2 rounded-full transition-colors cursor-pointer ${
+                                    color === 'primary' ? 'text-[var(--primary)] hover:bg-[var(--primary-hover)]' :
+                                    color === 'secondary' ? 'text-[var(--secondary)] hover:bg-[var(--secondary-hover)]' :
+                                    color === 'error' ? 'text-red-600 hover:bg-red-50' :
+                                    'text-[var(--secondary)] hover:bg-[var(--secondary-hover)]'
+                                  }`}
+                                  title={action.label}
+                                >
+                                  <Icon size={16} className="sm:w-5 sm:h-5" />
+                                  <span className="sr-only">{action.label}</span>
+                                </button>
+                              );
+                            }
+
+                            // Design personalizado para customer - usar cor secundária como padrão
+                            return (
+                              <button
+                                key={actionIndex}
+                                onClick={() => action.onClick(item)}
+                                className="p-1.5 sm:p-2 rounded-full hover:bg-opacity-10 transition-colors cursor-pointer"
+                                style={{
+                                  color: color === 'primary' ? primaryColor : 
+                                         color === 'secondary' ? secondaryColor : 
+                                         color === 'error' ? '#dc2626' : secondaryColor || primaryColor
+                                }}
+                                onMouseEnter={(e) => {
+                                  const bgColor = color === 'primary' ? primaryColor : 
+                                                color === 'secondary' ? secondaryColor : 
+                                                color === 'error' ? '#dc2626' : secondaryColor || primaryColor;
+                                  e.currentTarget.style.backgroundColor = `${bgColor}10`;
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = 'transparent';
+                                }}
+                                title={action.label}
+                              >
+                                <Icon size={16} className="sm:w-5 sm:h-5" />
+                                <span className="sr-only">{action.label}</span>
+                              </button>
+                            );
+                          })}
+                      </div>
+                    </td>
+                  )}
                   {columns.map((column, colIndex) => (
                     <td
                       key={colIndex}
@@ -207,7 +281,7 @@ export default function Table<T>({
                       {column.render ? column.render(item[column.key], item) : String(item[column.key])}
                     </td>
                   ))}
-                  {actions && (
+                  {!actionsFirst && actions && (
                     <td className="px-4 py-4 text-right">
                       <div className="flex items-center justify-end gap-1 sm:gap-2">
                         {actions

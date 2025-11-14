@@ -530,7 +530,10 @@ export default function OrdersPage() {
       key: 'createdAt' as keyof OrderItem,
       label: 'Data',
       width: 'w-28',
-      render: (value: unknown) => new Date(value as string).toLocaleDateString('pt-BR'),
+      render: (value: unknown) => {
+        const date = new Date(value as string);
+        return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      },
     },
   ];
 
@@ -959,6 +962,7 @@ export default function OrdersPage() {
               backgroundColor={appearance.productCards.backgroundColor}
               borderColor={appearance.productCards.hasBorder ? appearance.productCards.borderColor : undefined}
               rounded={appearance.productCards.rounded}
+              actionsFirst={true}
             />
           </div>
         </div>
